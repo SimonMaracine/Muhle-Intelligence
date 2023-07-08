@@ -9,7 +9,7 @@ set(SOURCES
     "minimax.cpp"
 )
 
-if(${MUHLE_SHARED_LIBRARY})
+if(MUHLE_SHARED_LIBRARY)
     add_library(muhle_intelligence SHARED ${SOURCES})
 else()
     add_library(muhle_intelligence STATIC ${SOURCES})
