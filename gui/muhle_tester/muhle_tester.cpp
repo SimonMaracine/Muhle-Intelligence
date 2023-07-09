@@ -16,6 +16,12 @@ void MuhleTester::update() {
     ImGui::ShowDemoWindow();
 }
 
+void MuhleTester::reset_game() {
+    // TODO stop everything
+
+    game = {};
+}
+
 void MuhleTester::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -218,5 +224,15 @@ void MuhleTester::play_mode_buttons() {
 }
 
 void MuhleTester::test_mode_buttons() {
+    if (ImGui::Button("Compute")) {
 
+    }
+
+    if (ImGui::Button("Stop AI")) {
+
+    }
+
+    if (ImGui::Button("Reset")) {
+
+    }
 }
