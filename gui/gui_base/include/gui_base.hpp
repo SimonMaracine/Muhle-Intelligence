@@ -1,8 +1,7 @@
 #pragma once
 
-// Include these for the user
+// Include this for the user
 #include <imgui.h>
-#include <glad/glad.h>
 
 struct GLFWwindow;
 
@@ -10,6 +9,7 @@ namespace gui_base {
     class GuiApplication {
     public:
         GuiApplication() = default;
+        GuiApplication(int width, int height, const char* title);
         virtual ~GuiApplication() = default;
 
         int run();
@@ -17,8 +17,15 @@ namespace gui_base {
         virtual void start() = 0;
         virtual void update() = 0;
 
-        bool running = true;
+        void quit();
+
         int exit_code = 0;
+
+        struct {
+            int width = 1280;
+            int height = 720;
+            const char* title = "GUI Base";
+        } window_properties;
     private:
         void loop();
         void initialize();

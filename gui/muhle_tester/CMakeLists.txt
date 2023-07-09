@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 add_executable(muhle_tester
     "main.cpp"
+    "muhle_tester.hpp"
+    "muhle_tester.cpp"
 )
 
 target_link_libraries(muhle_tester PRIVATE gui_base)

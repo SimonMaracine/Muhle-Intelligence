@@ -1,14 +1,4 @@
-#include <gui_base.hpp>
-
-struct MuhleTester : public gui_base::GuiApplication {
-    virtual void start() override {
-
-    }
-
-    virtual void update() override {
-        ImGui::ShowDemoWindow();
-    }
-};
+#include "muhle_tester.hpp"
 
 int main() {
     MuhleTester program;

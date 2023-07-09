@@ -9,6 +9,12 @@
 #include "gui_base.hpp"
 
 namespace gui_base {
+    GuiApplication::GuiApplication(int width, int height, const char* title) {
+        window_properties.width = width;
+        window_properties.height = height;
+        window_properties.title = title;
+    }
+
     int GuiApplication::run() {
         initialize();
         start();
@@ -20,10 +26,14 @@ namespace gui_base {
         return exit_code;
     }
 
+    void GuiApplication::quit() {
+        glfwSetWindowShouldClose(window, 1);
+    }
+
     void GuiApplication::loop() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        while (running) {
+        while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
             ImGui_ImplOpenGL3_NewFrame();
@@ -55,7 +65,13 @@ namespace gui_base {
         glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        window = glfwCreateWindow(1280, 720, "GUI Base", nullptr, nullptr);
+        window = glfwCreateWindow(
+            window_properties.width,
+            window_properties.height,
+            window_properties.title,
+            nullptr,
+            nullptr
+        );
 
         if (window == nullptr) {
             glfwTerminate();
@@ -73,7 +89,6 @@ namespace gui_base {
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-
         ImGui::StyleColorsDark();
 
         ImGui_ImplGlfw_InitForOpenGL(window, true);

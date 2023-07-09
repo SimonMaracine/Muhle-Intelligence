@@ -11,5 +11,5 @@ if(MUHLE_BUILD_GUI)
     add_subdirectory(gui)
 endif()
 
-message(STATUS "Muhle: built shared library: ${MUHLE_SHARED_LIBRARY}")
-message(STATUS "Muhle: built GUI: ${MUHLE_BUILD_GUI}")
+message(STATUS "Muhle: Building shared library: ${MUHLE_SHARED_LIBRARY}")
+message(STATUS "Muhle: Building GUI: ${MUHLE_BUILD_GUI}")
