@@ -4,7 +4,7 @@
 
 struct MuhleTester : public gui_base::GuiApplication {
     MuhleTester()
-        : gui_base::GuiApplication(1024, 576, "Mühle Tester") {}
+        : gui_base::GuiApplication(1024, 576, "Mühle Tester", false) {}
 
     virtual void start() override;
     virtual void update() override;

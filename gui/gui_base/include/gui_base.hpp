@@ -9,7 +9,7 @@ namespace gui_base {
     class GuiApplication {
     public:
         GuiApplication() = default;
-        GuiApplication(int width, int height, const char* title);
+        GuiApplication(int width, int height, const char* title, bool resizable = true);
         virtual ~GuiApplication() = default;
 
         int run();
@@ -25,6 +25,7 @@ namespace gui_base {
             int width = 1280;
             int height = 720;
             const char* title = "GUI Base";
+            bool resizable = true;
         } window_properties;
     private:
         void loop();

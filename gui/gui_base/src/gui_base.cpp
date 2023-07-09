@@ -9,10 +9,11 @@
 #include "gui_base.hpp"
 
 namespace gui_base {
-    GuiApplication::GuiApplication(int width, int height, const char* title) {
+    GuiApplication::GuiApplication(int width, int height, const char* title, bool resizable) {
         window_properties.width = width;
         window_properties.height = height;
         window_properties.title = title;
+        window_properties.resizable = resizable;
     }
 
     int GuiApplication::run() {
@@ -63,7 +64,7 @@ namespace gui_base {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_RESIZABLE, window_properties.resizable ? GLFW_TRUE : GLFW_FALSE);
 
         window = glfwCreateWindow(
             window_properties.width,

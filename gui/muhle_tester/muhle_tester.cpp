@@ -62,7 +62,7 @@ void MuhleTester::main_window() {
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 20));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(40.0f, 40.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 
     if (ImGui::Begin("Main", nullptr, flags)) {
@@ -77,10 +77,10 @@ void MuhleTester::main_window() {
 }
 
 void MuhleTester::board_canvas() {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));      // Disable padding
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));      // Disable padding
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(100, 100, 100, 255));  // Set a background color
 
-    ImGui::BeginChild("Canvas");
+    ImGui::BeginChild("Canvas", ImVec2(400.0f, 400.0f));
 
     ImGui::PopStyleColor();
     ImGui::PopStyleVar();
@@ -97,7 +97,9 @@ void MuhleTester::board_canvas() {
     //      ImGui::EndChild();
 
     // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
-    ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 cursor_position = ImGui::GetCursorScreenPos();
+    ImVec2 canvas_p0 = ImVec2(cursor_position.x + viewport->WorkPos.x, cursor_position.y + viewport->WorkPos.y);      // ImDrawList API uses screen coordinates!
     ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
     if (canvas_sz.x < 100.0f) canvas_sz.x = 100.0f;
     if (canvas_sz.y < 100.0f) canvas_sz.y = 100.0f;
@@ -114,13 +116,7 @@ void MuhleTester::board_canvas() {
     // const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
 
     const float UNIT = canvas_p1.x < canvas_p1.y ? canvas_p1.x / 8.0f : canvas_p1.y / 8.0f;
-    const ImVec2 OFFSET = (
-        canvas_p1.x < canvas_p1.y
-        ?
-        ImVec2(0.0f, ((canvas_p1.y - canvas_p0.y) - 8.0f * UNIT) / 2.0f)
-        :
-        ImVec2(((canvas_p1.x - canvas_p0.x) - 8.0f * UNIT) / 2.0f, 0.0f)
-    );
+    const ImVec2 OFFSET = ImVec2(canvas_p0.x / 2.0f, canvas_p0.y / 2.0f);
 
     const ImColor color = ImColor(220, 220, 220);
     const float thickness = 2.0f;
