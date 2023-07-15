@@ -6,7 +6,7 @@
 #include "muhle_tester.hpp"
 
 void MuhleTester::start() {
-
+    game.setup();
 }
 
 void MuhleTester::update() {
@@ -62,7 +62,7 @@ void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
 
     if (game.selected_piece_index != INVALID_INDEX) {
         const Piece& piece = game.nodes[game.selected_piece_index].piece.value();
-        draw_list->AddCircle(ImVec2(piece.position.x, piece.position.y), NODE_RADIUS + 1.0f, ImColor(255, 0, 0, 255));
+        draw_list->AddCircle(ImVec2(piece.position.x, piece.position.y), NODE_RADIUS + 1.0f, ImColor(255, 30, 30, 255), 0, 2.0f);
     }
 }
 
@@ -134,8 +134,8 @@ void MuhleTester::main_window() {
 }
 
 void MuhleTester::board_canvas() {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));      // Disable padding
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(100, 100, 100, 255));  // Set a background color
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(100, 100, 100, 255));
 
     ImGui::BeginChild("Canvas", ImVec2(400.0f, 400.0f));
 

@@ -34,19 +34,23 @@ static const int NODE_POSITIONS[24][2] = {
 };
 
 void Game::setup() {
-    Piece piece1;
-    piece1.type = PieceType::Black;
-    piece1.position.x = nodes[0].position.x;
-    piece1.position.y = nodes[0].position.y;
+    for (size_t i = 0; i < nodes.size(); i++) {
+        nodes[i].index = i;
+    }
 
-    nodes[0].piece = piece1;
+    // Piece piece1;
+    // piece1.type = PieceType::Black;
+    // piece1.position.x = nodes[0].position.x;
+    // piece1.position.y = nodes[0].position.y;
 
-    Piece piece2;
-    piece2.type = PieceType::White;
-    piece2.position.x = nodes[1].position.x;
-    piece2.position.y = nodes[1].position.y;
+    // nodes[0].piece = piece1;
 
-    nodes[1].piece = piece2;
+    // Piece piece2;
+    // piece2.type = PieceType::White;
+    // piece2.position.x = nodes[1].position.x;
+    // piece2.position.y = nodes[1].position.y;
+
+    // nodes[1].piece = piece2;
 }
 
 void Game::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
@@ -181,6 +185,10 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
             continue;
         }
 
+        if (!can_potentially_move(node_src, node_dest)) {
+            continue;
+        }
+
         // Moving a piece
 
         move_piece(node_src, node_dest);
@@ -211,4 +219,118 @@ void Game::change_turn() {
     } else {
         turn = Player::White;
     }
+}
+
+bool Game::can_potentially_move(Node& node_src, Node& node_dest) {
+    assert(node_src.piece != std::nullopt);
+    assert(node_dest.piece == std::nullopt);
+
+    if (can_jump[static_cast<int>(turn)]) {
+        return true;
+    }
+
+    switch (node_src.index) {
+        case 0:
+            if (node_dest.index == 1 || node_dest.index == 9)
+                return true;
+            break;
+        case 1:
+            if (node_dest.index == 0 || node_dest.index == 2 || node_dest.index == 4)
+                return true;
+            break;
+        case 2:
+            if (node_dest.index == 1 || node_dest.index == 14)
+                return true;
+            break;
+        case 3:
+            if (node_dest.index == 4 || node_dest.index == 10)
+                return true;
+            break;
+        case 4:
+            if (node_dest.index == 1 || node_dest.index == 3 || node_dest.index == 5
+                    || node_dest.index == 7)
+                return true;
+            break;
+        case 5:
+            if (node_dest.index == 4 || node_dest.index == 13)
+                return true;
+            break;
+        case 6:
+            if (node_dest.index == 7 || node_dest.index == 11)
+                return true;
+            break;
+        case 7:
+            if (node_dest.index == 4 || node_dest.index == 6 || node_dest.index == 8)
+                return true;
+            break;
+        case 8:
+            if (node_dest.index == 7 || node_dest.index == 12)
+                return true;
+            break;
+        case 9:
+            if (node_dest.index == 0 || node_dest.index == 10 || node_dest.index == 21)
+                return true;
+            break;
+        case 10:
+            if (node_dest.index == 3 || node_dest.index == 9 || node_dest.index == 11
+                    || node_dest.index == 18)
+                return true;
+            break;
+        case 11:
+            if (node_dest.index == 6 || node_dest.index == 10 || node_dest.index == 15)
+                return true;
+            break;
+        case 12:
+            if (node_dest.index == 8 || node_dest.index == 13 || node_dest.index == 17)
+                return true;
+            break;
+        case 13:
+            if (node_dest.index == 5 || node_dest.index == 12 || node_dest.index == 14
+                    || node_dest.index == 20)
+                return true;
+            break;
+        case 14:
+            if (node_dest.index == 2 || node_dest.index == 13 || node_dest.index == 23)
+                return true;
+            break;
+        case 15:
+            if (node_dest.index == 11 || node_dest.index == 16)
+                return true;
+            break;
+        case 16:
+            if (node_dest.index == 15 || node_dest.index == 17 || node_dest.index == 19)
+                return true;
+            break;
+        case 17:
+            if (node_dest.index == 12 || node_dest.index == 16)
+                return true;
+            break;
+        case 18:
+            if (node_dest.index == 10 || node_dest.index == 19)
+                return true;
+            break;
+        case 19:
+            if (node_dest.index == 16 || node_dest.index == 18 || node_dest.index == 20
+                    || node_dest.index == 22)
+                return true;
+            break;
+        case 20:
+            if (node_dest.index == 13 || node_dest.index == 19)
+                return true;
+            break;
+        case 21:
+            if (node_dest.index == 9 || node_dest.index == 22)
+                return true;
+            break;
+        case 22:
+            if (node_dest.index == 19 || node_dest.index == 21 || node_dest.index == 23)
+                return true;
+            break;
+        case 23:
+            if (node_dest.index == 14 || node_dest.index == 22)
+                return true;
+            break;
+    }
+
+    return false;
 }

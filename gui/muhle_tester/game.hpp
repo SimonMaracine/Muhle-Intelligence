@@ -5,6 +5,9 @@
 
 #include <glm/glm.hpp>
 
+inline constexpr float NODE_RADIUS = 25.0f;
+inline constexpr int INVALID_INDEX = -1;
+
 enum class Player {
     White,
     Black
@@ -30,10 +33,9 @@ struct Node {
     glm::vec2 position;
 
     std::optional<Piece> piece;
-};
 
-inline constexpr float NODE_RADIUS = 25.0f;
-inline constexpr int INVALID_INDEX = -1;
+    int index = INVALID_INDEX;
+};
 
 struct Game {
     unsigned int white_pieces_on_board = 0;
@@ -44,9 +46,11 @@ struct Game {
     Player turn = Player::White;
     GamePhase phase = GamePhase::PlacePieces;
 
-    std::array<Node, 24> nodes;
+    std::array<Node, 24> nodes {};
 
     int selected_piece_index = INVALID_INDEX;
+
+    std::array<bool, 2> can_jump {};
 
     void setup();
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
@@ -63,4 +67,5 @@ struct Game {
 
     bool point_in_node(glm::vec2 mouse_position, const Node& node);
     void change_turn();
+    bool can_potentially_move(Node& node_src, Node& node_dest);
 };
