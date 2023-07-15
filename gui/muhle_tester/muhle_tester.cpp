@@ -14,12 +14,63 @@ void MuhleTester::update() {
     main_window();
 
     ImGui::ShowDemoWindow();
+
+    game.update_nodes_positions(board_unit, board_offset);
+
+    switch (state) {
+        case State::None:
+            state = State::HumanPlacePiece;
+
+            break;
+        case State::HumanPlacePiece:
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                const ImVec2 position = ImGui::GetMousePos();
+                game.user_click(glm::vec2(position.x, position.y));
+            }
+
+            break;
+        case State::ComputerPlacePiece:
+            break;
+    }
+}
+
+void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, PieceType type) {
+    ImColor color {};
+
+    switch (type) {
+        case PieceType::White:
+            color = ImColor(255, 255, 255, 255);
+            break;
+        case PieceType::Black:
+            color = ImColor(0, 0, 0, 255);
+            break;
+    }
+
+    draw_list->AddCircleFilled(ImVec2(x, y), NODE_RADIUS, color);
+}
+
+void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
+    for (const Node& node : game.nodes) {
+        if (!node.piece.has_value()) {
+            continue;
+        }
+
+        const Piece& piece = node.piece.value();
+
+        draw_piece(draw_list, piece.position.x, piece.position.y, piece.type);
+    }
+
+    if (game.selected_piece_index != INVALID_INDEX) {
+        const Piece& piece = game.nodes[game.selected_piece_index].piece.value();
+        draw_list->AddCircle(ImVec2(piece.position.x, piece.position.y), NODE_RADIUS + 1.0f, ImColor(255, 0, 0, 255));
+    }
 }
 
 void MuhleTester::reset_game() {
     // TODO stop everything
 
     game = {};
+    game.setup();
 }
 
 void MuhleTester::main_menu_bar() {
@@ -91,22 +142,10 @@ void MuhleTester::board_canvas() {
     ImGui::PopStyleColor();
     ImGui::PopStyleVar();
 
-    // Typically you would use a BeginChild()/EndChild() pair to benefit from a clipping region + own scrolling.
-    // Here we demonstrate that this can be replaced by simple offsetting + custom drawing + PushClipRect/PopClipRect() calls.
-    // To use a child window instead we could use, e.g:
-    //      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));      // Disable padding
-    //      ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(50, 50, 50, 255));  // Set a background color
-    //      ImGui::BeginChild("canvas", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoMove);
-    //      ImGui::PopStyleColor();
-    //      ImGui::PopStyleVar();
-    //      [...]
-    //      ImGui::EndChild();
-
-    // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 cursor_position = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_p0 = ImVec2(cursor_position.x + viewport->WorkPos.x, cursor_position.y + viewport->WorkPos.y);      // ImDrawList API uses screen coordinates!
-    ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
+    ImVec2 canvas_p0 = ImVec2(cursor_position.x + viewport->WorkPos.x, cursor_position.y + viewport->WorkPos.y);
+    ImVec2 canvas_sz = ImGui::GetContentRegionAvail();
     if (canvas_sz.x < 100.0f) canvas_sz.x = 100.0f;
     if (canvas_sz.y < 100.0f) canvas_sz.y = 100.0f;
     ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
@@ -114,15 +153,10 @@ void MuhleTester::board_canvas() {
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    // This will catch our interactions
-    ImGui::InvisibleButton("Canvas button", canvas_sz, ImGuiButtonFlags_MouseButtonLeft);
-    const bool is_hovered = ImGui::IsItemHovered(); // Hovered
-    const bool is_active = ImGui::IsItemActive();   // Held
-    // const ImVec2 origin(canvas_p0.x + scrolling.x, canvas_p0.y + scrolling.y); // Lock scrolled origin
-    // const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
-
-    const float UNIT = canvas_p1.x < canvas_p1.y ? canvas_p1.x / 8.0f : canvas_p1.y / 8.0f;
-    const ImVec2 OFFSET = ImVec2(canvas_p0.x / 2.0f, canvas_p0.y / 2.0f);
+    board_unit = canvas_p1.x < canvas_p1.y ? canvas_p1.x / 8.0f : canvas_p1.y / 8.0f;
+    board_offset = glm::vec2(canvas_p0.x / 2.0f, canvas_p0.y / 2.0f);
+    const float UNIT = board_unit;
+    const glm::vec2 OFFSET = board_offset;
 
     const ImColor color = ImColor(220, 220, 220);
     const float thickness = 2.0f;
@@ -136,60 +170,7 @@ void MuhleTester::board_canvas() {
     draw_list->AddLine(ImVec2(4.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), ImVec2(4.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), color, thickness);
     draw_list->AddLine(ImVec2(1.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), ImVec2(3.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), color, thickness);
 
-    // draw_list->AddPolyline(outer_square, sizeof(outer_square), ImU32(255), 0, 4);
-    // draw_list->AddPolyline(middle_square, sizeof(middle_square), ImU32(255), 0, 4);
-    // draw_list->AddPolyline(inner_square, sizeof(inner_square), ImU32(255), 0, 4);
-
-    // // Add first and second point
-    // if (is_hovered && !adding_line && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-    // {
-    //     points.push_back(mouse_pos_in_canvas);
-    //     points.push_back(mouse_pos_in_canvas);
-    //     adding_line = true;
-    // }
-    // if (adding_line)
-    // {
-    //     points.back() = mouse_pos_in_canvas;
-    //     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
-    //         adding_line = false;
-    // }
-
-    // // Pan (we use a zero mouse threshold when there's no context menu)
-    // // You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
-    // const float mouse_threshold_for_pan = opt_enable_context_menu ? -1.0f : 0.0f;
-    // if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right, mouse_threshold_for_pan))
-    // {
-    //     scrolling.x += io.MouseDelta.x;
-    //     scrolling.y += io.MouseDelta.y;
-    // }
-
-    // // Context menu (under default mouse threshold)
-    // ImVec2 drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
-    // if (opt_enable_context_menu && drag_delta.x == 0.0f && drag_delta.y == 0.0f)
-    //     ImGui::OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
-    // if (ImGui::BeginPopup("context"))
-    // {
-    //     if (adding_line)
-    //         points.resize(points.size() - 2);
-    //     adding_line = false;
-    //     if (ImGui::MenuItem("Remove one", NULL, false, points.Size > 0)) { points.resize(points.size() - 2); }
-    //     if (ImGui::MenuItem("Remove all", NULL, false, points.Size > 0)) { points.clear(); }
-    //     ImGui::EndPopup();
-    // }
-
-    // // Draw grid + all lines in the canvas
-    // draw_list->PushClipRect(canvas_p0, canvas_p1, true);
-    // if (opt_enable_grid)
-    // {
-    //     const float GRID_STEP = 64.0f;
-    //     for (float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
-    //         draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
-    //     for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
-    //         draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
-    // }
-    // for (int n = 0; n < points.Size; n += 2)
-    //     draw_list->AddLine(ImVec2(origin.x + points[n].x, origin.y + points[n].y), ImVec2(origin.x + points[n + 1].x, origin.y + points[n + 1].y), IM_COL32(255, 255, 0, 255), 2.0f);
-    // draw_list->PopClipRect();
+    draw_all_pieces(draw_list);
 
     ImGui::EndChild();
 }
@@ -219,7 +200,7 @@ void MuhleTester::play_mode_buttons() {
     }
 
     if (ImGui::Button("Reset Game")) {
-
+        reset_game();
     }
 }
 
@@ -233,6 +214,6 @@ void MuhleTester::test_mode_buttons() {
     }
 
     if (ImGui::Button("Reset")) {
-
+        reset_game();
     }
 }

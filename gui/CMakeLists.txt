@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 add_subdirectory(extern/glfw)
+add_subdirectory(extern/glm)
 
 add_library(imgui STATIC
     "extern/imgui/imgui.h"
