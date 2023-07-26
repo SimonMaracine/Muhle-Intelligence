@@ -12,7 +12,7 @@ struct MuhleTester : public gui_base::GuiApplication {
     virtual void start() override;
     virtual void update() override;
 
-    void draw_piece(ImDrawList* draw_list, float x, float y, PieceType type);
+    void draw_piece(ImDrawList* draw_list, float x, float y, Player type);
     void draw_all_pieces(ImDrawList* draw_list);
 
     void reset_game();
@@ -27,10 +27,12 @@ struct MuhleTester : public gui_base::GuiApplication {
     void play_mode_buttons();
     void test_mode_buttons();
 
+    void game_debug();
+
     enum class Mode {
         Play,
         Test
-    } mode {};
+    } mode = Mode::Play;
 
     enum class State {
         None,

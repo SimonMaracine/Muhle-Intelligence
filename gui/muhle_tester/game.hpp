@@ -13,24 +13,20 @@ enum class Player {
     Black
 };
 
-enum class PieceType {
-    White,
-    Black
-};
-
 enum class GamePhase {
     PlacePieces,
-    MovePieces
+    MovePieces,
+    GameOver
 };
 
 struct Piece {
-    glm::vec2 position;
+    glm::vec2 position {};
 
-    PieceType type {};
+    Player type {};
 };
 
 struct Node {
-    glm::vec2 position;
+    glm::vec2 position {};
 
     std::optional<Piece> piece;
 
@@ -52,11 +48,13 @@ struct Game {
 
     std::array<bool, 2> can_jump {};
 
+    bool must_take_piece = false;
+
     void setup();
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_click(glm::vec2 mouse_position);
 
-    void place_piece(PieceType type, Node& node);
+    void place_piece(Player type, Node& node);
     void move_piece(Node& node_src, Node& node_dest);
     void take_piece(Node& node);
 
@@ -67,5 +65,8 @@ struct Game {
 
     bool point_in_node(glm::vec2 mouse_position, const Node& node);
     void change_turn();
+    Player opponent(Player player);
     bool can_potentially_move(Node& node_src, Node& node_dest);
+    bool piece_in_mill(const Node& node, Player type);
+    unsigned int pieces_in_mills(Player type);
 };

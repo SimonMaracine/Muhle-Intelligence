@@ -33,6 +33,14 @@ static const int NODE_POSITIONS[24][2] = {
     { 7, 7 }
 };
 
+static const unsigned int MILLS_COUNT = 16;
+static const unsigned int MILLS[MILLS_COUNT][3] = {
+    { 0, 1, 2 }, { 2, 14, 23 }, { 21, 22, 23 }, { 0, 9, 21 },
+    { 3, 4, 5 }, { 5, 13, 20 }, { 18, 19, 20 }, { 3, 10, 18 },
+    { 6, 7, 8 }, { 8, 12, 17 }, { 15, 16, 17 }, { 6, 11, 15 },
+    { 1, 4, 7 }, { 12, 13, 14 }, { 16, 19, 22 }, { 9, 10, 11 }
+};
+
 void Game::setup() {
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = i;
@@ -61,7 +69,7 @@ void Game::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
         );
 
         if (nodes[i].piece.has_value()) {
-            nodes[i].piece.value().position = nodes[i].position;
+            nodes[i].piece->position = nodes[i].position;
         }
     }
 }
@@ -69,16 +77,30 @@ void Game::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
 void Game::user_click(glm::vec2 mouse_position) {
     switch (phase) {
         case GamePhase::PlacePieces:
-            check_place_piece(mouse_position);
+            if (must_take_piece) {
+                check_take_piece(mouse_position);
+            } else {
+                check_place_piece(mouse_position);
+            }
+
             break;
         case GamePhase::MovePieces:
-            check_select_piece(mouse_position);
-            check_move_piece(mouse_position);
+            if (must_take_piece) {
+                check_take_piece(mouse_position);
+            } else {
+                check_select_piece(mouse_position);
+                check_move_piece(mouse_position);
+            }
+
+            break;
+        case GamePhase::GameOver:
+            // Do nothing
+
             break;
     }
 }
 
-void Game::place_piece(PieceType type, Node& node) {
+void Game::place_piece(Player type, Node& node) {
     assert(node.piece == std::nullopt);
 
     Piece piece;
@@ -115,13 +137,20 @@ void Game::check_select_piece(glm::vec2 mouse_position) {
             continue;
         }
 
+        // This is the hovered node
+
         if (i == selected_piece_index) {
+            // Deselect
             selected_piece_index = INVALID_INDEX;
             break;
         }
 
         if (node.piece == std::nullopt) {
-            continue;
+            break;
+        }
+
+        if (node.piece->type != turn) {
+            break;
         }
 
         // Selecting a piece
@@ -140,20 +169,28 @@ void Game::check_place_piece(glm::vec2 mouse_position) {
             continue;
         }
 
+        // This is the hovered node
+
         if (node.piece != std::nullopt) {
-            continue;
+            break;
         }
 
         // Placing a piece
 
         if (turn == Player::White) {
-            place_piece(PieceType::White, node);
+            place_piece(Player::White, node);
             white_pieces_on_board++;
             white_pieces_outside--;
         } else {
-            place_piece(PieceType::Black, node);
+            place_piece(Player::Black, node);
             black_pieces_on_board++;
             black_pieces_outside--;
+        }
+
+        if (piece_in_mill(node, turn)) {
+            must_take_piece = true;
+            std::cout << "Must take piece\n";
+            break;
         }
 
         change_turn();
@@ -181,21 +218,30 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
             continue;
         }
 
+        // This is the hovered node
+
         if (node_dest.piece != std::nullopt) {
-            continue;
+            break;
         }
 
         if (!can_potentially_move(node_src, node_dest)) {
-            continue;
+            break;
         }
 
         // Moving a piece
 
+        // Just reset this
+        selected_piece_index = INVALID_INDEX;
+
         move_piece(node_src, node_dest);
 
-        change_turn();
+        if (piece_in_mill(node_dest, turn)) {
+            must_take_piece = true;
+            std::cout << "Must take piece\n";
+            break;
+        }
 
-        selected_piece_index = INVALID_INDEX;
+        change_turn();
 
         // TODO other
 
@@ -204,20 +250,64 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
 }
 
 void Game::check_take_piece(glm::vec2 mouse_position) {
+    assert(must_take_piece);
 
+    for (Node& node : nodes) {
+        if (!point_in_node(mouse_position, node)) {
+            continue;
+        }
+
+        // This is the hovered node
+
+        if (node.piece == std::nullopt) {
+            break;
+        }
+
+        // It must be opponent piece
+        if (node.piece->type == turn) {
+            break;
+        }
+
+        // If all piece in mill and not all pieces on the board are in mills
+        const Player player = opponent(turn);
+        unsigned int& player_pieces = (
+            player == Player::White ? white_pieces_on_board : black_pieces_on_board
+        );
+
+        if (piece_in_mill(node, player) && pieces_in_mills(player) != player_pieces) {
+            break;
+        }
+
+        // Taking a piece
+
+        take_piece(node);
+
+        change_turn();
+
+        player_pieces--;
+        must_take_piece = false;
+
+        // TODO other
+
+        break;
+    }
 }
 
 bool Game::point_in_node(glm::vec2 mouse_position, const Node& node) {
-    glm::vec2 sub = node.position - mouse_position;
+    const glm::vec2 sub = node.position - mouse_position;
 
     return glm::length(sub) < NODE_RADIUS;
 }
 
 void Game::change_turn() {
+    turn = opponent(turn);
+}
+
+Player Game::opponent(Player player) {
     if (turn == Player::White) {
-        turn = Player::Black;
+        return Player::Black;
     } else {
-        turn = Player::White;
+        return Player::White;
     }
 }
 
@@ -333,4 +423,54 @@ bool Game::can_potentially_move(Node& node_src, Node& node_dest) {
     }
 
     return false;
+}
+
+bool Game::piece_in_mill(const Node& node, Player type) {
+    assert(node.piece != std::nullopt);
+    assert(node.piece->type == type);
+
+    for (unsigned int i = 0; i < MILLS_COUNT; i++) {
+        const unsigned int* mill = MILLS[i];
+
+        if (node.index != mill[0] && node.index != mill[1] && node.index != mill[2]) {
+            continue;
+        }
+
+        const auto& piece0 = nodes[mill[0]].piece;
+        const auto& piece1 = nodes[mill[1]].piece;
+        const auto& piece2 = nodes[mill[2]].piece;
+
+        if (!piece0.has_value() || !piece1.has_value() || !piece2.has_value()) {
+            continue;
+        }
+
+        if (piece0->type != type || piece1->type != type || piece2->type != type) {
+            continue;
+        }
+
+        if (piece0->type == piece1->type && piece1->type == piece2->type) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+unsigned int Game::pieces_in_mills(Player type) {
+    unsigned int result = 0;
+
+    for (const Node& node : nodes) {
+        if (!node.piece.has_value()) {
+            continue;
+        }
+
+        if (node.piece->type != type) {
+            continue;
+        }
+
+        const bool in_mill = piece_in_mill(node, type);
+        result += static_cast<unsigned int>(in_mill);
+    }
+
+    return result;
 }

@@ -13,7 +13,7 @@ void MuhleTester::update() {
     main_menu_bar();
     main_window();
 
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     game.update_nodes_positions(board_unit, board_offset);
 
@@ -34,14 +34,14 @@ void MuhleTester::update() {
     }
 }
 
-void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, PieceType type) {
+void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player type) {
     ImColor color {};
 
     switch (type) {
-        case PieceType::White:
+        case Player::White:
             color = ImColor(255, 255, 255, 255);
             break;
-        case PieceType::Black:
+        case Player::Black:
             color = ImColor(0, 0, 0, 255);
             break;
     }
@@ -83,7 +83,7 @@ void MuhleTester::main_menu_bar() {
 
             }
             if (ImGui::MenuItem("Exit")) {
-
+                quit();
             }
 
             ImGui::EndMenu();
@@ -187,11 +187,13 @@ void MuhleTester::right_side() {
             break;
     }
 
+    game_debug();
+
     ImGui::EndChild();
 }
 
 void MuhleTester::bottom_side() {
-
+    game_debug();
 }
 
 void MuhleTester::play_mode_buttons() {
@@ -202,6 +204,8 @@ void MuhleTester::play_mode_buttons() {
     if (ImGui::Button("Reset Game")) {
         reset_game();
     }
+
+    ImGui::Separator();
 }
 
 void MuhleTester::test_mode_buttons() {
@@ -216,4 +220,22 @@ void MuhleTester::test_mode_buttons() {
     if (ImGui::Button("Reset")) {
         reset_game();
     }
+
+    ImGui::Separator();
+}
+
+void MuhleTester::game_debug() {
+    ImGui::BeginChild("Game debug");
+
+    ImGui::Text("White pieces on board: %u", game.white_pieces_on_board);
+    ImGui::Text("Black pieces on board: %u", game.black_pieces_on_board);
+    ImGui::Text("White pieces outside: %u", game.white_pieces_outside);
+    ImGui::Text("Black pieces outside: %u", game.black_pieces_outside);
+    ImGui::Text("Turn: %d", game.turn);
+    ImGui::Text("Phase: %d", game.phase);
+    ImGui::Text("Selected piece: %d", game.selected_piece_index);
+    ImGui::Text("Can jump: %d, %d", game.can_jump[0], game.can_jump[1]);
+    ImGui::Text("Must take piece: %d", game.must_take_piece);
+
+    ImGui::EndChild();
 }
