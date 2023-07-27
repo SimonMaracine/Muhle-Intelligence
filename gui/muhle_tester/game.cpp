@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include <algorithm>
+#include <cstddef>
 
 #include <glm/glm.hpp>
 
@@ -45,20 +46,6 @@ void Game::setup() {
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = i;
     }
-
-    // Piece piece1;
-    // piece1.type = PieceType::Black;
-    // piece1.position.x = nodes[0].position.x;
-    // piece1.position.y = nodes[0].position.y;
-
-    // nodes[0].piece = piece1;
-
-    // Piece piece2;
-    // piece2.type = PieceType::White;
-    // piece2.position.x = nodes[1].position.x;
-    // piece2.position.y = nodes[1].position.y;
-
-    // nodes[1].piece = piece2;
 }
 
 void Game::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
@@ -187,6 +174,7 @@ void Game::check_place_piece(glm::vec2 mouse_position) {
             black_pieces_outside--;
         }
 
+        // Check for mills
         if (piece_in_mill(node, turn)) {
             must_take_piece = true;
             std::cout << "Must take piece\n";
@@ -194,6 +182,12 @@ void Game::check_place_piece(glm::vec2 mouse_position) {
         }
 
         change_turn();
+
+        // Check game over; only by blocking
+        if (player_has_no_legal_moves(turn)) {
+            game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+            break;
+        }
 
         if (white_pieces_outside + black_pieces_outside == 0) {
             phase = GamePhase::MovePieces;
@@ -235,6 +229,7 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
 
         move_piece(node_src, node_dest);
 
+        // Check for mills
         if (piece_in_mill(node_dest, turn)) {
             must_take_piece = true;
             std::cout << "Must take piece\n";
@@ -242,6 +237,12 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
         }
 
         change_turn();
+
+        // Check game over; only by blocking
+        if (player_has_no_legal_moves(turn)) {
+            game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+            break;
+        }
 
         // TODO other
 
@@ -268,7 +269,7 @@ void Game::check_take_piece(glm::vec2 mouse_position) {
             break;
         }
 
-        // If all piece in mill and not all pieces on the board are in mills
+        // If a piece in mill and not all pieces on the board are in mills
         const Player player = opponent(turn);
         unsigned int& player_pieces = (
             player == Player::White ? white_pieces_on_board : black_pieces_on_board
@@ -282,10 +283,21 @@ void Game::check_take_piece(glm::vec2 mouse_position) {
 
         take_piece(node);
 
-        change_turn();
-
         player_pieces--;
         must_take_piece = false;
+
+        change_turn();
+
+        // Check jumping
+        if (player_has_three_pieces(turn)) {
+            can_jump[static_cast<size_t>(turn)] = true;
+        }
+
+        // Check game over
+        if (player_has_two_pieces(turn) || player_has_no_legal_moves(turn)) {
+            game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+            break;
+        }
 
         // TODO other
 
@@ -315,7 +327,7 @@ bool Game::can_potentially_move(Node& node_src, Node& node_dest) {
     assert(node_src.piece != std::nullopt);
     assert(node_dest.piece == std::nullopt);
 
-    if (can_jump[static_cast<int>(turn)]) {
+    if (can_jump[static_cast<size_t>(turn)]) {
         return true;
     }
 
@@ -473,4 +485,251 @@ unsigned int Game::pieces_in_mills(Player type) {
     }
 
     return result;
+}
+
+bool Game::player_has_two_pieces(Player type) {
+    if (type == Player::White) {
+        return white_pieces_on_board + white_pieces_outside == 2;
+    } else {
+        return black_pieces_on_board + black_pieces_outside == 2;
+    }
+}
+
+bool Game::player_has_three_pieces(Player type) {
+    if (type == Player::White) {
+        return white_pieces_on_board + white_pieces_outside == 3;
+    } else {
+        return black_pieces_on_board + black_pieces_outside == 3;
+    }
+}
+
+bool Game::player_has_no_legal_moves(Player type) {
+    if (can_jump[static_cast<size_t>(type)]) {
+        return false;
+    }
+
+    // If phase is not two
+    if (white_pieces_outside > 0 || black_pieces_outside > 0) {
+        return false;
+    }
+
+    for (const Node& node : nodes) {
+        if (node.piece == std::nullopt) {
+            continue;
+        }
+
+        if (node.piece->type != type) {
+            continue;
+        }
+
+        const Piece& piece = node.piece.value();
+
+        switch (node.index) {
+            case 0: {
+                const Node& node1 = nodes[1];
+                const Node& node2 = nodes[9];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt) {
+                    return false;
+                }
+                break;
+            }
+            case 1: {
+                const Node& node1 = nodes[0];
+                const Node& node2 = nodes[2];
+                const Node& node3 = nodes[4];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 2: {
+                const Node& node1 = nodes[1];
+                const Node& node2 = nodes[14];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 3: {
+                const Node& node1 = nodes[4];
+                const Node& node2 = nodes[10];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 4: {
+                const Node& node1 = nodes[1];
+                const Node& node2 = nodes[3];
+                const Node& node3 = nodes[5];
+                const Node& node4 = nodes[7];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt || node4.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 5: {
+                const Node& node1 = nodes[4];
+                const Node& node2 = nodes[13];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 6: {
+                const Node& node1 = nodes[7];
+                const Node& node2 = nodes[11];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 7: {
+                const Node& node1 = nodes[4];
+                const Node& node2 = nodes[6];
+                const Node& node3 = nodes[8];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 8: {
+                const Node& node1 = nodes[7];
+                const Node& node2 = nodes[12];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 9: {
+                const Node& node1 = nodes[0];
+                const Node& node2 = nodes[10];
+                const Node& node3 = nodes[21];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 10: {
+                const Node& node1 = nodes[3];
+                const Node& node2 = nodes[9];
+                const Node& node3 = nodes[11];
+                const Node& node4 = nodes[18];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt || node4.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 11: {
+                const Node& node1 = nodes[6];
+                const Node& node2 = nodes[10];
+                const Node& node3 = nodes[15];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 12: {
+                const Node& node1 = nodes[8];
+                const Node& node2 = nodes[13];
+                const Node& node3 = nodes[17];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 13: {
+                const Node& node1 = nodes[5];
+                const Node& node2 = nodes[12];
+                const Node& node3 = nodes[14];
+                const Node& node4 = nodes[20];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt || node4.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 14: {
+                const Node& node1 = nodes[2];
+                const Node& node2 = nodes[13];
+                const Node& node3 = nodes[23];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 15: {
+                const Node& node1 = nodes[11];
+                const Node& node2 = nodes[16];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 16: {
+                const Node& node1 = nodes[15];
+                const Node& node2 = nodes[17];
+                const Node& node3 = nodes[19];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 17: {
+                const Node& node1 = nodes[12];
+                const Node& node2 = nodes[16];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 18: {
+                const Node& node1 = nodes[10];
+                const Node& node2 = nodes[19];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 19: {
+                const Node& node1 = nodes[16];
+                const Node& node2 = nodes[18];
+                const Node& node3 = nodes[20];
+                const Node& node4 = nodes[22];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt || node4.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 20: {
+                const Node& node1 = nodes[13];
+                const Node& node2 = nodes[19];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 21: {
+                const Node& node1 = nodes[9];
+                const Node& node2 = nodes[22];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 22: {
+                const Node& node1 = nodes[19];
+                const Node& node2 = nodes[21];
+                const Node& node3 = nodes[23];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt
+                        || node3.piece == std::nullopt)
+                    return false;
+                break;
+            }
+            case 23: {
+                const Node& node1 = nodes[14];
+                const Node& node2 = nodes[22];
+                if (node1.piece == std::nullopt || node2.piece == std::nullopt)
+                    return false;
+                break;
+            }
+        }
+    }
+
+    return true;
+}
+
+void Game::game_over(Ending ending) {
+    phase = GamePhase::GameOver;
+    this->ending = ending;
+    std::cout << "Game over: " << static_cast<int>(ending) << '\n';
 }

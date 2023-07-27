@@ -228,11 +228,12 @@ void MuhleTester::game_debug() {
     ImGui::BeginChild("Game debug");
 
     ImGui::Text("White pieces on board: %u", game.white_pieces_on_board);
-    ImGui::Text("Black pieces on board: %u", game.black_pieces_on_board);
     ImGui::Text("White pieces outside: %u", game.white_pieces_outside);
+    ImGui::Text("Black pieces on board: %u", game.black_pieces_on_board);
     ImGui::Text("Black pieces outside: %u", game.black_pieces_outside);
     ImGui::Text("Turn: %d", game.turn);
     ImGui::Text("Phase: %d", game.phase);
+    ImGui::Text("Ending: %d", game.ending);
     ImGui::Text("Selected piece: %d", game.selected_piece_index);
     ImGui::Text("Can jump: %d, %d", game.can_jump[0], game.can_jump[1]);
     ImGui::Text("Must take piece: %d", game.must_take_piece);

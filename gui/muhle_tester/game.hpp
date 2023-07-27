@@ -14,9 +14,16 @@ enum class Player {
 };
 
 enum class GamePhase {
-    PlacePieces,
+    PlacePieces = 1,
     MovePieces,
     GameOver
+};
+
+enum class Ending {
+    None,
+    WinnerWhite,
+    WinnerBlack,
+    TieBetweenBothPlayers
 };
 
 struct Piece {
@@ -41,6 +48,7 @@ struct Game {
 
     Player turn = Player::White;
     GamePhase phase = GamePhase::PlacePieces;
+    Ending ending = Ending::None;
 
     std::array<Node, 24> nodes {};
 
@@ -69,4 +77,8 @@ struct Game {
     bool can_potentially_move(Node& node_src, Node& node_dest);
     bool piece_in_mill(const Node& node, Player type);
     unsigned int pieces_in_mills(Player type);
+    bool player_has_two_pieces(Player type);
+    bool player_has_three_pieces(Player type);
+    bool player_has_no_legal_moves(Player type);
+    void game_over(Ending ending);
 };
