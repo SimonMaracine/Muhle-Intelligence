@@ -34,10 +34,10 @@ void MuhleTester::update() {
     }
 }
 
-void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player type) {
+void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player player) {
     ImColor color {};
 
-    switch (type) {
+    switch (player) {
         case Player::White:
             color = ImColor(255, 255, 255, 255);
             break;
@@ -57,7 +57,7 @@ void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
 
         const Piece& piece = node.piece.value();
 
-        draw_piece(draw_list, piece.position.x, piece.position.y, piece.type);
+        draw_piece(draw_list, piece.position.x, piece.position.y, piece.player);
     }
 
     if (game.selected_piece_index != INVALID_INDEX) {
@@ -231,12 +231,13 @@ void MuhleTester::game_debug() {
     ImGui::Text("White pieces outside: %u", game.white_pieces_outside);
     ImGui::Text("Black pieces on board: %u", game.black_pieces_on_board);
     ImGui::Text("Black pieces outside: %u", game.black_pieces_outside);
-    ImGui::Text("Turn: %d", game.turn);
+    ImGui::Text("Turn: %s", game.turn == Player::White ? "white" : "black");
     ImGui::Text("Phase: %d", game.phase);
     ImGui::Text("Ending: %d", game.ending);
     ImGui::Text("Selected piece: %d", game.selected_piece_index);
-    ImGui::Text("Can jump: %d, %d", game.can_jump[0], game.can_jump[1]);
+    ImGui::Text("Can jump: white %d, black %d", game.can_jump[0], game.can_jump[1]);
     ImGui::Text("Must take piece: %d", game.must_take_piece);
+    ImGui::Text("Plies without mills: %u", game.plies_without_mills);
 
     ImGui::EndChild();
 }

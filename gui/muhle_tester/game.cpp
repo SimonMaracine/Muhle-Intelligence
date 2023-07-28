@@ -87,11 +87,11 @@ void Game::user_click(glm::vec2 mouse_position) {
     }
 }
 
-void Game::place_piece(Player type, Node& node) {
+void Game::place_piece(Player player, Node& node) {
     assert(node.piece == std::nullopt);
 
     Piece piece;
-    piece.type = type;
+    piece.player = player;
     piece.position = node.position;
 
     node.piece = std::make_optional(piece);
@@ -136,7 +136,7 @@ void Game::check_select_piece(glm::vec2 mouse_position) {
             break;
         }
 
-        if (node.piece->type != turn) {
+        if (node.piece->player != turn) {
             break;
         }
 
@@ -181,7 +181,10 @@ void Game::check_place_piece(glm::vec2 mouse_position) {
             break;
         }
 
-        change_turn();
+        if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
+            game_over(Ending::TieBetweenBothPlayers);
+            break;
+        }
 
         // Check game over; only by blocking
         if (player_has_no_legal_moves(turn)) {
@@ -192,9 +195,10 @@ void Game::check_place_piece(glm::vec2 mouse_position) {
         if (white_pieces_outside + black_pieces_outside == 0) {
             phase = GamePhase::MovePieces;
             std::cout << "Phase two\n";
-        }
 
-        // TODO other
+            // Remember this position; now threefold repetition rule can apply
+            threefold_repetition();
+        }
 
         break;
     }
@@ -236,15 +240,22 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
             break;
         }
 
-        change_turn();
+        if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
+            game_over(Ending::TieBetweenBothPlayers);
+            break;
+        }
 
-        // Check game over; only by blocking
+        // Check game over by repetition
+        if (threefold_repetition()) {
+            game_over(Ending::TieBetweenBothPlayers);
+            break;
+        }
+
+        // Check game over by blocking
         if (player_has_no_legal_moves(turn)) {
             game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
             break;
         }
-
-        // TODO other
 
         break;
     }
@@ -265,7 +276,7 @@ void Game::check_take_piece(glm::vec2 mouse_position) {
         }
 
         // It must be opponent piece
-        if (node.piece->type == turn) {
+        if (node.piece->player == turn) {
             break;
         }
 
@@ -286,7 +297,13 @@ void Game::check_take_piece(glm::vec2 mouse_position) {
         player_pieces--;
         must_take_piece = false;
 
-        change_turn();
+        if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
+            game_over(Ending::TieBetweenBothPlayers);
+            break;
+        }
+
+        // Must reset counter here
+        plies_without_mills = 0;
 
         // Check jumping
         if (player_has_three_pieces(turn)) {
@@ -299,7 +316,8 @@ void Game::check_take_piece(glm::vec2 mouse_position) {
             break;
         }
 
-        // TODO other
+        // Previous positions can occur no more
+        clear_repetition();
 
         break;
     }
@@ -311,8 +329,12 @@ bool Game::point_in_node(glm::vec2 mouse_position, const Node& node) {
     return glm::length(sub) < NODE_RADIUS;
 }
 
-void Game::change_turn() {
+unsigned int Game::change_turn() {
     turn = opponent(turn);
+
+    plies_without_mills++;
+
+    return plies_without_mills;
 }
 
 Player Game::opponent(Player player) {
@@ -437,9 +459,9 @@ bool Game::can_potentially_move(Node& node_src, Node& node_dest) {
     return false;
 }
 
-bool Game::piece_in_mill(const Node& node, Player type) {
+bool Game::piece_in_mill(const Node& node, Player player) {
     assert(node.piece != std::nullopt);
-    assert(node.piece->type == type);
+    assert(node.piece->player == player);
 
     for (unsigned int i = 0; i < MILLS_COUNT; i++) {
         const unsigned int* mill = MILLS[i];
@@ -456,11 +478,11 @@ bool Game::piece_in_mill(const Node& node, Player type) {
             continue;
         }
 
-        if (piece0->type != type || piece1->type != type || piece2->type != type) {
+        if (piece0->player != player || piece1->player != player || piece2->player != player) {
             continue;
         }
 
-        if (piece0->type == piece1->type && piece1->type == piece2->type) {
+        if (piece0->player == piece1->player && piece1->player == piece2->player) {
             return true;
         }
     }
@@ -468,7 +490,7 @@ bool Game::piece_in_mill(const Node& node, Player type) {
     return false;
 }
 
-unsigned int Game::pieces_in_mills(Player type) {
+unsigned int Game::pieces_in_mills(Player player) {
     unsigned int result = 0;
 
     for (const Node& node : nodes) {
@@ -476,35 +498,35 @@ unsigned int Game::pieces_in_mills(Player type) {
             continue;
         }
 
-        if (node.piece->type != type) {
+        if (node.piece->player != player) {
             continue;
         }
 
-        const bool in_mill = piece_in_mill(node, type);
+        const bool in_mill = piece_in_mill(node, player);
         result += static_cast<unsigned int>(in_mill);
     }
 
     return result;
 }
 
-bool Game::player_has_two_pieces(Player type) {
-    if (type == Player::White) {
+bool Game::player_has_two_pieces(Player player) {
+    if (player == Player::White) {
         return white_pieces_on_board + white_pieces_outside == 2;
     } else {
         return black_pieces_on_board + black_pieces_outside == 2;
     }
 }
 
-bool Game::player_has_three_pieces(Player type) {
-    if (type == Player::White) {
+bool Game::player_has_three_pieces(Player player) {
+    if (player == Player::White) {
         return white_pieces_on_board + white_pieces_outside == 3;
     } else {
         return black_pieces_on_board + black_pieces_outside == 3;
     }
 }
 
-bool Game::player_has_no_legal_moves(Player type) {
-    if (can_jump[static_cast<size_t>(type)]) {
+bool Game::player_has_no_legal_moves(Player player) {
+    if (can_jump[static_cast<size_t>(player)]) {
         return false;
     }
 
@@ -518,7 +540,7 @@ bool Game::player_has_no_legal_moves(Player type) {
             continue;
         }
 
-        if (node.piece->type != type) {
+        if (node.piece->player != player) {
             continue;
         }
 
@@ -732,4 +754,47 @@ void Game::game_over(Ending ending) {
     phase = GamePhase::GameOver;
     this->ending = ending;
     std::cout << "Game over: " << static_cast<int>(ending) << '\n';
+}
+
+bool Game::threefold_repetition() {
+    ThreefoldRepetition::Position current;
+
+    for (size_t i = 0; i < nodes.size(); i++) {
+        if (nodes[i].piece.has_value()) {
+            current.nodes[i] = (
+                nodes[i].piece->player == Player::White
+                ?
+                ThreefoldRepetition::Node::White
+                :
+                ThreefoldRepetition::Node::Black
+            );
+        } else {
+            current.nodes[i] = ThreefoldRepetition::Node::Empty;
+        }
+    }
+
+    for (const ThreefoldRepetition::Position& position : repetition.twos) {
+        if (position == current) {
+            std::cout << "Threefold repetition\n";
+            return true;
+        }
+    }
+
+    for (const ThreefoldRepetition::Position& position : repetition.ones) {
+        if (position == current) {
+            repetition.ones.remove(current);
+            repetition.twos.push_front(current);
+
+            return false;
+        }
+    }
+
+    repetition.ones.push_front(current);
+
+    return false;
+}
+
+void Game::clear_repetition() {
+    repetition.ones.clear();
+    repetition.twos.clear();
 }
