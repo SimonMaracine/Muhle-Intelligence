@@ -6,7 +6,9 @@
 #include "muhle_tester.hpp"
 
 void MuhleTester::start() {
-    game.setup();
+    game.setup([this]() {
+        this->change_turn();
+    });
 }
 
 void MuhleTester::update() {
@@ -19,17 +21,19 @@ void MuhleTester::update() {
 
     switch (state) {
         case State::None:
-            state = State::HumanPlacePiece;
+            state = State::HumanTurn;
 
             break;
-        case State::HumanPlacePiece:
+        case State::HumanTurn:
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                 const ImVec2 position = ImGui::GetMousePos();
                 game.user_click(glm::vec2(position.x, position.y));
             }
 
             break;
-        case State::ComputerPlacePiece:
+        case State::ComputerTurn:
+            // muhle_intelligence()
+
             break;
     }
 }
@@ -62,7 +66,13 @@ void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
 
     if (game.selected_piece_index != INVALID_INDEX) {
         const Piece& piece = game.nodes[game.selected_piece_index].piece.value();
-        draw_list->AddCircle(ImVec2(piece.position.x, piece.position.y), NODE_RADIUS + 1.0f, ImColor(255, 30, 30, 255), 0, 2.0f);
+        draw_list->AddCircle(
+            ImVec2(piece.position.x, piece.position.y),
+            NODE_RADIUS + 1.0f,
+            ImColor(255, 30, 30, 255),
+            0,
+            2.0f
+        );
     }
 }
 
@@ -70,7 +80,24 @@ void MuhleTester::reset_game() {
     // TODO stop everything
 
     game = {};
-    game.setup();
+    game.setup([this]() {
+        this->change_turn();
+    });
+
+    state = State::None;
+}
+
+void MuhleTester::change_turn() {
+    switch (state) {
+        case State::HumanTurn:
+            state = State::ComputerTurn;
+            break;
+        case State::ComputerTurn:
+            state = State::HumanTurn;
+            break;
+        default:
+            break;
+    }
 }
 
 void MuhleTester::main_menu_bar() {
@@ -201,7 +228,7 @@ void MuhleTester::play_mode_buttons() {
 
     }
 
-    if (ImGui::Button("Reset Game")) {
+    if (ImGui::Button("Reset")) {
         reset_game();
     }
 

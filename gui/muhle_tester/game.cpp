@@ -42,10 +42,12 @@ static const unsigned int MILLS[MILLS_COUNT][3] = {
     { 1, 4, 7 }, { 12, 13, 14 }, { 16, 19, 22 }, { 9, 10, 11 }
 };
 
-void Game::setup() {
+void Game::setup(ChangedTurn changed_turn) {
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = i;
     }
+
+    this->changed_turn = changed_turn;
 }
 
 void Game::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
@@ -331,6 +333,8 @@ bool Game::point_in_node(glm::vec2 mouse_position, const Node& node) {
 
 unsigned int Game::change_turn() {
     turn = opponent(turn);
+
+    changed_turn();
 
     plies_without_mills++;
 

@@ -3,6 +3,7 @@
 #include <optional>
 #include <array>
 #include <forward_list>
+#include <functional>
 
 #include <glm/glm.hpp>
 
@@ -84,7 +85,10 @@ struct Game {
 
     ThreefoldRepetition repetition;
 
-    void setup();
+    using ChangedTurn = std::function<void()>;
+    ChangedTurn changed_turn;
+
+    void setup(ChangedTurn changed_turn);
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_click(glm::vec2 mouse_position);
 

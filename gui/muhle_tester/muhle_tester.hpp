@@ -16,6 +16,7 @@ struct MuhleTester : public gui_base::GuiApplication {
     void draw_all_pieces(ImDrawList* draw_list);
 
     void reset_game();
+    void change_turn();
 
     void main_menu_bar();
     void main_window();
@@ -36,8 +37,8 @@ struct MuhleTester : public gui_base::GuiApplication {
 
     enum class State {
         None,
-        HumanPlacePiece,
-        ComputerPlacePiece
+        HumanTurn,
+        ComputerTurn
     } state = State::None;
 
     Game game;
