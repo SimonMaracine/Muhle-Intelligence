@@ -92,9 +92,9 @@ struct Game {
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_click(glm::vec2 mouse_position);
 
-    void place_piece(Player player, Node& node);
-    void move_piece(Node& node_src, Node& node_dest);
-    void take_piece(Node& node);
+    void place_piece(Player player, int node_index);
+    void move_piece(int node_source_index, int node_destination_index);
+    void take_piece(int node_index);
 
     void check_select_piece(glm::vec2 mouse_position);
     void check_place_piece(glm::vec2 mouse_position);
@@ -113,4 +113,5 @@ struct Game {
     void game_over(Ending ending);
     bool threefold_repetition();
     void clear_repetition();
+    std::array<int, 24> get_position();
 };

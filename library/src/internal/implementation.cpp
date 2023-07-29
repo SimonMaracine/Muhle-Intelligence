@@ -34,10 +34,13 @@ namespace muhle {
     }
 
     void MuhleImpl::search(const Position& position, Player player, Result& result) {
+        result = {};
+
         thread = std::thread([&]() {
             SearchCtx search;
             search.setup(parameters);
-            search.search(position, player, result);
+            search.figure_out_position(position);
+            search.search(player, result);
         });
     }
 
@@ -55,7 +58,22 @@ namespace muhle {
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
-    void SearchCtx::search(Position position, Player player, Result& result) {
+    void SearchCtx::figure_out_position(Position position) {
+        this->position = position.pieces;
+
+        for (int i = 0; i < NODES; i++) {
+            if (this->position[i] == Piece::White) {
+                white_pieces_on_board++;
+            } else if (this->position[i] == Piece::Black) {
+                black_pieces_on_board++;
+            }
+        }
+
+        white_pieces_outside = 9 - white_pieces_on_board;
+        black_pieces_outside = 9 - black_pieces_on_board;
+    }
+
+    void SearchCtx::search(Player player, Result& result) {
         auto start = std::chrono::high_resolution_clock::now();
         evaluation = minimax(parameters.DEPTH, 0, MIN_EVALUATION, MAX_EVALUATION, player);
         auto end = std::chrono::high_resolution_clock::now();
@@ -159,7 +177,7 @@ namespace muhle {
             return moves;
         }
 
-        if (plies_until_this_position < 18) {  // Phase 1
+        if (white_pieces_outside + black_pieces_outside > 0) {  // Phase 1
             get_moves_phase1(piece, moves);
         } else {  // Phase 2
             get_moves_phase2(piece, moves);

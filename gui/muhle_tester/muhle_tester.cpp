@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include <gui_base.hpp>
+#include <just_dl/just_dl.hpp>
 
 #include "muhle_tester.hpp"
 
@@ -14,6 +15,8 @@ void MuhleTester::start() {
 void MuhleTester::update() {
     main_menu_bar();
     main_window();
+
+    load_library_modal();
 
     // ImGui::ShowDemoWindow();
 
@@ -32,10 +35,58 @@ void MuhleTester::update() {
 
             break;
         case State::ComputerTurn:
-            // muhle_intelligence()
+            if (muhle_result.done) {
+                switch (muhle_result.result.type) {
+                    case muhle::MoveType::Place:
+                        game.place_piece(Player::Black, muhle_result.result.place.node_index);
+                        break;
+                    case muhle::MoveType::Move:
+                        game.move_piece(
+                            muhle_result.result.move.node_source_index,
+                            muhle_result.result.move.node_destination_index
+                        );
+                        break;
+                    case muhle::MoveType::PlaceTake:
+                        game.place_piece(Player::Black, muhle_result.result.place_take.node_index);
+                        game.take_piece(muhle_result.result.place_take.node_take_index);
+                        break;
+                    case muhle::MoveType::MoveTake:
+                        game.move_piece(
+                            muhle_result.result.move_take.node_source_index,
+                            muhle_result.result.move_take.node_destination_index
+                        );
+                        game.take_piece(muhle_result.result.move_take.node_take_index);
+                        break;
+                }
+
+                muhle->join_thread();
+
+                state = State::ComputerEnd;
+            }
+
+            break;
+        case State::ComputerBegin: {
+            const auto game_position = game.get_position();
+
+            muhle::Position position;
+            for (size_t i = 0; i < game_position.size(); i++) {
+                position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
+            }
+            muhle->search(position, muhle::Player::Black, muhle_result);
+
+            state = State::ComputerTurn;
+
+            break;
+        }
+        case State::ComputerEnd:
+            state = State::HumanTurn;
 
             break;
     }
+}
+
+void MuhleTester::dispose() {
+    unload_library();
 }
 
 void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player player) {
@@ -90,9 +141,9 @@ void MuhleTester::reset_game() {
 void MuhleTester::change_turn() {
     switch (state) {
         case State::HumanTurn:
-            state = State::ComputerTurn;
+            state = State::ComputerBegin;
             break;
-        case State::ComputerTurn:
+        case State::ComputerEnd:
             state = State::HumanTurn;
             break;
         default:
@@ -100,9 +151,71 @@ void MuhleTester::change_turn() {
     }
 }
 
+void MuhleTester::load_library(const char* buffer) {
+    if (*buffer == '\0') {
+        std::cout << "No input\n";
+        return;
+    }
+
+    unload_library();
+
+    just_dl::Error err;
+
+    library_handle = just_dl::open_library(buffer, 0, err);
+
+    if (err) {
+        std::cout << "Could not open library: " << err.message() << '\n';
+        return;
+    }
+
+    muhle_intelligence_create = reinterpret_cast<LibraryCreate>(
+        just_dl::load_function(library_handle, "muhle_intelligence_create", err)
+    );
+
+    muhle_intelligence_destroy = reinterpret_cast<LibraryDestroy>(
+        just_dl::load_function(library_handle, "muhle_intelligence_destroy", err)
+    );
+
+    muhle_intelligence_name = reinterpret_cast<LibraryName>(
+        just_dl::load_function(library_handle, "muhle_intelligence_name", err)
+    );
+
+    if (err) {
+        std::cout << "Could not load functions: " << err.message() << '\n';
+        return;
+    }
+
+    muhle = muhle_intelligence_create();
+    muhle->initialize();
+
+    std::cout << "Successfully loaded library `" << buffer << "`, named `" << muhle_intelligence_name() << "`\n";
+}
+
+void MuhleTester::unload_library() {
+    if (library_handle == nullptr) {
+        return;
+    }
+
+    muhle_intelligence_destroy(muhle);
+
+    just_dl::Error err;
+
+    just_dl::close_library(library_handle, err);
+
+    if (err) {
+        std::cout << err.message() << '\n';
+        return;
+    }
+
+    std::cout << "Successfully unloaded library\n";
+}
+
 void MuhleTester::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Load AI")) {
+                show_load_library = true;
+            }
             if (ImGui::MenuItem("Import")) {
 
             }
@@ -158,6 +271,31 @@ void MuhleTester::main_window() {
     }
 
     ImGui::PopStyleVar(2);
+}
+
+void MuhleTester::load_library_modal() {
+    if (show_load_library) {
+        ImGui::OpenPopup("Load Library");
+        show_load_library = false;
+    }
+
+    if (ImGui::BeginPopupModal("Load Library", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        static char buffer[128] {};
+        ImGui::InputText("File Path", buffer, 128);
+
+        if (ImGui::Button("Load")) {
+            load_library(buffer);
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
 }
 
 void MuhleTester::board_canvas() {

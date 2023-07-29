@@ -9,4 +9,8 @@ extern "C" {
     void muhle_intelligence_destroy(muhle::MuhleIntelligence* instance) {
         delete instance;
     }
+
+    const char* muhle_intelligence_name() {
+        return "old";
+    }
 }

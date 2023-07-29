@@ -23,7 +23,8 @@ namespace muhle {
     class SearchCtx {
     public:
         void setup(const std::unordered_map<std::string, int>& parameters);
-        void search(Position position, Player player, Result& result);
+        void figure_out_position(Position position);
+        void search(Player player, Result& result);
     private:
         int minimax(unsigned int depth, unsigned int turns_from_root, int alpha, int beta, Player player);
 
@@ -55,7 +56,6 @@ namespace muhle {
         unsigned int total_number_of_pieces(Piece piece);
 
         std::array<Piece, NODES> position {};
-        unsigned int plies_until_this_position = 0;
         unsigned int white_pieces_on_board = 0;
         unsigned int white_pieces_outside = 0;
         unsigned int black_pieces_on_board = 0;

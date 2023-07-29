@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-option(MUHLE_SHARED_LIBRARY "Build the AI library as static or dynamic" OFF)
+option(MUHLE_SHARED_LIBRARY "Build the AI library as static or as dynamic" OFF)
 option(MUHLE_BUILD_GUI "Build the GUI components" ON)
 
 project("Muhle-Intelligence" LANGUAGES C CXX)

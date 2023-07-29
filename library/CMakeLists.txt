@@ -10,11 +10,16 @@ set(SOURCES
 
 if(MUHLE_SHARED_LIBRARY)
     add_library(muhle_intelligence SHARED ${SOURCES})
+    add_library(muhle_intelligence_api INTERFACE)
 else()
     add_library(muhle_intelligence STATIC ${SOURCES})
 endif()
 
 target_include_directories(muhle_intelligence PUBLIC "include")
+
+if(MUHLE_SHARED_LIBRARY)
+    target_include_directories(muhle_intelligence_api INTERFACE "include")
+endif()
 
 target_compile_features(muhle_intelligence PRIVATE cxx_std_17)
 set_target_properties(muhle_intelligence PROPERTIES CXX_EXTENSIONS OFF)

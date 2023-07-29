@@ -2,6 +2,7 @@
 #include <cassert>
 #include <algorithm>
 #include <cstddef>
+#include <array>
 
 #include <glm/glm.hpp>
 
@@ -89,33 +90,132 @@ void Game::user_click(glm::vec2 mouse_position) {
     }
 }
 
-void Game::place_piece(Player player, Node& node) {
+void Game::place_piece(Player player, int node_index) {
+    Node& node = nodes[node_index];
+
     assert(node.piece == std::nullopt);
 
-    Piece piece;
-    piece.player = player;
-    piece.position = node.position;
+    if (turn == Player::White) {
+        Piece piece;
+        piece.player = Player::White;
+        piece.position = node.position;
+        node.piece = std::make_optional(piece);
 
-    node.piece = std::make_optional(piece);
+        white_pieces_on_board++;
+        white_pieces_outside--;
+    } else {
+        Piece piece;
+        piece.player = Player::Black;
+        piece.position = node.position;
+        node.piece = std::make_optional(piece);
+
+        black_pieces_on_board++;
+        black_pieces_outside--;
+    }
 
     std::cout << "Placed piece\n";
+
+    // Check for mills
+    if (piece_in_mill(node, turn)) {
+        must_take_piece = true;
+        std::cout << "Must take piece\n";
+        return;
+    }
+
+    if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
+        game_over(Ending::TieBetweenBothPlayers);
+        return;
+    }
+
+    // Check game over; only by blocking
+    if (player_has_no_legal_moves(turn)) {
+        game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+        return;
+    }
+
+    if (white_pieces_outside + black_pieces_outside == 0) {
+        phase = GamePhase::MovePieces;
+        std::cout << "Phase two\n";
+
+        // Remember this position; now threefold repetition rule can apply
+        threefold_repetition();
+    }
 }
 
-void Game::move_piece(Node& node_src, Node& node_dest) {
+void Game::move_piece(int node_source_index, int node_destination_index) {
+    Node& node_src = nodes[node_source_index];
+    Node& node_dest = nodes[node_destination_index];
+
     assert(node_src.piece != std::nullopt);
     assert(node_dest.piece == std::nullopt);
 
     std::swap(node_src.piece, node_dest.piece);
 
     std::cout << "Moved piece\n";
+
+    // Check for mills
+    if (piece_in_mill(node_dest, turn)) {
+        must_take_piece = true;
+        std::cout << "Must take piece\n";
+        return;
+    }
+
+    if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
+        game_over(Ending::TieBetweenBothPlayers);
+        return;
+    }
+
+    // Check game over by repetition
+    if (threefold_repetition()) {
+        game_over(Ending::TieBetweenBothPlayers);
+        return;
+    }
+
+    // Check game over by blocking
+    if (player_has_no_legal_moves(turn)) {
+        game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+        return;
+    }
 }
 
-void Game::take_piece(Node& node) {
+void Game::take_piece(int node_index) {
+    Node& node = nodes[node_index];
+
     assert(node.piece != std::nullopt);
 
     node.piece = std::nullopt;
 
     std::cout << "Took piece\n";
+
+    if (turn == Player::White) {
+        black_pieces_on_board--;
+    } else  {
+        white_pieces_on_board--;
+    }
+
+    must_take_piece = false;
+
+    if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
+        game_over(Ending::TieBetweenBothPlayers);
+        return;
+    }
+
+    // Must reset counter here
+    plies_without_mills = 0;
+
+    // Check jumping
+    if (player_has_three_pieces(turn)) {
+        can_jump[static_cast<size_t>(turn)] = true;
+    }
+
+    // Check game over
+    if (player_has_two_pieces(turn) || player_has_no_legal_moves(turn)) {
+        game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+        return;
+    }
+
+    // Previous positions can occur no more
+    clear_repetition();
 }
 
 void Game::check_select_piece(glm::vec2 mouse_position) {
@@ -166,41 +266,7 @@ void Game::check_place_piece(glm::vec2 mouse_position) {
 
         // Placing a piece
 
-        if (turn == Player::White) {
-            place_piece(Player::White, node);
-            white_pieces_on_board++;
-            white_pieces_outside--;
-        } else {
-            place_piece(Player::Black, node);
-            black_pieces_on_board++;
-            black_pieces_outside--;
-        }
-
-        // Check for mills
-        if (piece_in_mill(node, turn)) {
-            must_take_piece = true;
-            std::cout << "Must take piece\n";
-            break;
-        }
-
-        if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
-            game_over(Ending::TieBetweenBothPlayers);
-            break;
-        }
-
-        // Check game over; only by blocking
-        if (player_has_no_legal_moves(turn)) {
-            game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
-            break;
-        }
-
-        if (white_pieces_outside + black_pieces_outside == 0) {
-            phase = GamePhase::MovePieces;
-            std::cout << "Phase two\n";
-
-            // Remember this position; now threefold repetition rule can apply
-            threefold_repetition();
-        }
+        place_piece(turn, node.index);
 
         break;
     }
@@ -230,34 +296,10 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
 
         // Moving a piece
 
+        move_piece(node_src.index, node_dest.index);
+
         // Just reset this
         selected_piece_index = INVALID_INDEX;
-
-        move_piece(node_src, node_dest);
-
-        // Check for mills
-        if (piece_in_mill(node_dest, turn)) {
-            must_take_piece = true;
-            std::cout << "Must take piece\n";
-            break;
-        }
-
-        if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
-            game_over(Ending::TieBetweenBothPlayers);
-            break;
-        }
-
-        // Check game over by repetition
-        if (threefold_repetition()) {
-            game_over(Ending::TieBetweenBothPlayers);
-            break;
-        }
-
-        // Check game over by blocking
-        if (player_has_no_legal_moves(turn)) {
-            game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
-            break;
-        }
 
         break;
     }
@@ -294,32 +336,7 @@ void Game::check_take_piece(glm::vec2 mouse_position) {
 
         // Taking a piece
 
-        take_piece(node);
-
-        player_pieces--;
-        must_take_piece = false;
-
-        if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
-            game_over(Ending::TieBetweenBothPlayers);
-            break;
-        }
-
-        // Must reset counter here
-        plies_without_mills = 0;
-
-        // Check jumping
-        if (player_has_three_pieces(turn)) {
-            can_jump[static_cast<size_t>(turn)] = true;
-        }
-
-        // Check game over
-        if (player_has_two_pieces(turn) || player_has_no_legal_moves(turn)) {
-            game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
-            break;
-        }
-
-        // Previous positions can occur no more
-        clear_repetition();
+        take_piece(node.index);
 
         break;
     }
@@ -801,4 +818,18 @@ bool Game::threefold_repetition() {
 void Game::clear_repetition() {
     repetition.ones.clear();
     repetition.twos.clear();
+}
+
+std::array<int, 24> Game::get_position() {
+    std::array<int, 24> result;
+
+    for (size_t i = 0; i < nodes.size(); i++) {
+        if (nodes[i].piece.has_value()) {
+            result[i] = nodes[i].piece->player == Player::White ? 1 : 2;  // FIXME find a better way
+        } else {
+            result[i] = 0;
+        }
+    }
+
+    return result;
 }

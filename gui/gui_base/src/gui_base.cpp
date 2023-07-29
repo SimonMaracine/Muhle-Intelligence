@@ -22,6 +22,7 @@ namespace gui_base {
 
         loop();
 
+        dispose();
         uninitialize();
 
         return exit_code;
