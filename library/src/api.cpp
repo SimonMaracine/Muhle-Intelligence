@@ -1,8 +1,5 @@
-#include "internal/implementation.hpp"
-
-namespace muhle {
-    struct MuhleIntelligence;
-}
+#include "muhle_intelligence/muhle_intelligence.hpp"
+#include "muhle_intelligence/internal/implementation.hpp"
 
 extern "C" {
     muhle::MuhleIntelligence* muhle_intelligence_create() {

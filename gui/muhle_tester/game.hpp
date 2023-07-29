@@ -65,8 +65,8 @@ struct ThreefoldRepetition {
 
 struct Game {
     unsigned int white_pieces_on_board = 0;
-    unsigned int black_pieces_on_board = 0;
     unsigned int white_pieces_outside = 9;
+    unsigned int black_pieces_on_board = 0;
     unsigned int black_pieces_outside = 9;
 
     Player turn = Player::White;
