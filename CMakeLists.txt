@@ -13,3 +13,4 @@ endif()
 
 message(STATUS "Muhle: Building shared library: ${MUHLE_SHARED_LIBRARY}")
 message(STATUS "Muhle: Building GUI: ${MUHLE_BUILD_GUI}")
+message(STATUS "Muhle: Build type: ${CMAKE_BUILD_TYPE}")

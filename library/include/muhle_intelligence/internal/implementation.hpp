@@ -20,10 +20,11 @@ namespace muhle {
         std::unordered_map<std::string, int> parameters;
     };
 
+    // For every invocation of the AI algorithm, create a new search context object
     class SearchCtx {
     public:
         void setup(const std::unordered_map<std::string, int>& parameters);
-        void figure_out_position(Position position);
+        void figure_out_position(const Position& position);
         void search(Player player, Result& result);
     private:
         int minimax(unsigned int depth, unsigned int turns_from_root, int alpha, int beta, Player player);
@@ -56,10 +57,10 @@ namespace muhle {
         unsigned int total_number_of_pieces(Piece piece);
 
         std::array<Piece, NODES> position {};
-        unsigned int white_pieces_on_board = 0;
-        unsigned int white_pieces_outside = 0;
-        unsigned int black_pieces_on_board = 0;
-        unsigned int black_pieces_outside = 0;
+        unsigned int white_pieces_on_board {};
+        unsigned int white_pieces_outside {};  // TODO cache phase two bool
+        unsigned int black_pieces_on_board {};
+        unsigned int black_pieces_outside {};
 
         Move best_move {};
         int evaluation = 0;

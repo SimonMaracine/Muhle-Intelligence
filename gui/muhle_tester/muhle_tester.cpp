@@ -72,6 +72,9 @@ void MuhleTester::update() {
             for (size_t i = 0; i < game_position.size(); i++) {
                 position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
             }
+            position.white_pieces_outside = game.white_pieces_outside;
+            position.black_pieces_outside = game.black_pieces_outside;
+
             muhle->search(position, muhle::Player::Black, muhle_result);
 
             state = State::ComputerTurn;
@@ -117,6 +120,7 @@ void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
 
     if (game.selected_piece_index != INVALID_INDEX) {
         const Piece& piece = game.nodes[game.selected_piece_index].piece.value();
+
         draw_list->AddCircle(
             ImVec2(piece.position.x, piece.position.y),
             NODE_RADIUS + 1.0f,

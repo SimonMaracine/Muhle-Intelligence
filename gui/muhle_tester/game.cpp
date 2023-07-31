@@ -825,9 +825,9 @@ std::array<int, 24> Game::get_position() {
 
     for (size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
-            result[i] = nodes[i].piece->player == Player::White ? 1 : 2;  // FIXME find a better way
+            result[i] = nodes[i].piece->player == Player::White ? 0 : 1;  // FIXME find a better way
         } else {
-            result[i] = 0;
+            result[i] = 2;
         }
     }
 
