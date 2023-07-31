@@ -72,4 +72,9 @@ namespace muhle {
             int DEPTH {};
         } parameters;
     };
+
+    Move create_place(Piece piece, int node_index);
+    Move create_move(Piece piece, int node_source_index, int node_destination_index);
+    Move create_place_take(Piece piece, int node_index, int node_take_index);
+    Move create_move_take(Piece piece, int node_source_index, int node_destination_index, int node_take_index);
 }

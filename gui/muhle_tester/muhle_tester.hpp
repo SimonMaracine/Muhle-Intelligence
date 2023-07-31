@@ -6,6 +6,12 @@
 
 #include "game.hpp"
 
+inline constexpr int Play = 0;
+inline constexpr int Test = 1;
+
+inline constexpr int Human = 0;
+inline constexpr int Computer = 1;
+
 struct MuhleTester : public gui_base::GuiApplication {
     MuhleTester()
         : gui_base::GuiApplication(1024, 576, "Mühle Tester", false) {}
@@ -13,6 +19,9 @@ struct MuhleTester : public gui_base::GuiApplication {
     virtual void start() override;
     virtual void update() override;
     virtual void dispose() override;
+
+    void play_mode_update();
+    void test_mode_update();
 
     void draw_piece(ImDrawList* draw_list, float x, float y, Player type);
     void draw_all_pieces(ImDrawList* draw_list);
@@ -28,7 +37,6 @@ struct MuhleTester : public gui_base::GuiApplication {
 
     void board_canvas();
     void right_side();
-    void bottom_side();
 
     void play_mode_buttons();
     void test_mode_buttons();
@@ -37,18 +45,18 @@ struct MuhleTester : public gui_base::GuiApplication {
 
     bool show_load_library = false;
 
-    enum class Mode {
-        Play,
-        Test
-    } mode = Mode::Play;
+    int mode = Play;
 
     enum class State {
-        None,
-        HumanTurn,
-        ComputerTurn,
+        NextTurn,
+        HumanThinking,
         ComputerBegin,
+        ComputerThinking,
         ComputerEnd
-    } state = State::None;
+    } state = State::NextTurn;
+
+    int white = Human;
+    int black = Computer;
 
     Game game;
     float board_unit = 0.0f;
@@ -64,6 +72,7 @@ struct MuhleTester : public gui_base::GuiApplication {
     void* library_handle = nullptr;
 
     muhle::MuhleIntelligence* muhle = nullptr;
+    const char* library_name = "";
 
     muhle::Result muhle_result;
 };

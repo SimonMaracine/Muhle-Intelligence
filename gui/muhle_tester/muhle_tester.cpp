@@ -22,23 +22,84 @@ void MuhleTester::update() {
 
     game.update_nodes_positions(board_unit, board_offset);
 
-    switch (state) {
-        case State::None:
-            state = State::HumanTurn;
+    if (mode == Play) {
+        play_mode_update();
+    } else {
+        test_mode_update();
+    }
+}
 
-            break;
-        case State::HumanTurn:
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-                const ImVec2 position = ImGui::GetMousePos();
-                game.user_click(glm::vec2(position.x, position.y));
+void MuhleTester::dispose() {
+    unload_library();
+}
+
+void MuhleTester::play_mode_update() {
+    switch (state) {
+        case State::NextTurn:
+            if (game.phase != GamePhase::GameOver) {
+                switch (game.turn) {
+                    case Player::White:
+                        switch (white) {
+                            case Human:
+                                state = State::HumanThinking;
+                                break;
+                            case Computer:
+                                state = State::ComputerBegin;
+                                break;
+                        }
+
+                        break;
+                    case Player::Black:
+                        switch (black) {
+                            case Human:
+                                state = State::HumanThinking;
+                                break;
+                            case Computer:
+                                state = State::ComputerBegin;
+                                break;
+                        }
+
+                        break;
+                }
             }
 
             break;
-        case State::ComputerTurn:
+        case State::HumanThinking:
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                const ImVec2 position = ImGui::GetMousePos();
+                game.user_click(glm::vec2(position.x, position.y));
+
+                state = State::NextTurn;
+            }
+
+            break;
+        case State::ComputerBegin: {
+            if (muhle != nullptr) {
+                const auto game_position = game.get_position();
+
+                muhle::Position position;
+                for (size_t i = 0; i < game_position.size(); i++) {
+                    position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
+                }
+                position.white_pieces_outside = game.white_pieces_outside;
+                position.black_pieces_outside = game.black_pieces_outside;
+
+                muhle->search(
+                    position,
+                    game.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
+                    muhle_result
+                );
+
+                state = State::ComputerThinking;
+            }
+
+            break;
+        }
+        case State::ComputerThinking:
             if (muhle_result.done) {
                 switch (muhle_result.result.type) {
                     case muhle::MoveType::Place:
-                        game.place_piece(Player::Black, muhle_result.result.place.node_index);
+                        game.place_piece(game.turn, muhle_result.result.place.node_index);
                         break;
                     case muhle::MoveType::Move:
                         game.move_piece(
@@ -47,7 +108,7 @@ void MuhleTester::update() {
                         );
                         break;
                     case muhle::MoveType::PlaceTake:
-                        game.place_piece(Player::Black, muhle_result.result.place_take.node_index);
+                        game.place_piece(game.turn, muhle_result.result.place_take.node_index);
                         game.take_piece(muhle_result.result.place_take.node_take_index);
                         break;
                     case muhle::MoveType::MoveTake:
@@ -65,31 +126,15 @@ void MuhleTester::update() {
             }
 
             break;
-        case State::ComputerBegin: {
-            const auto game_position = game.get_position();
-
-            muhle::Position position;
-            for (size_t i = 0; i < game_position.size(); i++) {
-                position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
-            }
-            position.white_pieces_outside = game.white_pieces_outside;
-            position.black_pieces_outside = game.black_pieces_outside;
-
-            muhle->search(position, muhle::Player::Black, muhle_result);
-
-            state = State::ComputerTurn;
-
-            break;
-        }
         case State::ComputerEnd:
-            state = State::HumanTurn;
+            state = State::NextTurn;
 
             break;
     }
 }
 
-void MuhleTester::dispose() {
-    unload_library();
+void MuhleTester::test_mode_update() {
+
 }
 
 void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player player) {
@@ -139,16 +184,16 @@ void MuhleTester::reset_game() {
         this->change_turn();
     });
 
-    state = State::None;
+    state = State::NextTurn;
 }
 
 void MuhleTester::change_turn() {
     switch (state) {
-        case State::HumanTurn:
+        case State::HumanThinking:
             state = State::ComputerBegin;
             break;
         case State::ComputerEnd:
-            state = State::HumanTurn;
+            state = State::HumanThinking;
             break;
         default:
             break;
@@ -192,7 +237,9 @@ void MuhleTester::load_library(const char* buffer) {
     muhle = muhle_intelligence_create();
     muhle->initialize();
 
-    std::cout << "Successfully loaded library `" << buffer << "`, named `" << muhle_intelligence_name() << "`\n";
+    library_name = muhle_intelligence_name();
+
+    std::cout << "Successfully loaded library `" << buffer << "`, named `" << library_name << "`\n";
 }
 
 void MuhleTester::unload_library() {
@@ -211,7 +258,9 @@ void MuhleTester::unload_library() {
         return;
     }
 
-    std::cout << "Successfully unloaded library\n";
+    std::cout << "Successfully unloaded library named: `"<< library_name << "`\n";
+
+    library_name = "";
 }
 
 void MuhleTester::main_menu_bar() {
@@ -234,8 +283,8 @@ void MuhleTester::main_menu_bar() {
         }
         if (ImGui::BeginMenu("Options")) {
             if (ImGui::BeginMenu("Mode")) {
-                ImGui::RadioButton("Play", reinterpret_cast<int*>(&mode), static_cast<int>(Mode::Play));
-                ImGui::RadioButton("Test", reinterpret_cast<int*>(&mode), static_cast<int>(Mode::Test));
+                ImGui::RadioButton("Play", &mode, Play);
+                ImGui::RadioButton("Test", &mode, Test);
 
                 ImGui::EndMenu();
             }
@@ -345,24 +394,21 @@ void MuhleTester::board_canvas() {
 }
 
 void MuhleTester::right_side() {
-    ImGui::BeginChild("Buttons");
+    ImGui::BeginChild("Right side buttons");
+
+    ImGui::Text("AI library name: %s", library_name);
+    ImGui::Separator();
 
     switch (mode) {
-        case Mode::Play:
+        case Play:
             play_mode_buttons();
             break;
-        case Mode::Test:
+        case Test:
             test_mode_buttons();
             break;
     }
 
-    game_debug();
-
     ImGui::EndChild();
-}
-
-void MuhleTester::bottom_side() {
-    game_debug();
 }
 
 void MuhleTester::play_mode_buttons() {
@@ -374,7 +420,17 @@ void MuhleTester::play_mode_buttons() {
         reset_game();
     }
 
+    ImGui::Text("White"); ImGui::SameLine();
+    ImGui::RadioButton("Human##w", &white, Human); ImGui::SameLine();
+    ImGui::RadioButton("Computer##w", &white, Computer);
+
+    ImGui::Text("Black"); ImGui::SameLine();
+    ImGui::RadioButton("Human##b", &black, Human); ImGui::SameLine();
+    ImGui::RadioButton("Computer##b", &black, Computer);
+
     ImGui::Separator();
+
+    game_debug();
 }
 
 void MuhleTester::test_mode_buttons() {
@@ -389,8 +445,6 @@ void MuhleTester::test_mode_buttons() {
     if (ImGui::Button("Reset")) {
         reset_game();
     }
-
-    ImGui::Separator();
 }
 
 void MuhleTester::game_debug() {
