@@ -12,6 +12,9 @@ inline constexpr int Test = 1;
 inline constexpr int Human = 0;
 inline constexpr int Computer = 1;
 
+inline constexpr int White = 0;
+inline constexpr int Black = 1;
+
 struct MuhleTester : public gui_base::GuiApplication {
     MuhleTester()
         : gui_base::GuiApplication(1024, 576, "Mühle Tester", false) {}
@@ -41,8 +44,6 @@ struct MuhleTester : public gui_base::GuiApplication {
     void play_mode_buttons();
     void test_mode_buttons();
 
-    void game_debug();
-
     bool show_load_library = false;
 
     int mode = Play;
@@ -58,8 +59,11 @@ struct MuhleTester : public gui_base::GuiApplication {
     int white = Human;
     int black = Computer;
 
-    Game game;
-    float board_unit = 0.0f;
+    int piece = White;
+
+    GamePlay game_play;
+    GameTest game_test;
+    float board_unit {};
     glm::vec2 board_offset {};
 
     using LibraryCreate = muhle::MuhleIntelligence*(*)();

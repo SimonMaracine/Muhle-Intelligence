@@ -43,7 +43,7 @@ static const unsigned int MILLS[MILLS_COUNT][3] = {
     { 1, 4, 7 }, { 12, 13, 14 }, { 16, 19, 22 }, { 9, 10, 11 }
 };
 
-void Game::setup(ChangedTurn changed_turn) {
+void GamePlay::setup(ChangedTurn changed_turn) {
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = i;
     }
@@ -51,7 +51,7 @@ void Game::setup(ChangedTurn changed_turn) {
     this->changed_turn = changed_turn;
 }
 
-void Game::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
+void GamePlay::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes[i].position = glm::vec2(
             NODE_POSITIONS[i][0] * board_unit + board_offset.x,
@@ -64,7 +64,7 @@ void Game::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
     }
 }
 
-void Game::user_click(glm::vec2 mouse_position) {
+void GamePlay::user_click(glm::vec2 mouse_position) {
     switch (phase) {
         case GamePhase::PlacePieces:
             if (must_take_piece) {
@@ -90,7 +90,7 @@ void Game::user_click(glm::vec2 mouse_position) {
     }
 }
 
-void Game::place_piece(Player player, int node_index) {
+void GamePlay::place_piece(int node_index) {
     Node& node = nodes[node_index];
 
     assert(node.piece == std::nullopt);
@@ -142,7 +142,7 @@ void Game::place_piece(Player player, int node_index) {
     }
 }
 
-void Game::move_piece(int node_source_index, int node_destination_index) {
+void GamePlay::move_piece(int node_source_index, int node_destination_index) {
     Node& node_src = nodes[node_source_index];
     Node& node_dest = nodes[node_destination_index];
 
@@ -178,7 +178,7 @@ void Game::move_piece(int node_source_index, int node_destination_index) {
     }
 }
 
-void Game::take_piece(int node_index) {
+void GamePlay::take_piece(int node_index) {
     Node& node = nodes[node_index];
 
     assert(node.piece != std::nullopt);
@@ -218,7 +218,7 @@ void Game::take_piece(int node_index) {
     clear_repetition();
 }
 
-void Game::check_select_piece(glm::vec2 mouse_position) {
+void GamePlay::check_select_piece(glm::vec2 mouse_position) {
     for (size_t i = 0; i < nodes.size(); i++) {
         const Node& node = nodes[i];
 
@@ -252,7 +252,7 @@ void Game::check_select_piece(glm::vec2 mouse_position) {
     }
 }
 
-void Game::check_place_piece(glm::vec2 mouse_position) {
+void GamePlay::check_place_piece(glm::vec2 mouse_position) {
     for (Node& node : nodes) {
         if (!point_in_node(mouse_position, node)) {
             continue;
@@ -266,13 +266,13 @@ void Game::check_place_piece(glm::vec2 mouse_position) {
 
         // Placing a piece
 
-        place_piece(turn, node.index);
+        place_piece(node.index);
 
         break;
     }
 }
 
-void Game::check_move_piece(glm::vec2 mouse_position) {
+void GamePlay::check_move_piece(glm::vec2 mouse_position) {
     if (selected_piece_index == INVALID_INDEX) {
         return;
     }
@@ -305,7 +305,7 @@ void Game::check_move_piece(glm::vec2 mouse_position) {
     }
 }
 
-void Game::check_take_piece(glm::vec2 mouse_position) {
+void GamePlay::check_take_piece(glm::vec2 mouse_position) {
     assert(must_take_piece);
 
     for (Node& node : nodes) {
@@ -342,13 +342,13 @@ void Game::check_take_piece(glm::vec2 mouse_position) {
     }
 }
 
-bool Game::point_in_node(glm::vec2 mouse_position, const Node& node) {
+bool GamePlay::point_in_node(glm::vec2 mouse_position, const Node& node) {
     const glm::vec2 sub = node.position - mouse_position;
 
     return glm::length(sub) < NODE_RADIUS;
 }
 
-unsigned int Game::change_turn() {
+unsigned int GamePlay::change_turn() {
     turn = opponent(turn);
 
     changed_turn();
@@ -358,7 +358,7 @@ unsigned int Game::change_turn() {
     return plies_without_mills;
 }
 
-Player Game::opponent(Player player) {
+Player GamePlay::opponent(Player player) {
     if (turn == Player::White) {
         return Player::Black;
     } else {
@@ -366,7 +366,7 @@ Player Game::opponent(Player player) {
     }
 }
 
-bool Game::can_potentially_move(Node& node_src, Node& node_dest) {
+bool GamePlay::can_potentially_move(Node& node_src, Node& node_dest) {
     assert(node_src.piece != std::nullopt);
     assert(node_dest.piece == std::nullopt);
 
@@ -480,7 +480,7 @@ bool Game::can_potentially_move(Node& node_src, Node& node_dest) {
     return false;
 }
 
-bool Game::piece_in_mill(const Node& node, Player player) {
+bool GamePlay::piece_in_mill(const Node& node, Player player) {
     assert(node.piece != std::nullopt);
     assert(node.piece->player == player);
 
@@ -511,7 +511,7 @@ bool Game::piece_in_mill(const Node& node, Player player) {
     return false;
 }
 
-unsigned int Game::pieces_in_mills(Player player) {
+unsigned int GamePlay::pieces_in_mills(Player player) {
     unsigned int result = 0;
 
     for (const Node& node : nodes) {
@@ -530,7 +530,7 @@ unsigned int Game::pieces_in_mills(Player player) {
     return result;
 }
 
-bool Game::player_has_two_pieces(Player player) {
+bool GamePlay::player_has_two_pieces(Player player) {
     if (player == Player::White) {
         return white_pieces_on_board + white_pieces_outside == 2;
     } else {
@@ -538,7 +538,7 @@ bool Game::player_has_two_pieces(Player player) {
     }
 }
 
-bool Game::player_has_three_pieces(Player player) {
+bool GamePlay::player_has_three_pieces(Player player) {
     if (player == Player::White) {
         return white_pieces_on_board + white_pieces_outside == 3;
     } else {
@@ -546,7 +546,7 @@ bool Game::player_has_three_pieces(Player player) {
     }
 }
 
-bool Game::player_has_no_legal_moves(Player player) {
+bool GamePlay::player_has_no_legal_moves(Player player) {
     if (can_jump[static_cast<size_t>(player)]) {
         return false;
     }
@@ -771,13 +771,13 @@ bool Game::player_has_no_legal_moves(Player player) {
     return true;
 }
 
-void Game::game_over(Ending ending) {
+void GamePlay::game_over(Ending ending) {
     phase = GamePhase::GameOver;
     this->ending = ending;
-    std::cout << "Game over: " << static_cast<int>(ending) << '\n';
+    std::cout << "GamePlay over: " << static_cast<int>(ending) << '\n';
 }
 
-bool Game::threefold_repetition() {
+bool GamePlay::threefold_repetition() {
     ThreefoldRepetition::Position current;
 
     for (size_t i = 0; i < nodes.size(); i++) {
@@ -815,12 +815,12 @@ bool Game::threefold_repetition() {
     return false;
 }
 
-void Game::clear_repetition() {
+void GamePlay::clear_repetition() {
     repetition.ones.clear();
     repetition.twos.clear();
 }
 
-std::array<int, 24> Game::get_position() {
+std::array<int, 24> GamePlay::get_position() {
     std::array<int, 24> result;
 
     for (size_t i = 0; i < nodes.size(); i++) {
@@ -832,4 +832,72 @@ std::array<int, 24> Game::get_position() {
     }
 
     return result;
+}
+
+void GameTest::setup() {
+    for (size_t i = 0; i < nodes.size(); i++) {
+        nodes[i].index = i;
+    }
+}
+
+void GameTest::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
+    for (size_t i = 0; i < nodes.size(); i++) {
+        nodes[i].position = glm::vec2(
+            NODE_POSITIONS[i][0] * board_unit + board_offset.x,
+            NODE_POSITIONS[i][1] * board_unit + board_offset.y
+        );
+
+        if (nodes[i].piece.has_value()) {
+            nodes[i].piece->position = nodes[i].position;
+        }
+    }
+}
+
+void GameTest::user_click(glm::vec2 mouse_position, MouseButton button, Player player) {
+    for (Node& node : nodes) {
+        if (!point_in_node(mouse_position, node)) {
+            continue;
+        }
+
+        // This is the selected node
+
+        switch (button) {
+            case MouseButton::Left:
+                add_piece(player, node.index);
+
+                break;
+            case MouseButton::Right:
+                remove_piece(node.index);
+
+                break;
+        }
+
+        break;
+    }
+}
+
+void GameTest::add_piece(Player player, int node_index) {
+    Node& node = nodes[node_index];
+
+    assert(node.piece == std::nullopt);
+
+    Piece piece;
+    piece.player = player;
+    piece.position = node.position;
+
+    node.piece = std::make_optional(piece);
+}
+
+void GameTest::remove_piece(int node_index) {
+    Node& node = nodes[node_index];
+
+    assert(node.piece != std::nullopt);
+
+    node.piece = std::nullopt;
+}
+
+bool GameTest::point_in_node(glm::vec2 mouse_position, const Node& node) {
+    const glm::vec2 sub = node.position - mouse_position;
+
+    return glm::length(sub) < NODE_RADIUS;
 }

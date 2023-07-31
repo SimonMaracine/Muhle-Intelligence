@@ -7,7 +7,7 @@
 #include "muhle_tester.hpp"
 
 void MuhleTester::start() {
-    game.setup([this]() {
+    game_play.setup([this]() {
         this->change_turn();
     });
 }
@@ -20,7 +20,7 @@ void MuhleTester::update() {
 
     // ImGui::ShowDemoWindow();
 
-    game.update_nodes_positions(board_unit, board_offset);
+    game_play.update_nodes_positions(board_unit, board_offset);
 
     if (mode == Play) {
         play_mode_update();
@@ -36,8 +36,8 @@ void MuhleTester::dispose() {
 void MuhleTester::play_mode_update() {
     switch (state) {
         case State::NextTurn:
-            if (game.phase != GamePhase::GameOver) {
-                switch (game.turn) {
+            if (game_play.phase != GamePhase::GameOver) {
+                switch (game_play.turn) {
                     case Player::White:
                         switch (white) {
                             case Human:
@@ -67,7 +67,7 @@ void MuhleTester::play_mode_update() {
         case State::HumanThinking:
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                 const ImVec2 position = ImGui::GetMousePos();
-                game.user_click(glm::vec2(position.x, position.y));
+                game_play.user_click(glm::vec2(position.x, position.y));
 
                 state = State::NextTurn;
             }
@@ -75,18 +75,18 @@ void MuhleTester::play_mode_update() {
             break;
         case State::ComputerBegin: {
             if (muhle != nullptr) {
-                const auto game_position = game.get_position();
+                const auto game_position = game_play.get_position();
 
                 muhle::Position position;
                 for (size_t i = 0; i < game_position.size(); i++) {
                     position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
                 }
-                position.white_pieces_outside = game.white_pieces_outside;
-                position.black_pieces_outside = game.black_pieces_outside;
+                position.white_pieces_outside = game_play.white_pieces_outside;
+                position.black_pieces_outside = game_play.black_pieces_outside;
 
                 muhle->search(
                     position,
-                    game.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
+                    game_play.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
                     muhle_result
                 );
 
@@ -99,24 +99,24 @@ void MuhleTester::play_mode_update() {
             if (muhle_result.done) {
                 switch (muhle_result.result.type) {
                     case muhle::MoveType::Place:
-                        game.place_piece(game.turn, muhle_result.result.place.node_index);
+                        game_play.place_piece(muhle_result.result.place.node_index);
                         break;
                     case muhle::MoveType::Move:
-                        game.move_piece(
+                        game_play.move_piece(
                             muhle_result.result.move.node_source_index,
                             muhle_result.result.move.node_destination_index
                         );
                         break;
                     case muhle::MoveType::PlaceTake:
-                        game.place_piece(game.turn, muhle_result.result.place_take.node_index);
-                        game.take_piece(muhle_result.result.place_take.node_take_index);
+                        game_play.place_piece(muhle_result.result.place_take.node_index);
+                        game_play.take_piece(muhle_result.result.place_take.node_take_index);
                         break;
                     case muhle::MoveType::MoveTake:
-                        game.move_piece(
+                        game_play.move_piece(
                             muhle_result.result.move_take.node_source_index,
                             muhle_result.result.move_take.node_destination_index
                         );
-                        game.take_piece(muhle_result.result.move_take.node_take_index);
+                        game_play.take_piece(muhle_result.result.move_take.node_take_index);
                         break;
                 }
 
@@ -134,7 +134,12 @@ void MuhleTester::play_mode_update() {
 }
 
 void MuhleTester::test_mode_update() {
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+        const ImVec2 position = ImGui::GetMousePos();
+        const Player player = piece == White ? Player::White : Player::Black;
 
+        game_test.user_click(glm::vec2(position.x, position.y), GameTest::MouseButton::Left, player);
+    }
 }
 
 void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player player) {
@@ -153,7 +158,7 @@ void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player pla
 }
 
 void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
-    for (const Node& node : game.nodes) {
+    for (const Node& node : game_play.nodes) {
         if (!node.piece.has_value()) {
             continue;
         }
@@ -163,8 +168,8 @@ void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
         draw_piece(draw_list, piece.position.x, piece.position.y, piece.player);
     }
 
-    if (game.selected_piece_index != INVALID_INDEX) {
-        const Piece& piece = game.nodes[game.selected_piece_index].piece.value();
+    if (game_play.selected_piece_index != INVALID_INDEX) {
+        const Piece& piece = game_play.nodes[game_play.selected_piece_index].piece.value();
 
         draw_list->AddCircle(
             ImVec2(piece.position.x, piece.position.y),
@@ -179,8 +184,8 @@ void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
 void MuhleTester::reset_game() {
     // TODO stop everything
 
-    game = {};
-    game.setup([this]() {
+    game_play = {};
+    game_play.setup([this]() {
         this->change_turn();
     });
 
@@ -430,7 +435,21 @@ void MuhleTester::play_mode_buttons() {
 
     ImGui::Separator();
 
-    game_debug();
+    ImGui::BeginChild("Game debug");
+
+    ImGui::Text("White pieces on board: %u", game_play.white_pieces_on_board);
+    ImGui::Text("White pieces outside: %u", game_play.white_pieces_outside);
+    ImGui::Text("Black pieces on board: %u", game_play.black_pieces_on_board);
+    ImGui::Text("Black pieces outside: %u", game_play.black_pieces_outside);
+    ImGui::Text("Turn: %s", game_play.turn == Player::White ? "white" : "black");
+    ImGui::Text("Phase: %d", game_play.phase);
+    ImGui::Text("Ending: %d", game_play.ending);
+    ImGui::Text("Selected piece: %d", game_play.selected_piece_index);
+    ImGui::Text("Can jump: white %d, black %d", game_play.can_jump[0], game_play.can_jump[1]);
+    ImGui::Text("Must take piece: %d", game_play.must_take_piece);
+    ImGui::Text("Plies without mills: %u", game_play.plies_without_mills);
+
+    ImGui::EndChild();
 }
 
 void MuhleTester::test_mode_buttons() {
@@ -445,22 +464,10 @@ void MuhleTester::test_mode_buttons() {
     if (ImGui::Button("Reset")) {
         reset_game();
     }
-}
 
-void MuhleTester::game_debug() {
-    ImGui::BeginChild("Game debug");
+    ImGui::Text("Piece"); ImGui::SameLine();
+    ImGui::RadioButton("White", &piece, Human); ImGui::SameLine();
+    ImGui::RadioButton("Black", &piece, Computer);
 
-    ImGui::Text("White pieces on board: %u", game.white_pieces_on_board);
-    ImGui::Text("White pieces outside: %u", game.white_pieces_outside);
-    ImGui::Text("Black pieces on board: %u", game.black_pieces_on_board);
-    ImGui::Text("Black pieces outside: %u", game.black_pieces_outside);
-    ImGui::Text("Turn: %s", game.turn == Player::White ? "white" : "black");
-    ImGui::Text("Phase: %d", game.phase);
-    ImGui::Text("Ending: %d", game.ending);
-    ImGui::Text("Selected piece: %d", game.selected_piece_index);
-    ImGui::Text("Can jump: white %d, black %d", game.can_jump[0], game.can_jump[1]);
-    ImGui::Text("Must take piece: %d", game.must_take_piece);
-    ImGui::Text("Plies without mills: %u", game.plies_without_mills);
-
-    ImGui::EndChild();
+    ImGui::Separator();
 }

@@ -63,7 +63,7 @@ struct ThreefoldRepetition {
     std::forward_list<Position> twos;
 };
 
-struct Game {
+struct GamePlay {
     unsigned int white_pieces_on_board = 0;
     unsigned int white_pieces_outside = 9;
     unsigned int black_pieces_on_board = 0;
@@ -92,7 +92,7 @@ struct Game {
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_click(glm::vec2 mouse_position);
 
-    void place_piece(Player player, int node_index);
+    void place_piece(int node_index);
     void move_piece(int node_source_index, int node_destination_index);
     void take_piece(int node_index);
 
@@ -114,4 +114,25 @@ struct Game {
     bool threefold_repetition();
     void clear_repetition();
     std::array<int, 24> get_position();
+};
+
+struct GameTest {
+    unsigned int white_pieces_outside = 9;
+    unsigned int black_pieces_outside = 9;
+
+    std::array<Node, 24> nodes {};;
+
+    enum class MouseButton {
+        Left,
+        Right
+    };
+
+    void setup();
+    void update_nodes_positions(float board_unit, glm::vec2 board_offset);
+    void user_click(glm::vec2 mouse_position, MouseButton button, Player player = Player::White);
+
+    void add_piece(Player player, int node_index);
+    void remove_piece(int node_index);
+
+    bool point_in_node(glm::vec2 mouse_position, const Node& node);
 };
