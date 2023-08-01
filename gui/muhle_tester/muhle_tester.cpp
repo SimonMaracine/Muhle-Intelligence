@@ -3,6 +3,8 @@
 
 #include <gui_base.hpp>
 #include <just_dl/just_dl.hpp>
+#include <muhle_intelligence/muhle_intelligence.hpp>
+#include <muhle_intelligence_miscellaneous/notation.hpp>
 
 #include "muhle_tester.hpp"
 
@@ -10,21 +12,30 @@ void MuhleTester::start() {
     game_play.setup([this]() {
         this->change_turn();
     });
+
+    game_test.setup();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+
+    // ImFont* label_font = ImGui::
 }
 
 void MuhleTester::update() {
     main_menu_bar();
     main_window();
 
-    load_library_modal();
-
     // ImGui::ShowDemoWindow();
 
-    game_play.update_nodes_positions(board_unit, board_offset);
+    if (muhle == nullptr) {
+        return;
+    }
 
-    if (mode == Play) {
+    if (mode == ModePlay) {
+        game_play.update_nodes_positions(board_unit, board_offset);
         play_mode_update();
     } else {
+        game_test.update_nodes_positions(board_unit, board_offset);
         test_mode_update();
     }
 }
@@ -34,28 +45,28 @@ void MuhleTester::dispose() {
 }
 
 void MuhleTester::play_mode_update() {
-    switch (state) {
-        case State::NextTurn:
+    switch (play_state) {
+        case PlayState::NextTurn:
             if (game_play.phase != GamePhase::GameOver) {
                 switch (game_play.turn) {
                     case Player::White:
                         switch (white) {
-                            case Human:
-                                state = State::HumanThinking;
+                            case PlayerHuman:
+                                play_state = PlayState::HumanThinking;
                                 break;
-                            case Computer:
-                                state = State::ComputerBegin;
+                            case PlayerComputer:
+                                play_state = PlayState::ComputerBegin;
                                 break;
                         }
 
                         break;
                     case Player::Black:
                         switch (black) {
-                            case Human:
-                                state = State::HumanThinking;
+                            case PlayerHuman:
+                                play_state = PlayState::HumanThinking;
                                 break;
-                            case Computer:
-                                state = State::ComputerBegin;
+                            case PlayerComputer:
+                                play_state = PlayState::ComputerBegin;
                                 break;
                         }
 
@@ -64,16 +75,16 @@ void MuhleTester::play_mode_update() {
             }
 
             break;
-        case State::HumanThinking:
+        case PlayState::HumanThinking:
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                 const ImVec2 position = ImGui::GetMousePos();
                 game_play.user_click(glm::vec2(position.x, position.y));
 
-                state = State::NextTurn;
+                play_state = PlayState::NextTurn;
             }
 
             break;
-        case State::ComputerBegin: {
+        case PlayState::ComputerBegin: {
             if (muhle != nullptr) {
                 const auto game_position = game_play.get_position();
 
@@ -90,12 +101,12 @@ void MuhleTester::play_mode_update() {
                     muhle_result
                 );
 
-                state = State::ComputerThinking;
+                play_state = PlayState::ComputerThinking;
             }
 
             break;
         }
-        case State::ComputerThinking:
+        case PlayState::ComputerThinking:
             if (muhle_result.done) {
                 switch (muhle_result.result.type) {
                     case muhle::MoveType::Place:
@@ -122,12 +133,12 @@ void MuhleTester::play_mode_update() {
 
                 muhle->join_thread();
 
-                state = State::ComputerEnd;
+                play_state = PlayState::ComputerEnd;
             }
 
             break;
-        case State::ComputerEnd:
-            state = State::NextTurn;
+        case PlayState::ComputerEnd:
+            play_state = PlayState::NextTurn;
 
             break;
     }
@@ -136,9 +147,55 @@ void MuhleTester::play_mode_update() {
 void MuhleTester::test_mode_update() {
     if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
         const ImVec2 position = ImGui::GetMousePos();
-        const Player player = piece == White ? Player::White : Player::Black;
+        const Player player = piece == PieceWhite ? Player::White : Player::Black;
 
         game_test.user_click(glm::vec2(position.x, position.y), GameTest::MouseButton::Left, player);
+    }
+
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+        const ImVec2 position = ImGui::GetMousePos();
+
+        game_test.user_click(glm::vec2(position.x, position.y), GameTest::MouseButton::Right);
+    }
+
+    switch (test_state) {
+        case TestState::None:
+            break;
+        case TestState::ComputerBegin: {
+            if (muhle != nullptr) {
+                result_text = "[None]";
+
+                const auto game_position = game_test.get_position();
+
+                muhle::Position position;
+                for (size_t i = 0; i < game_position.size(); i++) {
+                    position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
+                }
+                position.white_pieces_outside = game_test.white_pieces_outside;
+                position.black_pieces_outside = game_test.black_pieces_outside;
+
+                muhle->search(
+                    position,
+                    game_test.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
+                    muhle_result
+                );
+
+                test_state = TestState::ComputerThinking;
+            }
+
+            break;
+        }
+        case TestState::ComputerThinking: {
+            if (muhle_result.done) {
+                result_text = muhle::move_to_string(muhle_result.result);
+
+                muhle->join_thread();
+
+                test_state = TestState::None;
+            }
+
+            break;
+        }
     }
 }
 
@@ -158,30 +215,49 @@ void MuhleTester::draw_piece(ImDrawList* draw_list, float x, float y, Player pla
 }
 
 void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {
-    for (const Node& node : game_play.nodes) {
-        if (!node.piece.has_value()) {
-            continue;
+    switch (mode) {
+        case ModePlay: {
+                for (const Node& node : game_play.nodes) {
+                if (!node.piece.has_value()) {
+                    continue;
+                }
+
+                const Piece& piece = node.piece.value();
+
+                draw_piece(draw_list, piece.position.x, piece.position.y, piece.player);
+            }
+
+            if (game_play.selected_piece_index != INVALID_INDEX) {
+                const Piece& piece = game_play.nodes[game_play.selected_piece_index].piece.value();
+
+                draw_list->AddCircle(
+                    ImVec2(piece.position.x, piece.position.y),
+                    NODE_RADIUS + 1.0f,
+                    ImColor(255, 30, 30, 255),
+                    0,
+                    2.0f
+                );
+            }
+
+            break;
         }
+        case ModeTest: {
+            for (const Node& node : game_test.nodes) {
+                if (!node.piece.has_value()) {
+                    continue;
+                }
 
-        const Piece& piece = node.piece.value();
+                const Piece& piece = node.piece.value();
 
-        draw_piece(draw_list, piece.position.x, piece.position.y, piece.player);
-    }
+                draw_piece(draw_list, piece.position.x, piece.position.y, piece.player);
+            }
 
-    if (game_play.selected_piece_index != INVALID_INDEX) {
-        const Piece& piece = game_play.nodes[game_play.selected_piece_index].piece.value();
-
-        draw_list->AddCircle(
-            ImVec2(piece.position.x, piece.position.y),
-            NODE_RADIUS + 1.0f,
-            ImColor(255, 30, 30, 255),
-            0,
-            2.0f
-        );
+            break;
+        }
     }
 }
 
-void MuhleTester::reset_game() {
+void MuhleTester::reset_game_play() {
     // TODO stop everything
 
     game_play = {};
@@ -189,16 +265,23 @@ void MuhleTester::reset_game() {
         this->change_turn();
     });
 
-    state = State::NextTurn;
+    play_state = PlayState::NextTurn;
+}
+
+void MuhleTester::reset_game_test() {
+    // TODO stop everything
+
+    game_test = {};
+    game_test.setup();
 }
 
 void MuhleTester::change_turn() {
-    switch (state) {
-        case State::HumanThinking:
-            state = State::ComputerBegin;
+    switch (play_state) {
+        case PlayState::HumanThinking:
+            play_state = PlayState::ComputerBegin;
             break;
-        case State::ComputerEnd:
-            state = State::HumanThinking;
+        case PlayState::ComputerEnd:
+            play_state = PlayState::HumanThinking;
             break;
         default:
             break;
@@ -265,14 +348,16 @@ void MuhleTester::unload_library() {
 
     std::cout << "Successfully unloaded library named: `"<< library_name << "`\n";
 
-    library_name = "";
+    library_name = "[None]";
 }
 
 void MuhleTester::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Load AI")) {
-                show_load_library = true;
+            if (ImGui::BeginMenu("Load AI")) {
+                load_library();
+
+                ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Import")) {
 
@@ -288,8 +373,8 @@ void MuhleTester::main_menu_bar() {
         }
         if (ImGui::BeginMenu("Options")) {
             if (ImGui::BeginMenu("Mode")) {
-                ImGui::RadioButton("Play", &mode, Play);
-                ImGui::RadioButton("Test", &mode, Test);
+                ImGui::RadioButton("Play", &mode, ModePlay);
+                ImGui::RadioButton("Test", &mode, ModeTest);
 
                 ImGui::EndMenu();
             }
@@ -331,28 +416,12 @@ void MuhleTester::main_window() {
     ImGui::PopStyleVar(2);
 }
 
-void MuhleTester::load_library_modal() {
-    if (show_load_library) {
-        ImGui::OpenPopup("Load Library");
-        show_load_library = false;
-    }
+void MuhleTester::load_library() {
+    static char buffer[128] {};
+    ImGui::InputText("File Path", buffer, 128);
 
-    if (ImGui::BeginPopupModal("Load Library", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        static char buffer[128] {};
-        ImGui::InputText("File Path", buffer, 128);
-
-        if (ImGui::Button("Load")) {
-            load_library(buffer);
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
+    if (ImGui::Button("Load")) {
+        load_library(buffer);
     }
 }
 
@@ -360,7 +429,7 @@ void MuhleTester::board_canvas() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(100, 100, 100, 255));
 
-    ImGui::BeginChild("Canvas", ImVec2(400.0f, 400.0f));
+    ImGui::BeginChild("Canvas", ImVec2(500.0f, 500.0f));
 
     ImGui::PopStyleColor();
     ImGui::PopStyleVar();
@@ -376,7 +445,7 @@ void MuhleTester::board_canvas() {
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    board_unit = canvas_p1.x < canvas_p1.y ? canvas_p1.x / 8.0f : canvas_p1.y / 8.0f;
+    board_unit = canvas_p1.x < canvas_p1.y ? canvas_p1.x / 10.0f : canvas_p1.y / 10.0f;
     board_offset = glm::vec2(canvas_p0.x / 2.0f, canvas_p0.y / 2.0f);
     const float UNIT = board_unit;
     const glm::vec2 OFFSET = board_offset;
@@ -384,14 +453,48 @@ void MuhleTester::board_canvas() {
     const ImColor color = ImColor(220, 220, 220);
     const float thickness = 2.0f;
 
-    draw_list->AddRect(ImVec2(1.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), ImVec2(7.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, 0.0f, 0, thickness);
-    draw_list->AddRect(ImVec2(2.0f * UNIT + OFFSET.x, 6.0f * UNIT + OFFSET.y), ImVec2(6.0f * UNIT + OFFSET.x, 2.0f * UNIT + OFFSET.y), color, 0.0f, 0, thickness);
-    draw_list->AddRect(ImVec2(3.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), ImVec2(5.0f * UNIT + OFFSET.x, 3.0f * UNIT + OFFSET.y), color, 0.0f, 0, thickness);
+    draw_list->AddRect(ImVec2(2.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), ImVec2(8.0f * UNIT + OFFSET.x, 2.0f * UNIT + OFFSET.y), color, 0.0f, 0, thickness);
+    draw_list->AddRect(ImVec2(3.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), ImVec2(7.0f * UNIT + OFFSET.x, 3.0f * UNIT + OFFSET.y), color, 0.0f, 0, thickness);
+    draw_list->AddRect(ImVec2(4.0f * UNIT + OFFSET.x, 6.0f * UNIT + OFFSET.y), ImVec2(6.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), color, 0.0f, 0, thickness);
 
-    draw_list->AddLine(ImVec2(4.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), ImVec2(4.0f * UNIT + OFFSET.x, 3.0f * UNIT + OFFSET.y), color, thickness);
-    draw_list->AddLine(ImVec2(5.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), ImVec2(7.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), color, thickness);
-    draw_list->AddLine(ImVec2(4.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), ImVec2(4.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), color, thickness);
-    draw_list->AddLine(ImVec2(1.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), ImVec2(3.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), color, thickness);
+    draw_list->AddLine(ImVec2(5.0f * UNIT + OFFSET.x, 2.0f * UNIT + OFFSET.y), ImVec2(5.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), color, thickness);
+    draw_list->AddLine(ImVec2(6.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), ImVec2(8.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), color, thickness);
+    draw_list->AddLine(ImVec2(5.0f * UNIT + OFFSET.x, 6.0f * UNIT + OFFSET.y), ImVec2(5.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), color, thickness);
+    draw_list->AddLine(ImVec2(2.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), ImVec2(4.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), color, thickness);
+
+    // ImGui::PushFont()
+
+    draw_list->AddText(ImVec2(2.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "A");
+    draw_list->AddText(ImVec2(3.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "B");
+    draw_list->AddText(ImVec2(4.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "C");
+    draw_list->AddText(ImVec2(5.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "D");
+    draw_list->AddText(ImVec2(6.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "E");
+    draw_list->AddText(ImVec2(7.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "F");
+    draw_list->AddText(ImVec2(8.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "G");
+
+    draw_list->AddText(ImVec2(2.0f * UNIT + OFFSET.x, 9.0f * UNIT + OFFSET.y), color, "A");
+    draw_list->AddText(ImVec2(3.0f * UNIT + OFFSET.x, 9.0f * UNIT + OFFSET.y), color, "B");
+    draw_list->AddText(ImVec2(4.0f * UNIT + OFFSET.x, 9.0f * UNIT + OFFSET.y), color, "C");
+    draw_list->AddText(ImVec2(5.0f * UNIT + OFFSET.x, 9.0f * UNIT + OFFSET.y), color, "D");
+    draw_list->AddText(ImVec2(6.0f * UNIT + OFFSET.x, 9.0f * UNIT + OFFSET.y), color, "E");
+    draw_list->AddText(ImVec2(7.0f * UNIT + OFFSET.x, 9.0f * UNIT + OFFSET.y), color, "F");
+    draw_list->AddText(ImVec2(8.0f * UNIT + OFFSET.x, 9.0f * UNIT + OFFSET.y), color, "G");
+
+    draw_list->AddText(ImVec2(9.0f * UNIT + OFFSET.x, 2.0f * UNIT + OFFSET.y), color, "7");
+    draw_list->AddText(ImVec2(9.0f * UNIT + OFFSET.x, 3.0f * UNIT + OFFSET.y), color, "6");
+    draw_list->AddText(ImVec2(9.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), color, "5");
+    draw_list->AddText(ImVec2(9.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), color, "4");
+    draw_list->AddText(ImVec2(9.0f * UNIT + OFFSET.x, 6.0f * UNIT + OFFSET.y), color, "3");
+    draw_list->AddText(ImVec2(9.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), color, "2");
+    draw_list->AddText(ImVec2(9.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), color, "1");
+
+    draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 2.0f * UNIT + OFFSET.y), color, "7");
+    draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 3.0f * UNIT + OFFSET.y), color, "6");
+    draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 4.0f * UNIT + OFFSET.y), color, "5");
+    draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), color, "4");
+    draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 6.0f * UNIT + OFFSET.y), color, "3");
+    draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), color, "2");
+    draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), color, "1");
 
     draw_all_pieces(draw_list);
 
@@ -405,10 +508,10 @@ void MuhleTester::right_side() {
     ImGui::Separator();
 
     switch (mode) {
-        case Play:
+        case ModePlay:
             play_mode_buttons();
             break;
-        case Test:
+        case ModeTest:
             test_mode_buttons();
             break;
     }
@@ -422,16 +525,16 @@ void MuhleTester::play_mode_buttons() {
     }
 
     if (ImGui::Button("Reset")) {
-        reset_game();
+        reset_game_play();
     }
 
     ImGui::Text("White"); ImGui::SameLine();
-    ImGui::RadioButton("Human##w", &white, Human); ImGui::SameLine();
-    ImGui::RadioButton("Computer##w", &white, Computer);
+    ImGui::RadioButton("Human##w", &white, PlayerHuman); ImGui::SameLine();
+    ImGui::RadioButton("Computer##w", &white, PlayerComputer);
 
     ImGui::Text("Black"); ImGui::SameLine();
-    ImGui::RadioButton("Human##b", &black, Human); ImGui::SameLine();
-    ImGui::RadioButton("Computer##b", &black, Computer);
+    ImGui::RadioButton("Human##b", &black, PlayerHuman); ImGui::SameLine();
+    ImGui::RadioButton("Computer##b", &black, PlayerComputer);
 
     ImGui::Separator();
 
@@ -454,7 +557,7 @@ void MuhleTester::play_mode_buttons() {
 
 void MuhleTester::test_mode_buttons() {
     if (ImGui::Button("Compute")) {
-
+        test_state = TestState::ComputerBegin;
     }
 
     if (ImGui::Button("Stop AI")) {
@@ -462,12 +565,49 @@ void MuhleTester::test_mode_buttons() {
     }
 
     if (ImGui::Button("Reset")) {
-        reset_game();
+        reset_game_test();
     }
 
     ImGui::Text("Piece"); ImGui::SameLine();
-    ImGui::RadioButton("White", &piece, Human); ImGui::SameLine();
-    ImGui::RadioButton("Black", &piece, Computer);
+    ImGui::RadioButton("White", &piece, PieceWhite); ImGui::SameLine();
+    ImGui::RadioButton("Black", &piece, PieceBlack);
 
     ImGui::Separator();
+
+    ImGui::Text("Turn"); ImGui::SameLine();
+    static int turn = PieceWhite;
+
+    if (ImGui::RadioButton("White##turn", &turn, PieceWhite)) {
+        game_test.turn = Player::White;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::RadioButton("Black##turn", &turn, PieceBlack)) {
+        game_test.turn = Player::Black;
+    }
+
+    const float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
+
+    ImGui::Text("White"); ImGui::SameLine();
+    ImGui::PushButtonRepeat(true);
+    if (ImGui::ArrowButton("##wleft", ImGuiDir_Left)) { game_test.set_pieces_outside(Player::White, -1); }
+    ImGui::SameLine(0.0f, spacing);
+    if (ImGui::ArrowButton("##wright", ImGuiDir_Right)) { game_test.set_pieces_outside(Player::White, +1); }
+    ImGui::PopButtonRepeat();
+    ImGui::SameLine();
+    ImGui::Text("%u outside pieces", game_test.white_pieces_outside);
+
+    ImGui::Text("Black"); ImGui::SameLine();
+    ImGui::PushButtonRepeat(true);
+    if (ImGui::ArrowButton("##bleft", ImGuiDir_Left)) { game_test.set_pieces_outside(Player::Black, -1); }
+    ImGui::SameLine(0.0f, spacing);
+    if (ImGui::ArrowButton("##bright", ImGuiDir_Right)) { game_test.set_pieces_outside(Player::Black, +1); }
+    ImGui::PopButtonRepeat();
+    ImGui::SameLine();
+    ImGui::Text("%u outside pieces", game_test.black_pieces_outside);
+
+    ImGui::Separator();
+
+    ImGui::Text("Result: %s", result_text.c_str());
 }

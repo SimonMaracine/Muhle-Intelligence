@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 
+#include <definitions.hpp>
+
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 namespace muhle {

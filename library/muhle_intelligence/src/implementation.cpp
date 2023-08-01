@@ -157,7 +157,7 @@ namespace muhle {
         const auto moves = get_all_moves(piece);
 
         for (const auto& move : moves) {
-            std::cout << move << '\n';
+            std::cout << "some move" << '\n';  // TODO
         }
         std::cout << std::endl;
 

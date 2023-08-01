@@ -13,6 +13,7 @@ target_link_libraries(muhle_tester PRIVATE
     glm::glm
     just_dl
     muhle_intelligence_api
+    muhle_intelligence_miscellaneous
 )
 
 target_compile_features(muhle_tester PRIVATE cxx_std_17)

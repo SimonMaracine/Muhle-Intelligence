@@ -6,14 +6,14 @@
 
 #include "game.hpp"
 
-inline constexpr int Play = 0;
-inline constexpr int Test = 1;
+inline constexpr int ModePlay = 0;
+inline constexpr int ModeTest = 1;
 
-inline constexpr int Human = 0;
-inline constexpr int Computer = 1;
+inline constexpr int PlayerHuman = 0;
+inline constexpr int PlayerComputer = 1;
 
-inline constexpr int White = 0;
-inline constexpr int Black = 1;
+inline constexpr int PieceWhite = 0;
+inline constexpr int PieceBlack = 1;
 
 struct MuhleTester : public gui_base::GuiApplication {
     MuhleTester()
@@ -29,14 +29,15 @@ struct MuhleTester : public gui_base::GuiApplication {
     void draw_piece(ImDrawList* draw_list, float x, float y, Player type);
     void draw_all_pieces(ImDrawList* draw_list);
 
-    void reset_game();
+    void reset_game_play();
+    void reset_game_test();
     void change_turn();
     void load_library(const char* buffer);
     void unload_library();
 
     void main_menu_bar();
     void main_window();
-    void load_library_modal();
+    void load_library();
 
     void board_canvas();
     void right_side();
@@ -44,27 +45,30 @@ struct MuhleTester : public gui_base::GuiApplication {
     void play_mode_buttons();
     void test_mode_buttons();
 
-    bool show_load_library = false;
+    int mode = ModePlay;
 
-    int mode = Play;
+    float board_unit {};
+    glm::vec2 board_offset {};
 
-    enum class State {
+    GamePlay game_play;
+    int white = PlayerHuman;
+    int black = PlayerComputer;
+    enum class PlayState {
         NextTurn,
         HumanThinking,
         ComputerBegin,
         ComputerThinking,
         ComputerEnd
-    } state = State::NextTurn;
+    } play_state = PlayState::NextTurn;
 
-    int white = Human;
-    int black = Computer;
-
-    int piece = White;
-
-    GamePlay game_play;
     GameTest game_test;
-    float board_unit {};
-    glm::vec2 board_offset {};
+    int piece = PieceWhite;
+    enum class TestState {
+        None,
+        ComputerBegin,
+        ComputerThinking
+    } test_state = TestState::None;
+    std::string result_text = "[None]";
 
     using LibraryCreate = muhle::MuhleIntelligence*(*)();
     using LibraryDestroy = void(*)(muhle::MuhleIntelligence*);

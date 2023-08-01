@@ -91,6 +91,7 @@ struct GamePlay {
     void setup(ChangedTurn changed_turn);
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_click(glm::vec2 mouse_position);
+    std::array<int, 24> get_position();
 
     void place_piece(int node_index);
     void move_piece(int node_source_index, int node_destination_index);
@@ -101,7 +102,6 @@ struct GamePlay {
     void check_move_piece(glm::vec2 mouse_position);
     void check_take_piece(glm::vec2 mouse_position);
 
-    bool point_in_node(glm::vec2 mouse_position, const Node& node);
     unsigned int change_turn();
     Player opponent(Player player);
     bool can_potentially_move(Node& node_src, Node& node_dest);
@@ -113,14 +113,17 @@ struct GamePlay {
     void game_over(Ending ending);
     bool threefold_repetition();
     void clear_repetition();
-    std::array<int, 24> get_position();
 };
 
 struct GameTest {
+    unsigned int white_pieces_on_board = 0;
     unsigned int white_pieces_outside = 9;
+    unsigned int black_pieces_on_board = 0;
     unsigned int black_pieces_outside = 9;
 
-    std::array<Node, 24> nodes {};;
+    Player turn = Player::White;
+
+    std::array<Node, 24> nodes {};
 
     enum class MouseButton {
         Left,
@@ -130,9 +133,9 @@ struct GameTest {
     void setup();
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_click(glm::vec2 mouse_position, MouseButton button, Player player = Player::White);
+    std::array<int, 24> get_position();
+    void set_pieces_outside(Player player, int change);
 
-    void add_piece(Player player, int node_index);
-    void remove_piece(int node_index);
-
-    bool point_in_node(glm::vec2 mouse_position, const Node& node);
+    void check_add_piece(Player player, int node_index);
+    void check_remove_piece(int node_index);
 };

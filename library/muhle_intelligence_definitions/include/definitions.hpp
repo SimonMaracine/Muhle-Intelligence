@@ -1,8 +1,6 @@
 #pragma once
 
-#include <ostream>
 #include <array>
-#include <string_view>
 
 namespace muhle {
     inline constexpr int NODES = 24;
@@ -58,19 +56,8 @@ namespace muhle {
         Piece piece = Piece::None;
     };
 
-    std::ostream& operator<<(std::ostream& stream, const Move& move);
-
     struct Result {
         bool done = false;
         Move result {};
-    };
-
-    struct MuhleIntelligence {
-        virtual ~MuhleIntelligence() = default;
-
-        virtual void initialize() = 0;
-        virtual void search(const Position& position, Player player, Result& result) = 0;
-        virtual void join_thread() = 0;
-        virtual void set_parameter(std::string_view parameter, int value) = 0;
     };
 }

@@ -9,30 +9,30 @@
 #include "game.hpp"
 
 static const int NODE_POSITIONS[24][2] = {
-    { 1, 1 },
-    { 4, 1 },
-    { 7, 1 },
     { 2, 2 },
-    { 4, 2 },
-    { 6, 2 },
+    { 5, 2 },
+    { 8, 2 },
     { 3, 3 },
-    { 4, 3 },
     { 5, 3 },
-    { 1, 4 },
-    { 2, 4 },
-    { 3, 4 },
+    { 7, 3 },
+    { 4, 4 },
     { 5, 4 },
     { 6, 4 },
-    { 7, 4 },
+    { 2, 5 },
     { 3, 5 },
     { 4, 5 },
-    { 5, 5 },
-    { 2, 6 },
+    { 6, 5 },
+    { 7, 5 },
+    { 8, 5 },
     { 4, 6 },
+    { 5, 6 },
     { 6, 6 },
-    { 1, 7 },
-    { 4, 7 },
-    { 7, 7 }
+    { 3, 7 },
+    { 5, 7 },
+    { 7, 7 },
+    { 2, 8 },
+    { 5, 8 },
+    { 8, 8 }
 };
 
 static const unsigned int MILLS_COUNT = 16;
@@ -42,6 +42,26 @@ static const unsigned int MILLS[MILLS_COUNT][3] = {
     { 6, 7, 8 }, { 8, 12, 17 }, { 15, 16, 17 }, { 6, 11, 15 },
     { 1, 4, 7 }, { 12, 13, 14 }, { 16, 19, 22 }, { 9, 10, 11 }
 };
+
+static bool point_in_node(glm::vec2 mouse_position, const Node& node) {
+    const glm::vec2 sub = node.position - mouse_position;
+
+    return glm::length(sub) < NODE_RADIUS;
+}
+
+static std::array<int, 24> position(const std::array<Node, 24>& nodes) {
+    std::array<int, 24> result;
+
+    for (size_t i = 0; i < nodes.size(); i++) {
+        if (nodes[i].piece.has_value()) {
+            result[i] = nodes[i].piece->player == Player::White ? 0 : 1;  // FIXME find a better way
+        } else {
+            result[i] = 2;
+        }
+    }
+
+    return result;
+}
 
 void GamePlay::setup(ChangedTurn changed_turn) {
     for (size_t i = 0; i < nodes.size(); i++) {
@@ -88,6 +108,10 @@ void GamePlay::user_click(glm::vec2 mouse_position) {
 
             break;
     }
+}
+
+std::array<int, 24> GamePlay::get_position() {
+    return position(nodes);
 }
 
 void GamePlay::place_piece(int node_index) {
@@ -340,12 +364,6 @@ void GamePlay::check_take_piece(glm::vec2 mouse_position) {
 
         break;
     }
-}
-
-bool GamePlay::point_in_node(glm::vec2 mouse_position, const Node& node) {
-    const glm::vec2 sub = node.position - mouse_position;
-
-    return glm::length(sub) < NODE_RADIUS;
 }
 
 unsigned int GamePlay::change_turn() {
@@ -820,20 +838,6 @@ void GamePlay::clear_repetition() {
     repetition.twos.clear();
 }
 
-std::array<int, 24> GamePlay::get_position() {
-    std::array<int, 24> result;
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-        if (nodes[i].piece.has_value()) {
-            result[i] = nodes[i].piece->player == Player::White ? 0 : 1;  // FIXME find a better way
-        } else {
-            result[i] = 2;
-        }
-    }
-
-    return result;
-}
-
 void GameTest::setup() {
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = i;
@@ -863,11 +867,12 @@ void GameTest::user_click(glm::vec2 mouse_position, MouseButton button, Player p
 
         switch (button) {
             case MouseButton::Left:
-                add_piece(player, node.index);
+                check_add_piece(player, node.index);
 
                 break;
             case MouseButton::Right:
-                remove_piece(node.index);
+
+                check_remove_piece(node.index);
 
                 break;
         }
@@ -876,10 +881,64 @@ void GameTest::user_click(glm::vec2 mouse_position, MouseButton button, Player p
     }
 }
 
-void GameTest::add_piece(Player player, int node_index) {
+std::array<int, 24> GameTest::get_position() {
+    return position(nodes);
+}
+
+void GameTest::set_pieces_outside(Player player, int change) {
+    assert(change == 1 || change == -1);
+
+    if (player == Player::White) {
+        if (change == -1 && white_pieces_outside == 0) {
+            return;
+        }
+
+        if (change == 1 && white_pieces_outside >= 9 - white_pieces_on_board) {
+            return;
+        }
+
+        white_pieces_outside += change;
+    } else {
+        if (change == -1 && black_pieces_outside == 0) {
+            return;
+        }
+
+        if (change == 1 && black_pieces_outside >= 9 - black_pieces_on_board) {
+            return;
+        }
+
+        black_pieces_outside += change;
+    }
+}
+
+void GameTest::check_add_piece(Player player, int node_index) {
     Node& node = nodes[node_index];
 
-    assert(node.piece == std::nullopt);
+    if (node.piece != std::nullopt) {
+        return;
+    }
+
+    if (player == Player::White) {
+        if (white_pieces_on_board >= 9) {
+            return;
+        }
+
+        white_pieces_on_board++;
+
+        if (white_pieces_outside >= 9 - white_pieces_on_board) {
+            white_pieces_outside = 9 - white_pieces_on_board;
+        }
+    } else {
+        if (black_pieces_on_board >= 9) {
+            return;
+        }
+
+        black_pieces_on_board++;
+
+        if (black_pieces_outside >= 9 - black_pieces_on_board) {
+            black_pieces_outside = 9 - black_pieces_on_board;
+        }
+    }
 
     Piece piece;
     piece.player = player;
@@ -888,16 +947,28 @@ void GameTest::add_piece(Player player, int node_index) {
     node.piece = std::make_optional(piece);
 }
 
-void GameTest::remove_piece(int node_index) {
+void GameTest::check_remove_piece(int node_index) {
     Node& node = nodes[node_index];
 
-    assert(node.piece != std::nullopt);
+    if (node.piece == std::nullopt) {
+        return;
+    }
+
+    const Player player = node.piece->player;
+
+    if (player == Player::White) {
+        if (white_pieces_on_board == 0) {
+            return;
+        }
+
+        white_pieces_on_board--;
+    } else {
+        if (black_pieces_on_board == 0) {
+            return;
+        }
+
+        black_pieces_on_board--;
+    }
 
     node.piece = std::nullopt;
-}
-
-bool GameTest::point_in_node(glm::vec2 mouse_position, const Node& node) {
-    const glm::vec2 sub = node.position - mouse_position;
-
-    return glm::length(sub) < NODE_RADIUS;
 }
