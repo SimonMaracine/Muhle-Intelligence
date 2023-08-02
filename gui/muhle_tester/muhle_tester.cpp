@@ -16,9 +16,12 @@ void MuhleTester::start() {
     game_test.setup();
 
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontDefault();
 
-    // ImFont* label_font = ImGui::
+    ImFontConfig config {};
+    io.Fonts->AddFontDefault();
+    config.SizePixels = 15;
+    label_font = io.Fonts->AddFontDefault(&config);
+    io.Fonts->Build();
 }
 
 void MuhleTester::update() {
@@ -327,7 +330,7 @@ void MuhleTester::load_library(const char* buffer) {
 
     library_name = muhle_intelligence_name();
 
-    std::cout << "Successfully loaded library `" << buffer << "`, named `" << library_name << "`\n";
+    std::cout << "Successfully loaded library `" << buffer << " `, named `" << library_name << "`\n";
 }
 
 void MuhleTester::unload_library() {
@@ -346,7 +349,7 @@ void MuhleTester::unload_library() {
         return;
     }
 
-    std::cout << "Successfully unloaded library named: `"<< library_name << "`\n";
+    std::cout << "Successfully unloaded library named: `" << library_name << "`\n";
 
     library_name = "[None]";
 }
@@ -382,8 +385,15 @@ void MuhleTester::main_menu_bar() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Help")) {
-            if (ImGui::MenuItem("About")) {
+            if (ImGui::BeginMenu("About")) {
+                about();
 
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Notation")) {
+                notation();
+
+                ImGui::EndMenu();
             }
 
             ImGui::EndMenu();
@@ -425,9 +435,22 @@ void MuhleTester::load_library() {
     }
 }
 
+void MuhleTester::about() {
+    ImGui::Text(u8"Mühle Tester - for testing and developing Mühle Intelligence");
+}
+
+void MuhleTester::notation() {
+    ImGui::Text("A player's turn is described as:");
+    ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.3f, 1.0f), "player move_type node[-node] [move_type node]");
+    ImGui::Text("1. Player: W for white, B for black");
+    ImGui::Text("2. Main move: P for place, M for move, first and second phase respectively");
+    ImGui::Text("3. Node: one node - place location, or two nodes - move source and destination");
+    ImGui::Text("4. Optional, take move: T preceeded by a node - which piece was taken");
+}
+
 void MuhleTester::board_canvas() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(100, 100, 100, 255));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(90, 90, 90, 255));
 
     ImGui::BeginChild("Canvas", ImVec2(500.0f, 500.0f));
 
@@ -462,7 +485,7 @@ void MuhleTester::board_canvas() {
     draw_list->AddLine(ImVec2(5.0f * UNIT + OFFSET.x, 6.0f * UNIT + OFFSET.y), ImVec2(5.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), color, thickness);
     draw_list->AddLine(ImVec2(2.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), ImVec2(4.0f * UNIT + OFFSET.x, 5.0f * UNIT + OFFSET.y), color, thickness);
 
-    // ImGui::PushFont()
+    ImGui::PushFont(label_font);
 
     draw_list->AddText(ImVec2(2.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "A");
     draw_list->AddText(ImVec2(3.0f * UNIT + OFFSET.x, 1.0f * UNIT + OFFSET.y), color, "B");
@@ -495,6 +518,8 @@ void MuhleTester::board_canvas() {
     draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 6.0f * UNIT + OFFSET.y), color, "3");
     draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), color, "2");
     draw_list->AddText(ImVec2(1.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), color, "1");
+
+    ImGui::PopFont();
 
     draw_all_pieces(draw_list);
 

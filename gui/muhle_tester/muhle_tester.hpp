@@ -17,7 +17,7 @@ inline constexpr int PieceBlack = 1;
 
 struct MuhleTester : public gui_base::GuiApplication {
     MuhleTester()
-        : gui_base::GuiApplication(1024, 576, "Mühle Tester", false) {}
+        : gui_base::GuiApplication(1024, 576, u8"Mühle Tester", false) {}
 
     virtual void start() override;
     virtual void update() override;
@@ -38,6 +38,8 @@ struct MuhleTester : public gui_base::GuiApplication {
     void main_menu_bar();
     void main_window();
     void load_library();
+    void about();
+    void notation();
 
     void board_canvas();
     void right_side();
@@ -49,6 +51,7 @@ struct MuhleTester : public gui_base::GuiApplication {
 
     float board_unit {};
     glm::vec2 board_offset {};
+    ImFont* label_font = nullptr;
 
     GamePlay game_play;
     int white = PlayerHuman;
