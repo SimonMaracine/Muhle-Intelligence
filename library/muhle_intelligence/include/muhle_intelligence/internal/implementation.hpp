@@ -12,6 +12,8 @@
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 namespace muhle {
+    inline constexpr size_t MAX_PLY_MOVES = 57;
+
     struct MuhleImpl : public MuhleIntelligence {
         virtual void initialize() override;
         virtual void search(const Position& position, Player player, Result& result) override;
@@ -30,6 +32,7 @@ namespace muhle {
         void search(Player player, Result& result);
     private:
         int minimax(unsigned int depth, unsigned int turns_from_root, int alpha, int beta, Player player);
+        unsigned int test_moves(Player player, unsigned int depth);
 
         Move random_move(Piece piece);
         std::vector<Move> get_all_moves(Piece piece);
@@ -55,17 +58,15 @@ namespace muhle {
         Piece opponent_piece(Piece type);
         bool is_mill(Piece piece, int index);
         bool is_game_over();
-        unsigned int number_of_pieces_outside(Piece piece);
-        unsigned int total_number_of_pieces(Piece piece);
+        unsigned int pieces_on_board(Piece piece);
 
+        // TODO cache stuff
         std::array<Piece, NODES> position {};
         unsigned int white_pieces_on_board {};
-        unsigned int white_pieces_outside {};  // TODO cache phase two bool
         unsigned int black_pieces_on_board {};
-        unsigned int black_pieces_outside {};
+        unsigned int plies {};
 
         Move best_move {};
-        int evaluation = 0;
         unsigned int positions_evaluated = 0;
 
         struct {

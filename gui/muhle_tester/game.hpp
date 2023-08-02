@@ -72,6 +72,7 @@ struct GamePlay {
     Player turn = Player::White;
     GamePhase phase = GamePhase::PlacePieces;
     Ending ending = Ending::None;
+    unsigned int plies = 0;
 
     std::array<Node, 24> nodes {};
 
@@ -117,11 +118,10 @@ struct GamePlay {
 
 struct GameTest {
     unsigned int white_pieces_on_board = 0;
-    unsigned int white_pieces_outside = 9;
     unsigned int black_pieces_on_board = 0;
-    unsigned int black_pieces_outside = 9;
 
     Player turn = Player::White;
+    unsigned int plies = 0;
 
     std::array<Node, 24> nodes {};
 

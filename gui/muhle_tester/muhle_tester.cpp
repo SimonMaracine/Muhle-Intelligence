@@ -95,8 +95,7 @@ void MuhleTester::play_mode_update() {
                 for (size_t i = 0; i < game_position.size(); i++) {
                     position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
                 }
-                position.white_pieces_outside = game_play.white_pieces_outside;
-                position.black_pieces_outside = game_play.black_pieces_outside;
+                position.plies = game_play.plies;
 
                 muhle->search(
                     position,
@@ -174,8 +173,7 @@ void MuhleTester::test_mode_update() {
                 for (size_t i = 0; i < game_position.size(); i++) {
                     position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
                 }
-                position.white_pieces_outside = game_test.white_pieces_outside;
-                position.black_pieces_outside = game_test.black_pieces_outside;
+                position.plies = game_test.plies;
 
                 muhle->search(
                     position,
@@ -614,23 +612,13 @@ void MuhleTester::test_mode_buttons() {
 
     const float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
 
-    ImGui::Text("White"); ImGui::SameLine();
     ImGui::PushButtonRepeat(true);
-    if (ImGui::ArrowButton("##wleft", ImGuiDir_Left)) { game_test.set_pieces_outside(Player::White, -1); }
+    if (ImGui::ArrowButton("##wleft", ImGuiDir_Left)) { if (game_test.plies > 0) game_test.plies--; }
     ImGui::SameLine(0.0f, spacing);
-    if (ImGui::ArrowButton("##wright", ImGuiDir_Right)) { game_test.set_pieces_outside(Player::White, +1); }
+    if (ImGui::ArrowButton("##wright", ImGuiDir_Right)) { game_test.plies++; }
     ImGui::PopButtonRepeat();
     ImGui::SameLine();
-    ImGui::Text("%u outside pieces", game_test.white_pieces_outside);
-
-    ImGui::Text("Black"); ImGui::SameLine();
-    ImGui::PushButtonRepeat(true);
-    if (ImGui::ArrowButton("##bleft", ImGuiDir_Left)) { game_test.set_pieces_outside(Player::Black, -1); }
-    ImGui::SameLine(0.0f, spacing);
-    if (ImGui::ArrowButton("##bright", ImGuiDir_Right)) { game_test.set_pieces_outside(Player::Black, +1); }
-    ImGui::PopButtonRepeat();
-    ImGui::SameLine();
-    ImGui::Text("%u outside pieces", game_test.black_pieces_outside);
+    ImGui::Text("%u plies", game_test.plies);
 
     ImGui::Separator();
 

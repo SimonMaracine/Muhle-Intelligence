@@ -4,6 +4,7 @@
 
 namespace muhle {
     inline constexpr int NODES = 24;
+    inline constexpr int INVALID_INDEX = -1;
 
     enum class Player {
         White,
@@ -25,8 +26,7 @@ namespace muhle {
 
     struct Position {
         std::array<Piece, NODES> pieces {};
-        unsigned int white_pieces_outside {};
-        unsigned int black_pieces_outside {};
+        unsigned int plies {};
     };
 
     struct Move {

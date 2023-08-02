@@ -371,6 +371,7 @@ unsigned int GamePlay::change_turn() {
 
     changed_turn();
 
+    plies++;
     plies_without_mills++;
 
     return plies_without_mills;
@@ -792,7 +793,7 @@ bool GamePlay::player_has_no_legal_moves(Player player) {
 void GamePlay::game_over(Ending ending) {
     phase = GamePhase::GameOver;
     this->ending = ending;
-    std::cout << "GamePlay over: " << static_cast<int>(ending) << '\n';
+    std::cout << "Game over: " << static_cast<int>(ending) << '\n';
 }
 
 bool GamePlay::threefold_repetition() {
@@ -885,32 +886,6 @@ std::array<int, 24> GameTest::get_position() {
     return position(nodes);
 }
 
-void GameTest::set_pieces_outside(Player player, int change) {
-    assert(change == 1 || change == -1);
-
-    if (player == Player::White) {
-        if (change == -1 && white_pieces_outside == 0) {
-            return;
-        }
-
-        if (change == 1 && white_pieces_outside >= 9 - white_pieces_on_board) {
-            return;
-        }
-
-        white_pieces_outside += change;
-    } else {
-        if (change == -1 && black_pieces_outside == 0) {
-            return;
-        }
-
-        if (change == 1 && black_pieces_outside >= 9 - black_pieces_on_board) {
-            return;
-        }
-
-        black_pieces_outside += change;
-    }
-}
-
 void GameTest::check_add_piece(Player player, int node_index) {
     Node& node = nodes[node_index];
 
@@ -924,20 +899,12 @@ void GameTest::check_add_piece(Player player, int node_index) {
         }
 
         white_pieces_on_board++;
-
-        if (white_pieces_outside >= 9 - white_pieces_on_board) {
-            white_pieces_outside = 9 - white_pieces_on_board;
-        }
     } else {
         if (black_pieces_on_board >= 9) {
             return;
         }
 
         black_pieces_on_board++;
-
-        if (black_pieces_outside >= 9 - black_pieces_on_board) {
-            black_pieces_outside = 9 - black_pieces_on_board;
-        }
     }
 
     Piece piece;
