@@ -17,6 +17,6 @@ extern "C" {
     }
 
     MUHLE_API const char* muhle_intelligence_name() {
-        return "old_fixed";
+        return "a_bit_faster";
     }
 }
