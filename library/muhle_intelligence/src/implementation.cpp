@@ -8,7 +8,7 @@
 #include <iomanip>
 #include <climits>
 #include <chrono>
-#include <utility>
+#include <array>
 
 #include "muhle_intelligence/internal/implementation.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
