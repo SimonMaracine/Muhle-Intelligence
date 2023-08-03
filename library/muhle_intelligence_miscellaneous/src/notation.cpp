@@ -58,6 +58,8 @@ namespace muhle {
                 assert(false);
                 break;
         }
+
+        return nullptr;
     }
 
     std::string move_to_string(const Move& move) {

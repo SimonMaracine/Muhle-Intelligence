@@ -11,3 +11,5 @@ target_include_directories(muhle_intelligence_miscellaneous PUBLIC "include")
 
 target_compile_features(muhle_intelligence_miscellaneous PRIVATE cxx_std_17)
 set_target_properties(muhle_intelligence_miscellaneous PROPERTIES CXX_EXTENSIONS OFF)
+
+enable_warnings(muhle_intelligence_miscellaneous)

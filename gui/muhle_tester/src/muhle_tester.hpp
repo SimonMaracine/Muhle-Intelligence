@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <gui_base.hpp>
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
@@ -83,7 +85,7 @@ struct MuhleTester : public gui_base::GuiApplication {
     void* library_handle = nullptr;
 
     muhle::MuhleIntelligence* muhle = nullptr;
-    const char* library_name = "";
+    std::string library_name = "";
 
     muhle::Result muhle_result;
 };

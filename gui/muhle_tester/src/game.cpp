@@ -65,7 +65,7 @@ static std::array<int, 24> position(const std::array<Node, 24>& nodes) {
 
 void GamePlay::setup(ChangedTurn changed_turn) {
     for (size_t i = 0; i < nodes.size(); i++) {
-        nodes[i].index = i;
+        nodes[i].index = static_cast<int>(i);
     }
 
     this->changed_turn = changed_turn;
@@ -268,7 +268,7 @@ void GamePlay::check_select_piece(glm::vec2 mouse_position) {
 
         // Selecting a piece
 
-        selected_piece_index = i;
+        selected_piece_index = static_cast<int>(i);
 
         std::cout << "Selected piece index " << i << '\n';
 
@@ -841,7 +841,7 @@ void GamePlay::clear_repetition() {
 
 void GameTest::setup() {
     for (size_t i = 0; i < nodes.size(); i++) {
-        nodes[i].index = i;
+        nodes[i].index = static_cast<int>(i);
     }
 }
 

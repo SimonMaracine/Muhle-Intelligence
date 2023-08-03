@@ -13,3 +13,5 @@ target_include_directories(gui_base PUBLIC "include")
 
 target_compile_features(gui_base PRIVATE cxx_std_17)
 set_target_properties(gui_base PROPERTIES CXX_EXTENSIONS OFF)
+
+enable_warnings(gui_base)

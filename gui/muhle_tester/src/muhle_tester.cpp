@@ -1,5 +1,5 @@
 #include <iostream>
-#include <math.h>
+#include <string>
 
 #include <gui_base.hpp>
 #include <just_dl/just_dl.hpp>
@@ -336,7 +336,7 @@ void MuhleTester::unload_library() {
         return;
     }
 
-    muhle_intelligence_destroy(muhle);
+    muhle_intelligence_destroy(muhle);  // FIXME crash, if functions were not loaded
 
     just_dl::Error err;
 
@@ -527,7 +527,7 @@ void MuhleTester::board_canvas() {
 void MuhleTester::right_side() {
     ImGui::BeginChild("Right side buttons");
 
-    ImGui::Text("AI library name: %s", library_name);
+    ImGui::Text("AI library name: %s", library_name.c_str());
     ImGui::Separator();
 
     switch (mode) {

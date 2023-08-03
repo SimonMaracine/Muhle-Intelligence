@@ -5,6 +5,16 @@ option(MUHLE_BUILD_GUI "Build the GUI components" ON)
 
 project("Muhle-Intelligence" LANGUAGES C CXX)
 
+function(enable_warnings target)
+    if(UNIX)
+        target_compile_options(${target} PRIVATE "-Wall" "-Wextra" "-Wpedantic")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        target_compile_options(${target} PRIVATE "/W3")
+    else()
+        message(WARNING "Compiler is not MSVC or platform is not supported; warnings were not enabled")
+    endif()
+endfunction()
+
 add_subdirectory(library)
 
 if(MUHLE_BUILD_GUI)
