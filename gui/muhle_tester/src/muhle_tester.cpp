@@ -336,7 +336,7 @@ void MuhleTester::load_library(const char* buffer) {
 
     library_name = muhle_intelligence_name();
 
-    std::cout << "Successfully loaded library `" << buffer << " `, named `" << library_name << "`\n";
+    std::cout << "Successfully loaded library `" << buffer << "`, named `" << library_name << "`\n";
 }
 
 void MuhleTester::unload_library() {
