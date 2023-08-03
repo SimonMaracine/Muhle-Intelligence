@@ -11,6 +11,6 @@ extern "C" {
     }
 
     const char* muhle_intelligence_name() {
-        return "old";
+        return "old_fixed";
     }
 }

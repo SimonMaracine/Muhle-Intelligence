@@ -31,6 +31,7 @@ namespace muhle {
         // Here the default values are set
         parameters["PIECE"] = 7;
         parameters["FREEDOM"] = 1;
+        parameters["END_GAME"] = 100;
         parameters["DEPTH"] = 5;
     }
 
@@ -56,6 +57,7 @@ namespace muhle {
     void SearchCtx::setup(const std::unordered_map<std::string, int>& parameters) {
         this->parameters.PIECE = parameters.at("PIECE");
         this->parameters.FREEDOM = parameters.at("FREEDOM");
+        this->parameters.END_GAME = parameters.at("END_GAME");
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
@@ -92,8 +94,10 @@ namespace muhle {
     }
 
     int SearchCtx::minimax(unsigned int depth, unsigned int plies_from_root, int alpha, int beta, Player player) {
-        if (depth == 0 || is_game_over()) {
-            return evaluate_position();
+        int game_over_evaluation = 0;
+
+        if (depth == 0 || is_game_over(game_over_evaluation)) {
+            return evaluate_position(game_over_evaluation);
         }
 
         if (player == Player::White) {
@@ -383,7 +387,7 @@ namespace muhle {
         position[node_destination_index] = Piece::None;
     }
 
-    int SearchCtx::evaluate_position() {  // TODO also evaluate piece positions
+    int SearchCtx::evaluate_position(int game_over_evaluation) {  // TODO also evaluate piece positions
         positions_evaluated++;
 
         int evaluation = 0;
@@ -391,14 +395,19 @@ namespace muhle {
         const unsigned int white_material = calculate_material(Piece::White);  // constexpr
         const unsigned int black_material = calculate_material(Piece::Black);
 
+        // Calculate number of pieces
         evaluation += white_material * parameters.PIECE;
         evaluation -= black_material * parameters.PIECE;
 
         const unsigned int white_freedom = calculate_freedom(Piece::White);
         const unsigned int black_freedom = calculate_freedom(Piece::Black);
 
+        // Calculate pieces' freedom
         evaluation += white_freedom * parameters.FREEDOM;
         evaluation -= black_freedom * parameters.FREEDOM;
+
+        // Encourage end game
+        evaluation += game_over_evaluation * parameters.END_GAME;
 
         return evaluation;
     }
@@ -817,24 +826,28 @@ namespace muhle {
         return false;
     }
 
-    bool SearchCtx::is_game_over() {
+    bool SearchCtx::is_game_over(int& game_over_evaluation) {
         if (plies < 18) {
             return false;
         }
 
         if (white_pieces_on_board < 3) {
+            game_over_evaluation = -1;
             return true;
         }
 
         if (black_pieces_on_board < 3) {
+            game_over_evaluation = 1;
             return true;
         }
 
         if (calculate_freedom(Piece::White) == 0) {  // TODO constexpr
+            game_over_evaluation = -1;
             return true;
         }
 
         if (calculate_freedom(Piece::Black) == 0) {
+            game_over_evaluation = 1;
             return true;
         }
 

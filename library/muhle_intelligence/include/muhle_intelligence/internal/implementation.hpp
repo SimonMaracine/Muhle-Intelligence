@@ -48,7 +48,7 @@ namespace muhle {
         void make_move_move(Piece piece, int node_source_index, int node_destination_index);
         void unmake_move_move(Piece piece, int node_source_index, int node_destination_index);
 
-        int evaluate_position();
+        int evaluate_position(int game_over_evaluation);
         unsigned int calculate_material(Piece piece);
         unsigned int calculate_freedom(Piece piece);
         unsigned int calculate_piece_freedom(int index);
@@ -57,7 +57,7 @@ namespace muhle {
         std::array<int, 5> neighbor_free_positions(int index);
         Piece opponent_piece(Piece type);
         bool is_mill(Piece piece, int index);
-        bool is_game_over();
+        bool is_game_over(int& game_over_evaluation);
         unsigned int pieces_on_board(Piece piece);
 
         // TODO cache stuff
@@ -72,6 +72,7 @@ namespace muhle {
         struct {
             int PIECE {};
             int FREEDOM {};
+            int END_GAME {};
             int DEPTH {};
         } parameters;
     };
