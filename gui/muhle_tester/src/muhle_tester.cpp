@@ -4,7 +4,7 @@
 #include <gui_base.hpp>
 #include <just_dl/just_dl.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
-#include <muhle_intelligence_miscellaneous/notation.hpp>
+#include <muhle_intelligence_miscellaneous/miscellaneous.hpp>
 
 #include "muhle_tester.hpp"
 
@@ -110,6 +110,8 @@ void MuhleTester::play_mode_update() {
         }
         case PlayState::ComputerThinking:
             if (muhle_result.done) {
+                muhle::print_result(muhle_result);
+
                 switch (muhle_result.result.type) {
                     case muhle::MoveType::Place:
                         game_play.place_piece(muhle_result.result.place.node_index);
@@ -188,6 +190,8 @@ void MuhleTester::test_mode_update() {
         }
         case TestState::ComputerThinking: {
             if (muhle_result.done) {
+                muhle::print_result(muhle_result);
+
                 result_text = muhle::move_to_string(muhle_result.result);
 
                 muhle->join_thread();

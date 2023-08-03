@@ -30,3 +30,7 @@ if(UNIX)
 endif()
 
 enable_warnings(muhle_intelligence)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_definitions(muhle_intelligence PRIVATE "NDEBUG")
+endif()

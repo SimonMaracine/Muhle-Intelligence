@@ -1,14 +1,12 @@
 #include <thread>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+#include <array>
 #include <string>
 #include <string_view>
-#include <cassert>
-#include <iostream>
-#include <iomanip>
 #include <climits>
 #include <chrono>
-#include <array>
+#include <cassert>
 
 #include "muhle_intelligence/internal/implementation.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
@@ -76,28 +74,25 @@ namespace muhle {
     }
 
     void SearchCtx::search(Player player, Result& result) {
-        auto start = std::chrono::high_resolution_clock::now();
+        const auto start = std::chrono::high_resolution_clock::now();
         const int evaluation = minimax(parameters.DEPTH, 0, MIN_EVALUATION, MAX_EVALUATION, player);
-        // const unsigned int move_count = test_moves(player, parameters.DEPTH);
-        auto end = std::chrono::high_resolution_clock::now();
+        const auto end = std::chrono::high_resolution_clock::now();
 
-        std::cout << "Time: " << std::setprecision(3) << std::chrono::duration<double>(end - start).count() << '\n';
-        std::cout << "Evaluation: " << evaluation << '\n';
-        std::cout << "Positions evaluated: " << positions_evaluated << '\n';
-        std::cout << "Depth searched: " << parameters.DEPTH << '\n';
-        // std::cout << move_count << '\n';
+        const double time = std::chrono::duration<double>(end - start).count();
 
         result.result = best_move;
-        // result.result = create_place(Piece::Black, 0);
+        result.time = time;
+        result.evaluation = evaluation;
+        result.positions_evaluated = positions_evaluated;
 
         result.done = true;
     }
 
     int SearchCtx::minimax(unsigned int depth, unsigned int plies_from_root, int alpha, int beta, Player player) {
-        int game_over_evaluation = 0;
+        int evaluation_game_over = 0;
 
-        if (depth == 0 || is_game_over(game_over_evaluation)) {
-            return evaluate_position(game_over_evaluation);
+        if (depth == 0 || is_game_over(evaluation_game_over)) {
+            return evaluate_position(evaluation_game_over);
         }
 
         if (player == Player::White) {
@@ -114,7 +109,7 @@ namespace muhle {
                     max_evaluation = evaluation;
 
                     if (plies_from_root == 0) {
-                        best_move = move;  // TODO don't copy
+                        best_move = move;
                     }
                 }
 
@@ -187,15 +182,14 @@ namespace muhle {
         return move_count;
     }
 
-    Move SearchCtx::random_move(Piece piece) {
+    Move SearchCtx::random_move(Piece piece) {  // FIXME
         const auto moves = get_all_moves(piece);
 
         if (moves.empty()) {
-            std::cout << "Game over\n";  // FIXME
             return {};
         }
 
-        return moves[0];  // FIXME
+        return moves[0];
     }
 
     std::vector<Move> SearchCtx::get_all_moves(Piece piece) {
@@ -229,13 +223,14 @@ namespace muhle {
 
             if (is_mill(piece, i)) {
                 const Piece opponent = opponent_piece(piece);
+                const bool all_in_mills = all_pieces_in_mills(opponent);
 
                 for (int j = 0; j < NODES; j++) {
                     if (position[j] != opponent) {
                         continue;
                     }
 
-                    if (is_mill(opponent, j) && !all_pieces_in_mills(opponent)) {  // TODO move second condition up
+                    if (is_mill(opponent, j) && !all_in_mills) {
                         continue;
                     }
 
@@ -264,13 +259,14 @@ namespace muhle {
 
                 if (is_mill(piece, free_positions[j])) {
                     const auto opponent = opponent_piece(piece);
+                    const bool all_in_mills = all_pieces_in_mills(opponent);
 
                     for (int k = 0; k < NODES; k++) {
                         if (position[k] != opponent) {
                             continue;
                         }
 
-                        if (is_mill(opponent, k) && !all_pieces_in_mills(opponent)) {  // TODO move second condition up
+                        if (is_mill(opponent, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -302,13 +298,14 @@ namespace muhle {
 
                 if (is_mill(piece, j)) {
                     const auto opponent = opponent_piece(piece);
+                    const bool all_in_mills = all_pieces_in_mills(opponent);
 
                     for (int k = 0; k < NODES; k++) {
                         if (position[k] != opponent) {
                             continue;
                         }
 
-                        if (is_mill(opponent, k) && !all_pieces_in_mills(opponent)) {  // TODO move second condition up
+                        if (is_mill(opponent, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -387,27 +384,23 @@ namespace muhle {
         position[node_destination_index] = Piece::None;
     }
 
-    int SearchCtx::evaluate_position(int game_over_evaluation) {  // TODO also evaluate piece positions
+    int SearchCtx::evaluate_position(int evaluation_game_over) {  // TODO also evaluate piece positions
         positions_evaluated++;
 
         int evaluation = 0;
 
-        const unsigned int white_material = calculate_material(Piece::White);  // constexpr
-        const unsigned int black_material = calculate_material(Piece::Black);
+        const int evaluation_material = calculate_material_both();
 
         // Calculate number of pieces
-        evaluation += white_material * parameters.PIECE;
-        evaluation -= black_material * parameters.PIECE;
+        evaluation += evaluation_material * parameters.PIECE;
 
-        const unsigned int white_freedom = calculate_freedom(Piece::White);
-        const unsigned int black_freedom = calculate_freedom(Piece::Black);
+        const int evaluation_freedom = calculate_freedom_both();
 
         // Calculate pieces' freedom
-        evaluation += white_freedom * parameters.FREEDOM;
-        evaluation -= black_freedom * parameters.FREEDOM;
+        evaluation += evaluation_freedom * parameters.FREEDOM;
 
         // Encourage end game
-        evaluation += game_over_evaluation * parameters.END_GAME;
+        evaluation += evaluation_game_over * parameters.END_GAME;
 
         return evaluation;
     }
@@ -422,6 +415,16 @@ namespace muhle {
         }
 
         return piece_count;
+    }
+
+    int SearchCtx::calculate_material_both() {
+        int evaluation_material = 0;
+
+        for (int i = 0; i < NODES; i++) {
+            evaluation_material += static_cast<int>(position[i]);
+        }
+
+        return evaluation_material;
     }
 
     unsigned int SearchCtx::calculate_freedom(Piece piece) {
@@ -441,6 +444,8 @@ namespace muhle {
     }
 
     unsigned int SearchCtx::calculate_piece_freedom(int index) {
+        assert(position[index] != Piece::None);
+
         unsigned int freedom = 0;
 
         switch (index) {
@@ -559,6 +564,18 @@ namespace muhle {
         }
 
         return freedom;
+    }
+
+    int SearchCtx::calculate_freedom_both() {
+        int evaluation_freedom = 0;
+
+        for (int i = 0; i < NODES; i++) {
+            evaluation_freedom += (
+                static_cast<int>(calculate_piece_freedom(i)) * static_cast<int>(position[i])
+            );
+        }
+
+        return evaluation_freedom;
     }
 
     bool SearchCtx::all_pieces_in_mills(Piece piece) {
@@ -826,28 +843,28 @@ namespace muhle {
         return false;
     }
 
-    bool SearchCtx::is_game_over(int& game_over_evaluation) {
+    bool SearchCtx::is_game_over(int& evaluation_game_over) {
         if (plies < 18) {
             return false;
         }
 
         if (white_pieces_on_board < 3) {
-            game_over_evaluation = -1;
+            evaluation_game_over = -1;
             return true;
         }
 
         if (black_pieces_on_board < 3) {
-            game_over_evaluation = 1;
+            evaluation_game_over = 1;
             return true;
         }
 
         if (calculate_freedom(Piece::White) == 0) {  // TODO constexpr
-            game_over_evaluation = -1;
+            evaluation_game_over = -1;
             return true;
         }
 
         if (calculate_freedom(Piece::Black) == 0) {
-            game_over_evaluation = 1;
+            evaluation_game_over = 1;
             return true;
         }
 

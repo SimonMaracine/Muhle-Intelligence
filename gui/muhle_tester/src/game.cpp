@@ -54,9 +54,9 @@ static std::array<int, 24> position(const std::array<Node, 24>& nodes) {
 
     for (size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
-            result[i] = nodes[i].piece->player == Player::White ? 0 : 1;  // FIXME find a better way
+            result[i] = nodes[i].piece->player == Player::White ? 1 : -1;  // FIXME find a better way
         } else {
-            result[i] = 2;
+            result[i] = 0;
         }
     }
 
@@ -219,10 +219,8 @@ void GamePlay::take_piece(int node_index) {
 
     must_take_piece = false;
 
-    if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
-        game_over(Ending::TieBetweenBothPlayers);
-        return;
-    }
+    // Don't check for tie this time
+    change_turn();
 
     // Must reset counter here
     plies_without_mills = 0;

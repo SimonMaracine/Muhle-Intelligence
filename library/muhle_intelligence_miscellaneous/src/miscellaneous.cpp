@@ -1,7 +1,9 @@
 #include <string>
 #include <cassert>
+#include <iostream>
+#include <iomanip>
 
-#include "muhle_intelligence_miscellaneous/notation.hpp"
+#include "muhle_intelligence_miscellaneous/miscellaneous.hpp"
 
 namespace muhle {
     static const char* node_index_to_name(int index) {
@@ -116,5 +118,21 @@ namespace muhle {
         }
 
         return result;
+    }
+
+    void print_result(const Result& result, std::ostream& stream) {
+        stream << "Time seconds: " << std::setprecision(3) << result.time << '\n';
+        stream << "Evaluation: " << result.evaluation << '\n';
+        stream << "Positions evaluated: " << result.positions_evaluated << '\n';
+    }
+
+    void print_result(const Result& result, std::string& string) {
+        std::stringstream stream;
+
+        stream << "Time seconds: " << std::setprecision(3) << result.time << '\n';
+        stream << "Evaluation: " << result.evaluation << '\n';
+        stream << "Positions evaluated: " << result.positions_evaluated << '\n';
+
+        string = stream.str();
     }
 }

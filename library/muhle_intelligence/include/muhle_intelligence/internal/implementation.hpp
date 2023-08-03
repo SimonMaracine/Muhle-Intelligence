@@ -31,7 +31,7 @@ namespace muhle {
         void figure_out_position(const Position& position);
         void search(Player player, Result& result);
     private:
-        int minimax(unsigned int depth, unsigned int turns_from_root, int alpha, int beta, Player player);
+        int minimax(unsigned int depth, unsigned int plies_from_root, int alpha, int beta, Player player);
         unsigned int test_moves(Player player, unsigned int depth);
 
         Move random_move(Piece piece);
@@ -48,16 +48,18 @@ namespace muhle {
         void make_move_move(Piece piece, int node_source_index, int node_destination_index);
         void unmake_move_move(Piece piece, int node_source_index, int node_destination_index);
 
-        int evaluate_position(int game_over_evaluation);
+        int evaluate_position(int evaluation_game_over);
         unsigned int calculate_material(Piece piece);
+        int calculate_material_both();
         unsigned int calculate_freedom(Piece piece);
         unsigned int calculate_piece_freedom(int index);
+        int calculate_freedom_both();
 
         bool all_pieces_in_mills(Piece piece);
         std::array<int, 5> neighbor_free_positions(int index);
         Piece opponent_piece(Piece type);
         bool is_mill(Piece piece, int index);
-        bool is_game_over(int& game_over_evaluation);
+        bool is_game_over(int& evaluation_game_over);
         unsigned int pieces_on_board(Piece piece);
 
         // TODO cache stuff

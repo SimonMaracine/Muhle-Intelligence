@@ -12,9 +12,9 @@ namespace muhle {
     };
 
     enum class Piece {  // TODO change
-        White,
-        Black,
-        None
+        Black = -1,
+        None = 0,
+        White = 1
     };
 
     enum class MoveType {
@@ -30,34 +30,38 @@ namespace muhle {
     };
 
     struct Move {
-        // union {
+        union {
             struct {
                 int node_index;
-            } place {};
+            } place;
 
             struct {
                 int node_source_index;
                 int node_destination_index;
-            } move {};
+            } move;
 
             struct {
                 int node_index;
                 int node_take_index;
-            } place_take {};
+            } place_take;
 
             struct {
                 int node_source_index;
                 int node_destination_index;
                 int node_take_index;
-            } move_take {};
-        // };
+            } move_take;
+        };
 
         MoveType type {};
         Piece piece = Piece::None;
     };
 
     struct Result {
-        bool done = false;
         Move result {};
+        double time = 0.0;
+        int evaluation = 0;
+        unsigned int positions_evaluated = 0;
+
+        bool done = false;
     };
 }
