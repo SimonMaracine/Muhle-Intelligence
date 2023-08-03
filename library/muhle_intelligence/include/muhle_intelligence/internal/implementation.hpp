@@ -1,18 +1,19 @@
 #pragma once
 
-#include <array>
 #include <thread>
-#include <vector>
+#include <array>
 #include <unordered_map>
 #include <string>
 #include <string_view>
+#include <cstddef>
 
 #include <definitions.hpp>
 
+#include "muhle_intelligence/internal/moves_array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 namespace muhle {
-    inline constexpr size_t MAX_PLY_MOVES = 57;
+    inline constexpr size_t MAX_MOVES = 57;
 
     struct MuhleImpl : public MuhleIntelligence {
         virtual void initialize() override;
@@ -31,38 +32,37 @@ namespace muhle {
         void figure_out_position(const Position& position);
         void search(Player player, Result& result);
     private:
-        int minimax(unsigned int depth, unsigned int plies_from_root, int alpha, int beta, Player player);
+        Eval minimax(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, Player player);
         unsigned int test_moves(Player player, unsigned int depth);
 
         Move random_move(Piece piece);
-        std::vector<Move> get_all_moves(Piece piece);
-        void get_moves_phase1(Piece piece, std::vector<Move>& moves);
-        void get_moves_phase2(Piece piece, std::vector<Move>& moves);
-        void get_moves_phase3(Piece piece, std::vector<Move>& moves);
+        void get_all_moves(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
+        void get_moves_phase1(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
+        void get_moves_phase2(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
+        void get_moves_phase3(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
 
         void make_move(const Move& move);
         void unmake_move(const Move& move);
 
-        void make_place_move(Piece piece, int node_index);
-        void unmake_place_move(int node_index);
-        void make_move_move(Piece piece, int node_source_index, int node_destination_index);
-        void unmake_move_move(Piece piece, int node_source_index, int node_destination_index);
+        void make_place_move(Piece piece, Idx node_index);
+        void unmake_place_move(Idx node_index);
+        void make_move_move(Piece piece, Idx node_source_index, Idx node_destination_index);
+        void unmake_move_move(Piece piece, Idx node_source_index, Idx node_destination_index);
 
-        int evaluate_position(int evaluation_game_over);
+        Eval evaluate_position(Eval evaluation_game_over);
         unsigned int calculate_material(Piece piece);
-        int calculate_material_both();
+        Eval calculate_material_both();
         unsigned int calculate_freedom(Piece piece);
-        unsigned int calculate_piece_freedom(int index);
-        int calculate_freedom_both();
+        unsigned int calculate_piece_freedom(Idx index);
+        Eval calculate_freedom_both();
 
         bool all_pieces_in_mills(Piece piece);
-        std::array<int, 5> neighbor_free_positions(int index);
+        std::array<Idx, 5> neighbor_free_positions(Idx index);
         Piece opponent_piece(Piece type);
-        bool is_mill(Piece piece, int index);
-        bool is_game_over(int& evaluation_game_over);
+        bool is_mill(Piece piece, Idx index);
+        bool is_game_over(Eval& evaluation_game_over);
         unsigned int pieces_on_board(Piece piece);
 
-        // TODO cache stuff
         std::array<Piece, NODES> position {};
         unsigned int white_pieces_on_board {};
         unsigned int black_pieces_on_board {};
@@ -79,8 +79,8 @@ namespace muhle {
         } parameters;
     };
 
-    Move create_place(Piece piece, int node_index);
-    Move create_move(Piece piece, int node_source_index, int node_destination_index);
-    Move create_place_take(Piece piece, int node_index, int node_take_index);
-    Move create_move_take(Piece piece, int node_source_index, int node_destination_index, int node_take_index);
+    Move create_place(Piece piece, Idx node_index);
+    Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index);
+    Move create_place_take(Piece piece, Idx node_index, Idx node_take_index);
+    Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index);
 }

@@ -1,6 +1,5 @@
 #include <thread>
 #include <unordered_map>
-#include <vector>
 #include <array>
 #include <string>
 #include <string_view>
@@ -9,6 +8,7 @@
 #include <cassert>
 
 #include "muhle_intelligence/internal/implementation.hpp"
+#include "muhle_intelligence/internal/moves_array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 // TODO please don't optimize early!!!
@@ -22,8 +22,8 @@
 */
 
 namespace muhle {
-    static constexpr int MIN_EVALUATION = std::numeric_limits<int>::min();
-    static constexpr int MAX_EVALUATION = std::numeric_limits<int>::max();
+    static constexpr Eval MIN_EVALUATION = std::numeric_limits<Eval>::min();
+    static constexpr Eval MAX_EVALUATION = std::numeric_limits<Eval>::max();
 
     void MuhleImpl::initialize() {
         // Here the default values are set
@@ -62,7 +62,7 @@ namespace muhle {
     void SearchCtx::figure_out_position(const Position& position) {
         this->position = position.pieces;
 
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             if (this->position[i] == Piece::White) {
                 white_pieces_on_board++;
             } else if (this->position[i] == Piece::Black) {
@@ -75,7 +75,15 @@ namespace muhle {
 
     void SearchCtx::search(Player player, Result& result) {
         const auto start = std::chrono::high_resolution_clock::now();
-        const int evaluation = minimax(parameters.DEPTH, 0, MIN_EVALUATION, MAX_EVALUATION, player);
+
+        const Eval evaluation = minimax(
+            static_cast<unsigned int>(parameters.DEPTH),
+            0u,
+            MIN_EVALUATION,
+            MAX_EVALUATION,
+            player
+        );
+
         const auto end = std::chrono::high_resolution_clock::now();
 
         const double time = std::chrono::duration<double>(end - start).count();
@@ -88,21 +96,20 @@ namespace muhle {
         result.done = true;
     }
 
-    int SearchCtx::minimax(unsigned int depth, unsigned int plies_from_root, int alpha, int beta, Player player) {
-        int evaluation_game_over = 0;
-
-        if (depth == 0 || is_game_over(evaluation_game_over)) {
+    Eval SearchCtx::minimax(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, Player player) {
+        if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(evaluation_game_over)) {
             return evaluate_position(evaluation_game_over);
         }
 
         if (player == Player::White) {
-            int max_evaluation = MIN_EVALUATION;
+            Eval max_evaluation = MIN_EVALUATION;
 
-            const auto moves = get_all_moves(Piece::White);
+            MovesArray<Move, MAX_MOVES> moves;
+            get_all_moves(Piece::White, moves);
 
             for (const Move& move : moves) {
                 make_move(move);
-                const int evaluation = minimax(depth - 1, plies_from_root + 1, alpha, beta, Player::Black);
+                const Eval evaluation = minimax(depth - 1, plies_from_root + 1, alpha, beta, Player::Black);
                 unmake_move(move);
 
                 if (evaluation > max_evaluation) {
@@ -124,13 +131,14 @@ namespace muhle {
 
             return max_evaluation;
         } else {
-            int min_evaluation = MAX_EVALUATION;
+            Eval min_evaluation = MAX_EVALUATION;
 
-            const auto moves = get_all_moves(Piece::Black);
+            MovesArray<Move, MAX_MOVES> moves;
+            get_all_moves(Piece::Black, moves);
 
             for (const Move& move : moves) {
                 make_move(move);
-                const int evaluation = minimax(depth - 1, plies_from_root + 1, alpha, beta, Player::White);
+                const Eval evaluation = minimax(depth - 1, plies_from_root + 1, alpha, beta, Player::White);
                 unmake_move(move);
 
                 if (evaluation < min_evaluation) {
@@ -162,7 +170,8 @@ namespace muhle {
         unsigned int move_count = 0;
 
         if (player == Player::White) {
-            const auto moves = get_all_moves(Piece::White);
+            MovesArray<Move, MAX_MOVES> moves;
+            get_all_moves(Piece::White, moves);
 
             for (const Move& move : moves) {
                 make_move(move);
@@ -170,7 +179,8 @@ namespace muhle {
                 unmake_move(move);
             }
         } else {
-            const auto moves = get_all_moves(Piece::Black);
+            MovesArray<Move, MAX_MOVES> moves;
+            get_all_moves(Piece::Black, moves);
 
             for (const Move& move : moves) {
                 make_move(move);
@@ -183,7 +193,8 @@ namespace muhle {
     }
 
     Move SearchCtx::random_move(Piece piece) {  // FIXME
-        const auto moves = get_all_moves(piece);
+        MovesArray<Move, MAX_MOVES> moves;
+        get_all_moves(piece, moves);
 
         if (moves.empty()) {
             return {};
@@ -192,10 +203,7 @@ namespace muhle {
         return moves[0];
     }
 
-    std::vector<Move> SearchCtx::get_all_moves(Piece piece) {
-        std::vector<Move> moves;  // TODO optimize allocation
-        moves.reserve(MAX_PLY_MOVES);  // This is the maximum amount of moves possible
-
+    void SearchCtx::get_all_moves(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
         if (plies < 18) {
             get_moves_phase1(piece, moves);
         } else {
@@ -205,16 +213,12 @@ namespace muhle {
                 get_moves_phase2(piece, moves);
             }
         }
-
-        assert(moves.size() <= MAX_PLY_MOVES);
-
-        return moves;
     }
 
-    void SearchCtx::get_moves_phase1(Piece piece, std::vector<Move>& moves) {
+    void SearchCtx::get_moves_phase1(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             if (position[i] != Piece::None) {
                 continue;
             }
@@ -225,7 +229,7 @@ namespace muhle {
                 const Piece opponent = opponent_piece(piece);
                 const bool all_in_mills = all_pieces_in_mills(opponent);
 
-                for (int j = 0; j < NODES; j++) {
+                for (IterIdx j = 0; j < NODES; j++) {
                     if (position[j] != opponent) {
                         continue;
                     }
@@ -244,24 +248,24 @@ namespace muhle {
         }
     }
 
-    void SearchCtx::get_moves_phase2(Piece piece, std::vector<Move>& moves) {
+    void SearchCtx::get_moves_phase2(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             if (position[i] != piece) {
                 continue;
             }
 
             const auto free_positions = neighbor_free_positions(i);
 
-            for (int j = 0; free_positions[j] != INVALID_INDEX; j++) {
+            for (IterIdx j = 0; free_positions[j] != INVALID_INDEX; j++) {
                 make_move_move(piece, i, free_positions[j]);
 
                 if (is_mill(piece, free_positions[j])) {
                     const auto opponent = opponent_piece(piece);
                     const bool all_in_mills = all_pieces_in_mills(opponent);
 
-                    for (int k = 0; k < NODES; k++) {
+                    for (IterIdx k = 0; k < NODES; k++) {
                         if (position[k] != opponent) {
                             continue;
                         }
@@ -281,15 +285,15 @@ namespace muhle {
         }
     }
 
-    void SearchCtx::get_moves_phase3(Piece piece, std::vector<Move>& moves) {
+    void SearchCtx::get_moves_phase3(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             if (position[i] != piece) {
                 continue;
             }
 
-            for (int j = 0; j < NODES; j++) {
+            for (IterIdx j = 0; j < NODES; j++) {
                 if (position[j] != Piece::None) {
                     continue;
                 }
@@ -300,7 +304,7 @@ namespace muhle {
                     const auto opponent = opponent_piece(piece);
                     const bool all_in_mills = all_pieces_in_mills(opponent);
 
-                    for (int k = 0; k < NODES; k++) {
+                    for (IterIdx k = 0; k < NODES; k++) {
                         if (position[k] != opponent) {
                             continue;
                         }
@@ -366,41 +370,41 @@ namespace muhle {
         plies--;
     }
 
-    void SearchCtx::make_place_move(Piece piece, int node_index) {
+    void SearchCtx::make_place_move(Piece piece, Idx node_index) {
         position[node_index] = piece;
     }
 
-    void SearchCtx::unmake_place_move(int node_index) {
+    void SearchCtx::unmake_place_move(Idx node_index) {
         position[node_index] = Piece::None;
     }
 
-    void SearchCtx::make_move_move(Piece piece, int node_source_index, int node_destination_index) {
+    void SearchCtx::make_move_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
         position[node_source_index] = Piece::None;
         position[node_destination_index] = piece;
     }
 
-    void SearchCtx::unmake_move_move(Piece piece, int node_source_index, int node_destination_index) {
+    void SearchCtx::unmake_move_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
         position[node_source_index] = piece;
         position[node_destination_index] = Piece::None;
     }
 
-    int SearchCtx::evaluate_position(int evaluation_game_over) {  // TODO also evaluate piece positions
+    Eval SearchCtx::evaluate_position(Eval evaluation_game_over) {  // TODO also evaluate piece positions
         positions_evaluated++;
 
-        int evaluation = 0;
+        Eval evaluation = 0;
 
-        const int evaluation_material = calculate_material_both();
+        const Eval evaluation_material = calculate_material_both();
 
         // Calculate number of pieces
-        evaluation += evaluation_material * parameters.PIECE;
+        evaluation += evaluation_material * static_cast<Eval>(parameters.PIECE);
 
-        const int evaluation_freedom = calculate_freedom_both();
+        const Eval evaluation_freedom = calculate_freedom_both();
 
         // Calculate pieces' freedom
-        evaluation += evaluation_freedom * parameters.FREEDOM;
+        evaluation += evaluation_freedom * static_cast<Eval>(parameters.FREEDOM);
 
         // Encourage end game
-        evaluation += evaluation_game_over * parameters.END_GAME;
+        evaluation += evaluation_game_over * static_cast<Eval>(parameters.END_GAME);
 
         return evaluation;
     }
@@ -410,18 +414,18 @@ namespace muhle {
 
         unsigned int piece_count = 0;
 
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             piece_count += position[i] == piece;
         }
 
         return piece_count;
     }
 
-    int SearchCtx::calculate_material_both() {
-        int evaluation_material = 0;
+    Eval SearchCtx::calculate_material_both() {
+        Eval evaluation_material = 0;
 
-        for (int i = 0; i < NODES; i++) {
-            evaluation_material += static_cast<int>(position[i]);
+        for (IterIdx i = 0; i < NODES; i++) {
+            evaluation_material += static_cast<Eval>(position[i]);
         }
 
         return evaluation_material;
@@ -432,7 +436,7 @@ namespace muhle {
 
         unsigned int total_free_positions = 0;
 
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             if (position[i] != piece) {
                 continue;
             }
@@ -443,7 +447,7 @@ namespace muhle {
         return total_free_positions;
     }
 
-    unsigned int SearchCtx::calculate_piece_freedom(int index) {
+    unsigned int SearchCtx::calculate_piece_freedom(Idx index) {
         assert(position[index] != Piece::None);
 
         unsigned int freedom = 0;
@@ -566,12 +570,12 @@ namespace muhle {
         return freedom;
     }
 
-    int SearchCtx::calculate_freedom_both() {
-        int evaluation_freedom = 0;
+    Eval SearchCtx::calculate_freedom_both() {
+        Eval evaluation_freedom = 0;
 
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             evaluation_freedom += (
-                static_cast<int>(calculate_piece_freedom(i)) * static_cast<int>(position[i])
+                static_cast<Eval>(calculate_piece_freedom(i)) * static_cast<Eval>(position[i])
             );
         }
 
@@ -579,7 +583,7 @@ namespace muhle {
     }
 
     bool SearchCtx::all_pieces_in_mills(Piece piece) {
-        for (int i = 0; i < NODES; i++) {
+        for (IterIdx i = 0; i < NODES; i++) {
             if (position[i] != piece) {
                 continue;
             }
@@ -597,11 +601,11 @@ namespace muhle {
         result[pos++] = (const_index); \
     }
 
-    std::array<int, 5> SearchCtx::neighbor_free_positions(int index) {
-        std::array<int, 5> result = {
+    std::array<Idx, 5> SearchCtx::neighbor_free_positions(Idx index) {
+        std::array<Idx, 5> result = {
             INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX
         };
-        int pos = 0;
+        unsigned int pos = 0;
 
         switch (index) {
             case 0:
@@ -738,7 +742,7 @@ namespace muhle {
 
 #define IS_PC(const_index) (position[const_index] == piece)
 
-    bool SearchCtx::is_mill(Piece piece, int index) {
+    bool SearchCtx::is_mill(Piece piece, Idx index) {
         assert(piece != Piece::None);
 
         switch (index) {
@@ -843,7 +847,7 @@ namespace muhle {
         return false;
     }
 
-    bool SearchCtx::is_game_over(int& evaluation_game_over) {
+    bool SearchCtx::is_game_over(Eval& evaluation_game_over) {
         if (plies < 18) {
             return false;
         }
@@ -886,7 +890,7 @@ namespace muhle {
         return 0;
     }
 
-    Move create_place(Piece piece, int node_index) {
+    Move create_place(Piece piece, Idx node_index) {
         Move move;
         move.place.node_index = node_index;
         move.type = MoveType::Place;
@@ -895,7 +899,7 @@ namespace muhle {
         return move;
     }
 
-    Move create_move(Piece piece, int node_source_index, int node_destination_index) {
+    Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
         Move move;
         move.move.node_source_index = node_source_index;
         move.move.node_destination_index = node_destination_index;
@@ -905,7 +909,7 @@ namespace muhle {
         return move;
     }
 
-    Move create_place_take(Piece piece, int node_index, int node_take_index) {
+    Move create_place_take(Piece piece, Idx node_index, Idx node_take_index) {
         Move move;
         move.place_take.node_index = node_index;
         move.place_take.node_take_index = node_take_index;
@@ -915,7 +919,7 @@ namespace muhle {
         return move;
     }
 
-    Move create_move_take(Piece piece, int node_source_index, int node_destination_index, int node_take_index) {
+    Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index) {
         Move move;
         move.move_take.node_source_index = node_source_index;
         move.move_take.node_destination_index = node_destination_index;

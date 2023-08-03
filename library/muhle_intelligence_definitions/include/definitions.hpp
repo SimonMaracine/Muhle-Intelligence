@@ -1,23 +1,29 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 
 namespace muhle {
-    inline constexpr int NODES = 24;
-    inline constexpr int INVALID_INDEX = -1;
+    using Idx = int_fast8_t;
+    using IterIdx = int;
+
+    inline constexpr IterIdx NODES = 24;
+    inline constexpr Idx INVALID_INDEX = -1;
+
+    using Eval = int;
 
     enum class Player {
         White,
         Black
     };
 
-    enum class Piece {  // TODO change
+    enum class Piece : Idx {  // TODO change
         Black = -1,
         None = 0,
         White = 1
     };
 
-    enum class MoveType {
+    enum class MoveType : int_fast8_t {
         Place,
         Move,
         PlaceTake,
@@ -32,23 +38,23 @@ namespace muhle {
     struct Move {
         union {
             struct {
-                int node_index;
+                Idx node_index;
             } place;
 
             struct {
-                int node_source_index;
-                int node_destination_index;
+                Idx node_source_index;
+                Idx node_destination_index;
             } move;
 
             struct {
-                int node_index;
-                int node_take_index;
+                Idx node_index;
+                Idx node_take_index;
             } place_take;
 
             struct {
-                int node_source_index;
-                int node_destination_index;
-                int node_take_index;
+                Idx node_source_index;
+                Idx node_destination_index;
+                Idx node_take_index;
             } move_take;
         };
 
@@ -59,7 +65,7 @@ namespace muhle {
     struct Result {
         Move result {};
         double time = 0.0;
-        int evaluation = 0;
+        Eval evaluation = 0;
         unsigned int positions_evaluated = 0;
 
         bool done = false;
