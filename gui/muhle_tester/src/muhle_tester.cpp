@@ -320,6 +320,10 @@ void MuhleTester::load_library(const char* buffer) {
 
     if (err) {
         std::cout << "Could not load functions: " << err.message() << '\n';
+
+        just_dl::close_library(library_handle, err);
+        library_handle = nullptr;
+
         return;
     }
 
@@ -336,7 +340,7 @@ void MuhleTester::unload_library() {
         return;
     }
 
-    muhle_intelligence_destroy(muhle);  // FIXME crash, if functions were not loaded
+    muhle_intelligence_destroy(muhle);
 
     just_dl::Error err;
 
@@ -410,7 +414,7 @@ void MuhleTester::main_window() {
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(40.0f, 40.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20.0f, 20.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 
     if (ImGui::Begin("Main", nullptr, flags)) {
@@ -569,6 +573,7 @@ void MuhleTester::play_mode_buttons() {
     ImGui::Text("Turn: %s", game_play.turn == Player::White ? "white" : "black");
     ImGui::Text("Phase: %d", static_cast<int>(game_play.phase));
     ImGui::Text("Ending: %d", static_cast<int>(game_play.ending));
+    ImGui::Text("Plies: %u", game_play.plies);
     ImGui::Text("Selected piece: %d", game_play.selected_piece_index);
     ImGui::Text("Can jump: white %d, black %d", game_play.can_jump[0], game_play.can_jump[1]);
     ImGui::Text("Must take piece: %d", game_play.must_take_piece);

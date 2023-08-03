@@ -134,7 +134,6 @@ struct GameTest {
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_click(glm::vec2 mouse_position, MouseButton button, Player player = Player::White);
     std::array<int, 24> get_position();
-    void set_pieces_outside(Player player, int change);
 
     void check_add_piece(Player player, int node_index);
     void check_remove_piece(int node_index);
