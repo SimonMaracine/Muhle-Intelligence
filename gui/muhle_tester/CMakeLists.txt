@@ -21,6 +21,10 @@ set_target_properties(muhle_tester PROPERTIES CXX_EXTENSIONS OFF)
 
 enable_warnings(muhle_tester)
 
+if(UNIX)
+    target_compile_options(muhle_tester PRIVATE "-Wno-cast-function-type")
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(muhle_tester PRIVATE "/utf-8")
 endif()

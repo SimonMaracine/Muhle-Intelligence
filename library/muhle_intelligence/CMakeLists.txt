@@ -25,4 +25,8 @@ endif()
 target_compile_features(muhle_intelligence PRIVATE cxx_std_17)
 set_target_properties(muhle_intelligence PROPERTIES CXX_EXTENSIONS OFF)
 
+if(UNIX)
+    target_compile_options(muhle_intelligence PRIVATE "-Wno-parentheses")
+endif()
+
 enable_warnings(muhle_intelligence)

@@ -35,8 +35,8 @@ static const int NODE_POSITIONS[24][2] = {
     { 8, 8 }
 };
 
-static const unsigned int MILLS_COUNT = 16;
-static const unsigned int MILLS[MILLS_COUNT][3] = {
+static const int MILLS_COUNT = 16;
+static const int MILLS[MILLS_COUNT][3] = {
     { 0, 1, 2 }, { 2, 14, 23 }, { 21, 22, 23 }, { 0, 9, 21 },
     { 3, 4, 5 }, { 5, 13, 20 }, { 18, 19, 20 }, { 3, 10, 18 },
     { 6, 7, 8 }, { 8, 12, 17 }, { 15, 16, 17 }, { 6, 11, 15 },
@@ -252,7 +252,7 @@ void GamePlay::check_select_piece(glm::vec2 mouse_position) {
 
         // This is the hovered node
 
-        if (i == selected_piece_index) {
+        if (static_cast<int>(i) == selected_piece_index) {
             // Deselect
             selected_piece_index = INVALID_INDEX;
             break;
@@ -378,7 +378,7 @@ unsigned int GamePlay::change_turn() {
 }
 
 Player GamePlay::opponent(Player player) {
-    if (turn == Player::White) {
+    if (player == Player::White) {
         return Player::Black;
     } else {
         return Player::White;
@@ -503,8 +503,8 @@ bool GamePlay::piece_in_mill(const Node& node, Player player) {
     assert(node.piece != std::nullopt);
     assert(node.piece->player == player);
 
-    for (unsigned int i = 0; i < MILLS_COUNT; i++) {
-        const unsigned int* mill = MILLS[i];
+    for (int i = 0; i < MILLS_COUNT; i++) {
+        const int* mill = MILLS[i];
 
         if (node.index != mill[0] && node.index != mill[1] && node.index != mill[2]) {
             continue;
@@ -583,8 +583,6 @@ bool GamePlay::player_has_no_legal_moves(Player player) {
         if (node.piece->player != player) {
             continue;
         }
-
-        const Piece& piece = node.piece.value();
 
         switch (node.index) {
             case 0: {

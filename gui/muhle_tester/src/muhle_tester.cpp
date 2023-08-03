@@ -463,7 +463,6 @@ void MuhleTester::board_canvas() {
     if (canvas_sz.y < 100.0f) canvas_sz.y = 100.0f;
     ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
-    ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     board_unit = canvas_p1.x < canvas_p1.y ? canvas_p1.x / 10.0f : canvas_p1.y / 10.0f;
@@ -568,8 +567,8 @@ void MuhleTester::play_mode_buttons() {
     ImGui::Text("Black pieces on board: %u", game_play.black_pieces_on_board);
     ImGui::Text("Black pieces outside: %u", game_play.black_pieces_outside);
     ImGui::Text("Turn: %s", game_play.turn == Player::White ? "white" : "black");
-    ImGui::Text("Phase: %d", game_play.phase);
-    ImGui::Text("Ending: %d", game_play.ending);
+    ImGui::Text("Phase: %d", static_cast<int>(game_play.phase));
+    ImGui::Text("Ending: %d", static_cast<int>(game_play.ending));
     ImGui::Text("Selected piece: %d", game_play.selected_piece_index);
     ImGui::Text("Can jump: white %d, black %d", game_play.can_jump[0], game_play.can_jump[1]);
     ImGui::Text("Must take piece: %d", game_play.must_take_piece);
