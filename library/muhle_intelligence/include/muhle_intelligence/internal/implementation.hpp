@@ -52,7 +52,7 @@ namespace muhle {
         Eval evaluate_position(Eval evaluation_game_over);
         unsigned int calculate_material(Piece piece);
         Eval calculate_material_both();
-        unsigned int calculate_freedom(Piece piece);
+        void calculate_freedom_both(unsigned int& white, unsigned int& black);
         unsigned int calculate_piece_freedom(Idx index);
         Eval calculate_freedom_both();
 

@@ -77,11 +77,11 @@ struct MuhleTester : public gui_base::GuiApplication {
 
     using LibraryCreate = muhle::MuhleIntelligence*(*)();
     using LibraryDestroy = void(*)(muhle::MuhleIntelligence*);
-    using LibraryName = const char*(*)();
+    using LibraryVersion = const char*(*)();
 
     LibraryCreate muhle_intelligence_create = nullptr;
     LibraryDestroy muhle_intelligence_destroy = nullptr;
-    LibraryName muhle_intelligence_name = nullptr;
+    LibraryVersion muhle_intelligence_version = nullptr;
     void* library_handle = nullptr;
 
     muhle::MuhleIntelligence* muhle = nullptr;

@@ -63,10 +63,15 @@ namespace muhle {
         this->position = position.pieces;
 
         for (IterIdx i = 0; i < NODES; i++) {
-            if (this->position[i] == Piece::White) {
-                white_pieces_on_board++;
-            } else if (this->position[i] == Piece::Black) {
-                black_pieces_on_board++;
+            switch (this->position[i]) {
+                case Piece::White:
+                    white_pieces_on_board++;
+                    break;
+                case Piece::Black:
+                    black_pieces_on_board++;
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -403,7 +408,7 @@ namespace muhle {
         // Calculate pieces' freedom
         evaluation += evaluation_freedom * static_cast<Eval>(parameters.FREEDOM);
 
-        // Encourage end game
+        // Teach what is end game
         evaluation += evaluation_game_over * static_cast<Eval>(parameters.END_GAME);
 
         return evaluation;
@@ -431,20 +436,25 @@ namespace muhle {
         return evaluation_material;
     }
 
-    unsigned int SearchCtx::calculate_freedom(Piece piece) {
-        assert(piece != Piece::None);
-
-        unsigned int total_free_positions = 0;
+    void SearchCtx::calculate_freedom_both(unsigned int& white, unsigned int& black) {
+        unsigned int total_white_free_positions = 0;
+        unsigned int total_black_free_positions = 0;
 
         for (IterIdx i = 0; i < NODES; i++) {
-            if (position[i] != piece) {
-                continue;
+            switch (position[i]) {
+                case Piece::White:
+                    total_white_free_positions += calculate_piece_freedom(i);
+                    break;
+                case Piece::Black:
+                    total_black_free_positions += calculate_piece_freedom(i);
+                    break;
+                default:
+                    break;
             }
-
-            total_free_positions += calculate_piece_freedom(i);
         }
 
-        return total_free_positions;
+        white = total_white_free_positions;
+        black = total_black_free_positions;
     }
 
     unsigned int SearchCtx::calculate_piece_freedom(Idx index) {
@@ -862,12 +872,16 @@ namespace muhle {
             return true;
         }
 
-        if (calculate_freedom(Piece::White) == 0) {  // TODO constexpr
+        unsigned int white_free_positions = 0;
+        unsigned int black_free_positions = 0;
+        calculate_freedom_both(white_free_positions, black_free_positions);
+
+        if (white_free_positions == 0) {
             evaluation_game_over = -1;
             return true;
         }
 
-        if (calculate_freedom(Piece::Black) == 0) {
+        if (black_free_positions == 0) {
             evaluation_game_over = 1;
             return true;
         }
@@ -875,7 +889,7 @@ namespace muhle {
         return false;
     }
 
-    unsigned int SearchCtx::pieces_on_board(Piece piece) {  // TODO constexpr
+    unsigned int SearchCtx::pieces_on_board(Piece piece) {
         assert(piece != Piece::None);
 
         switch (piece) {

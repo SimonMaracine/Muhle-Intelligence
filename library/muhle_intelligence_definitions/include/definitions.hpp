@@ -17,7 +17,7 @@ namespace muhle {
         Black
     };
 
-    enum class Piece : Idx {  // TODO change
+    enum class Piece : Idx {
         Black = -1,
         None = 0,
         White = 1

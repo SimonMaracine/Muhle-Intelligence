@@ -16,7 +16,7 @@ extern "C" {
         delete instance;
     }
 
-    MUHLE_API const char* muhle_intelligence_name() {
-        return "a_bit_faster";
+    MUHLE_API const char* muhle_intelligence_version() {
+        return "simple 0.1.0";
     }
 }

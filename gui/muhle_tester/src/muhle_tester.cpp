@@ -318,7 +318,7 @@ void MuhleTester::load_library(const char* buffer) {
         just_dl::load_function(library_handle, "muhle_intelligence_destroy", err)
     );
 
-    muhle_intelligence_name = reinterpret_cast<LibraryName>(
+    muhle_intelligence_version = reinterpret_cast<LibraryVersion>(
         just_dl::load_function(library_handle, "muhle_intelligence_name", err)
     );
 
@@ -334,7 +334,7 @@ void MuhleTester::load_library(const char* buffer) {
     muhle = muhle_intelligence_create();
     muhle->initialize();
 
-    library_name = muhle_intelligence_name();
+    library_name = muhle_intelligence_version();
 
     std::cout << "Successfully loaded library `" << buffer << "`, named `" << library_name << "`\n";
 }
