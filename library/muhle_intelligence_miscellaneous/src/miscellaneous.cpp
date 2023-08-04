@@ -121,13 +121,13 @@ namespace muhle {
         return result;
     }
 
-    void print_result(const Result& result, std::ostream& stream) {
+    void print_result_statistics(const Result& result, std::ostream& stream) {
         stream << "Time seconds: " << std::setprecision(3) << result.time << '\n';
         stream << "Evaluation: " << result.evaluation << '\n';
         stream << "Positions evaluated: " << result.positions_evaluated << '\n';
     }
 
-    void print_result(const Result& result, std::string& string) {
+    void print_result_statistics(const Result& result, std::string& string) {
         std::stringstream stream;
 
         stream << "Time seconds: " << std::setprecision(3) << result.time << '\n';

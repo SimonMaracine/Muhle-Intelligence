@@ -8,6 +8,10 @@
 
 #include "muhle_tester.hpp"
 
+static void vertical_spacing() {
+    ImGui::Dummy(ImVec2(0.0f, 4.0f));
+}
+
 void MuhleTester::start() {
     game_play.setup([this]() {
         this->change_turn();
@@ -110,7 +114,7 @@ void MuhleTester::play_mode_update() {
         }
         case PlayState::ComputerThinking:
             if (muhle_result.done) {
-                muhle::print_result(muhle_result);
+                muhle::print_result_statistics(muhle_result);
 
                 switch (muhle_result.result.type) {
                     case muhle::MoveType::Place:
@@ -136,6 +140,8 @@ void MuhleTester::play_mode_update() {
                 }
 
                 muhle->join_thread();
+
+                computer_move_history.push_back(muhle_result);
 
                 play_state = PlayState::ComputerEnd;
             }
@@ -190,7 +196,7 @@ void MuhleTester::test_mode_update() {
         }
         case TestState::ComputerThinking: {
             if (muhle_result.done) {
-                muhle::print_result(muhle_result);
+                muhle::print_result_statistics(muhle_result);
 
                 result_text = muhle::move_to_string(muhle_result.result);
 
@@ -271,6 +277,8 @@ void MuhleTester::reset_game_play() {
     });
 
     play_state = PlayState::NextTurn;
+
+    computer_move_history.clear();
 }
 
 void MuhleTester::reset_game_test() {
@@ -550,6 +558,8 @@ void MuhleTester::right_side() {
 }
 
 void MuhleTester::play_mode_buttons() {
+    vertical_spacing();
+
     if (ImGui::Button("Stop AI")) {
 
     }
@@ -557,6 +567,8 @@ void MuhleTester::play_mode_buttons() {
     if (ImGui::Button("Reset")) {
         reset_game_play();
     }
+
+    vertical_spacing();
 
     ImGui::Text("White"); ImGui::SameLine();
     ImGui::RadioButton("Human##w", &white, PlayerHuman); ImGui::SameLine();
@@ -566,10 +578,13 @@ void MuhleTester::play_mode_buttons() {
     ImGui::RadioButton("Human##b", &black, PlayerHuman); ImGui::SameLine();
     ImGui::RadioButton("Computer##b", &black, PlayerComputer);
 
+    vertical_spacing();
+
     ImGui::Separator();
 
-    ImGui::BeginChild("Game debug");
+    vertical_spacing();
 
+    ImGui::Text("State: %d", static_cast<int>(play_state));
     ImGui::Text("White pieces on board: %u", game_play.white_pieces_on_board);
     ImGui::Text("White pieces outside: %u", game_play.white_pieces_outside);
     ImGui::Text("Black pieces on board: %u", game_play.black_pieces_on_board);
@@ -583,10 +598,25 @@ void MuhleTester::play_mode_buttons() {
     ImGui::Text("Must take piece: %d", game_play.must_take_piece);
     ImGui::Text("Plies without mills: %u", game_play.plies_without_mills);
 
+    vertical_spacing();
+
+    ImGui::Separator();
+
+    vertical_spacing();
+
+    ImGui::BeginChild("Moves");
+
+    for (const muhle::Result& result : computer_move_history) {
+        ImGui::Text("%s", muhle::move_to_string(result.result).c_str());
+        ImGui::Spacing();
+    }
+
     ImGui::EndChild();
 }
 
 void MuhleTester::test_mode_buttons() {
+    vertical_spacing();
+
     if (ImGui::Button("Compute")) {
         test_state = TestState::ComputerBegin;
     }
@@ -599,11 +629,17 @@ void MuhleTester::test_mode_buttons() {
         reset_game_test();
     }
 
+    vertical_spacing();
+
     ImGui::Text("Piece"); ImGui::SameLine();
     ImGui::RadioButton("White", &piece, PieceWhite); ImGui::SameLine();
     ImGui::RadioButton("Black", &piece, PieceBlack);
 
+    vertical_spacing();
+
     ImGui::Separator();
+
+    vertical_spacing();
 
     ImGui::Text("Turn"); ImGui::SameLine();
     static int turn = PieceWhite;
@@ -628,7 +664,11 @@ void MuhleTester::test_mode_buttons() {
     ImGui::SameLine();
     ImGui::Text("%u plies", game_test.plies);
 
+    vertical_spacing();
+
     ImGui::Separator();
+
+    vertical_spacing();
 
     ImGui::Text("Result: %s", result_text.c_str());
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <gui_base.hpp>
 #include <glm/glm.hpp>
@@ -65,6 +66,7 @@ struct MuhleTester : public gui_base::GuiApplication {
         ComputerThinking,
         ComputerEnd
     } play_state = PlayState::NextTurn;
+    std::vector<muhle::Result> computer_move_history;
 
     GameTest game_test;
     int piece = PieceWhite;
