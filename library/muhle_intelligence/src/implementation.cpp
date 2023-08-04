@@ -11,8 +11,6 @@
 #include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
-// TODO please don't optimize early!!!
-
 /*
     Maximizing player is white.
     Minimizing player is black.
