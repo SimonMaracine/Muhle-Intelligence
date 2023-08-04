@@ -8,7 +8,7 @@
 #include <cassert>
 
 #include "muhle_intelligence/internal/implementation.hpp"
-#include "muhle_intelligence/internal/moves_array.hpp"
+#include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 // TODO please don't optimize early!!!
@@ -109,7 +109,7 @@ namespace muhle {
         if (player == Player::White) {
             Eval max_evaluation = MIN_EVALUATION;
 
-            MovesArray<Move, MAX_MOVES> moves;
+            Array<Move, MAX_MOVES> moves;
             get_all_moves(Piece::White, moves);
 
             for (const Move& move : moves) {
@@ -138,7 +138,7 @@ namespace muhle {
         } else {
             Eval min_evaluation = MAX_EVALUATION;
 
-            MovesArray<Move, MAX_MOVES> moves;
+            Array<Move, MAX_MOVES> moves;
             get_all_moves(Piece::Black, moves);
 
             for (const Move& move : moves) {
@@ -175,7 +175,7 @@ namespace muhle {
         unsigned int move_count = 0;
 
         if (player == Player::White) {
-            MovesArray<Move, MAX_MOVES> moves;
+            Array<Move, MAX_MOVES> moves;
             get_all_moves(Piece::White, moves);
 
             for (const Move& move : moves) {
@@ -184,7 +184,7 @@ namespace muhle {
                 unmake_move(move);
             }
         } else {
-            MovesArray<Move, MAX_MOVES> moves;
+            Array<Move, MAX_MOVES> moves;
             get_all_moves(Piece::Black, moves);
 
             for (const Move& move : moves) {
@@ -198,7 +198,7 @@ namespace muhle {
     }
 
     Move SearchCtx::random_move(Piece piece) {  // FIXME
-        MovesArray<Move, MAX_MOVES> moves;
+        Array<Move, MAX_MOVES> moves;
         get_all_moves(piece, moves);
 
         if (moves.empty()) {
@@ -208,7 +208,7 @@ namespace muhle {
         return moves[0];
     }
 
-    void SearchCtx::get_all_moves(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
+    void SearchCtx::get_all_moves(Piece piece, Array<Move, MAX_MOVES>& moves) {
         if (plies < 18) {
             get_moves_phase1(piece, moves);
         } else {
@@ -220,7 +220,7 @@ namespace muhle {
         }
     }
 
-    void SearchCtx::get_moves_phase1(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
+    void SearchCtx::get_moves_phase1(Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i = 0; i < NODES; i++) {
@@ -243,17 +243,17 @@ namespace muhle {
                         continue;
                     }
 
-                    moves.push_back(create_place_take(piece, i, j));
+                    moves.push_back(moves::create_place_take(piece, i, j));
                 }
             } else {
-                moves.push_back(create_place(piece, i));
+                moves.push_back(moves::create_place(piece, i));
             }
 
             unmake_place_move(i);
         }
     }
 
-    void SearchCtx::get_moves_phase2(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
+    void SearchCtx::get_moves_phase2(Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i = 0; i < NODES; i++) {
@@ -279,10 +279,10 @@ namespace muhle {
                             continue;
                         }
 
-                        moves.push_back(create_move_take(piece, i, free_positions[j], k));
+                        moves.push_back(moves::create_move_take(piece, i, free_positions[j], k));
                     }
                 } else {
-                    moves.push_back(create_move(piece, i, free_positions[j]));
+                    moves.push_back(moves::create_move(piece, i, free_positions[j]));
                 }
 
                 unmake_move_move(piece, i, free_positions[j]);
@@ -290,7 +290,7 @@ namespace muhle {
         }
     }
 
-    void SearchCtx::get_moves_phase3(Piece piece, MovesArray<Move, MAX_MOVES>& moves) {
+    void SearchCtx::get_moves_phase3(Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i = 0; i < NODES; i++) {
@@ -318,10 +318,10 @@ namespace muhle {
                             continue;
                         }
 
-                        moves.push_back(create_move_take(piece, i, j, k));
+                        moves.push_back(moves::create_move_take(piece, i, j, k));
                     }
                 } else {
-                    moves.push_back(create_move(piece, i, j));
+                    moves.push_back(moves::create_move(piece, i, j));
                 }
 
                 unmake_move_move(piece, i, j);
@@ -335,16 +335,16 @@ namespace muhle {
                 position[move.place.node_index] = move.piece;
                 break;
             case MoveType::Move:
-                position[move.move.node_destination_index] = move.piece;
                 position[move.move.node_source_index] = Piece::None;
+                position[move.move.node_destination_index] = move.piece;
                 break;
             case MoveType::PlaceTake:
                 position[move.place_take.node_index] = move.piece;
                 position[move.place_take.node_take_index] = Piece::None;
                 break;
             case MoveType::MoveTake:
-                position[move.move_take.node_destination_index] = move.piece;
                 position[move.move_take.node_source_index] = Piece::None;
+                position[move.move_take.node_destination_index] = move.piece;
                 position[move.move_take.node_take_index] = Piece::None;
                 break;
         }
@@ -358,16 +358,16 @@ namespace muhle {
                 position[move.place.node_index] = Piece::None;
                 break;
             case MoveType::Move:
-                position[move.move.node_destination_index] = Piece::None;
                 position[move.move.node_source_index] = move.piece;
+                position[move.move.node_destination_index] = Piece::None;
                 break;
             case MoveType::PlaceTake:
                 position[move.place_take.node_index] = Piece::None;
                 position[move.place_take.node_take_index] = opponent_piece(move.piece);
                 break;
             case MoveType::MoveTake:
-                position[move.move_take.node_destination_index] = Piece::None;
                 position[move.move_take.node_source_index] = move.piece;
+                position[move.move_take.node_destination_index] = Piece::None;
                 position[move.move_take.node_take_index] = opponent_piece(move.piece);
                 break;
         }
@@ -908,43 +908,45 @@ namespace muhle {
         return 0;
     }
 
-    Move create_place(Piece piece, Idx node_index) {
-        Move move;
-        move.place.node_index = node_index;
-        move.type = MoveType::Place;
-        move.piece = piece;
+    namespace moves {
+        Move create_place(Piece piece, Idx node_index) noexcept {
+            Move move;
+            move.place.node_index = node_index;
+            move.type = MoveType::Place;
+            move.piece = piece;
 
-        return move;
-    }
+            return move;
+        }
 
-    Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
-        Move move;
-        move.move.node_source_index = node_source_index;
-        move.move.node_destination_index = node_destination_index;
-        move.type = MoveType::Move;
-        move.piece = piece;
+        Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index) noexcept {
+            Move move;
+            move.move.node_source_index = node_source_index;
+            move.move.node_destination_index = node_destination_index;
+            move.type = MoveType::Move;
+            move.piece = piece;
 
-        return move;
-    }
+            return move;
+        }
 
-    Move create_place_take(Piece piece, Idx node_index, Idx node_take_index) {
-        Move move;
-        move.place_take.node_index = node_index;
-        move.place_take.node_take_index = node_take_index;
-        move.type = MoveType::PlaceTake;
-        move.piece = piece;
+        Move create_place_take(Piece piece, Idx node_index, Idx node_take_index) noexcept {
+            Move move;
+            move.place_take.node_index = node_index;
+            move.place_take.node_take_index = node_take_index;
+            move.type = MoveType::PlaceTake;
+            move.piece = piece;
 
-        return move;
-    }
+            return move;
+        }
 
-    Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index) {
-        Move move;
-        move.move_take.node_source_index = node_source_index;
-        move.move_take.node_destination_index = node_destination_index;
-        move.move_take.node_take_index = node_take_index;
-        move.type = MoveType::MoveTake;
-        move.piece = piece;
+        Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index) noexcept {
+            Move move;
+            move.move_take.node_source_index = node_source_index;
+            move.move_take.node_destination_index = node_destination_index;
+            move.move_take.node_take_index = node_take_index;
+            move.type = MoveType::MoveTake;
+            move.piece = piece;
 
-        return move;
+            return move;
+        }
     }
 }

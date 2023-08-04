@@ -6,15 +6,15 @@
 
 namespace muhle {
     template<typename T, size_t Size>
-    class MovesArray {
+    class Array {
     public:
-        MovesArray() noexcept = default;
-        ~MovesArray() noexcept = default;
+        Array() noexcept = default;
+        ~Array() noexcept = default;
 
-        MovesArray(const MovesArray&) noexcept = default;
-        MovesArray& operator=(const MovesArray&) noexcept = default;
-        MovesArray(MovesArray&&) noexcept = default;
-        MovesArray& operator=(MovesArray&&) noexcept = default;
+        Array(const Array&) noexcept = default;
+        Array& operator=(const Array&) noexcept = default;
+        Array(Array&&) noexcept = default;
+        Array& operator=(Array&&) noexcept = default;
 
         void push_back(const T& value) noexcept {
             assert(data_size < Size);

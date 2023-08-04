@@ -9,7 +9,7 @@
 
 #include <definitions.hpp>
 
-#include "muhle_intelligence/internal/moves_array.hpp"
+#include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 namespace muhle {
@@ -36,10 +36,10 @@ namespace muhle {
         unsigned int test_moves(Player player, unsigned int depth);
 
         Move random_move(Piece piece);
-        void get_all_moves(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
-        void get_moves_phase1(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
-        void get_moves_phase2(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
-        void get_moves_phase3(Piece piece, MovesArray<Move, MAX_MOVES>& moves);
+        void get_all_moves(Piece piece, Array<Move, MAX_MOVES>& moves);
+        void get_moves_phase1(Piece piece, Array<Move, MAX_MOVES>& moves);
+        void get_moves_phase2(Piece piece, Array<Move, MAX_MOVES>& moves);
+        void get_moves_phase3(Piece piece, Array<Move, MAX_MOVES>& moves);
 
         void make_move(const Move& move);
         void unmake_move(const Move& move);
@@ -79,8 +79,10 @@ namespace muhle {
         } parameters;
     };
 
-    Move create_place(Piece piece, Idx node_index);
-    Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index);
-    Move create_place_take(Piece piece, Idx node_index, Idx node_take_index);
-    Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index);
+    namespace moves {
+        Move create_place(Piece piece, Idx node_index) noexcept;
+        Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index) noexcept;
+        Move create_place_take(Piece piece, Idx node_index, Idx node_take_index) noexcept;
+        Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index) noexcept;
+    }
 }
