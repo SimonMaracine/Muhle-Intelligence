@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 set(SOURCES
     "include/muhle_intelligence/internal/implementation.hpp"
+    "include/muhle_intelligence/internal/moves_array.hpp"
     "include/muhle_intelligence/muhle_intelligence.hpp"
     "src/api.cpp"
     "src/implementation.cpp"

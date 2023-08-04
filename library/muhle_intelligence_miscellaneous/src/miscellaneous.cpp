@@ -1,6 +1,7 @@
 #include <string>
 #include <cassert>
-#include <iostream>
+#include <ostream>
+#include <sstream>
 #include <iomanip>
 
 #include "muhle_intelligence_miscellaneous/miscellaneous.hpp"

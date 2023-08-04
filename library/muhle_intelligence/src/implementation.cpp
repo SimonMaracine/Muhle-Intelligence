@@ -584,6 +584,10 @@ namespace muhle {
         Eval evaluation_freedom = 0;
 
         for (IterIdx i = 0; i < NODES; i++) {
+            if (position[i] == Piece::None) {
+                continue;
+            }
+
             evaluation_freedom += (
                 static_cast<Eval>(calculate_piece_freedom(i)) * static_cast<Eval>(position[i])
             );

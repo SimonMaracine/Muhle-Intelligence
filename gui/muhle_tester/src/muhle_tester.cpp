@@ -319,7 +319,7 @@ void MuhleTester::load_library(const char* buffer) {
     );
 
     muhle_intelligence_version = reinterpret_cast<LibraryVersion>(
-        just_dl::load_function(library_handle, "muhle_intelligence_name", err)
+        just_dl::load_function(library_handle, "muhle_intelligence_version", err)
     );
 
     if (err) {
