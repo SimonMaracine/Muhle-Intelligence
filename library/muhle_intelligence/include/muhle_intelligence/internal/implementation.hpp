@@ -6,6 +6,9 @@
 #include <string>
 #include <string_view>
 #include <cstddef>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
 
 #include <definitions.hpp>
 
@@ -21,7 +24,15 @@ namespace muhle {
         virtual void join_thread() override;
         virtual void set_parameter(std::string_view parameter, int value) override;
 
+        void wait_for_work();
+
         std::thread thread;
+        std::function<void()> search_function;
+        bool running = false;
+
+        std::condition_variable cv;
+        std::mutex mutex;
+
         std::unordered_map<std::string, int> parameters;
     };
 

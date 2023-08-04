@@ -6,6 +6,7 @@
 #include <climits>
 #include <chrono>
 #include <cassert>
+#include <mutex>
 
 #include "muhle_intelligence/internal/implementation.hpp"
 #include "muhle_intelligence/internal/array.hpp"
@@ -29,25 +30,58 @@ namespace muhle {
         parameters["FREEDOM"] = 1;
         parameters["END_GAME"] = 100;
         parameters["DEPTH"] = 5;
+
+        running = true;
+
+        thread = std::thread([this]() {
+            while (true) {
+                wait_for_work();
+
+                if (!running) {
+                    break;
+                }
+
+                search_function();
+
+                // Reset the function
+                search_function = {};
+            }
+        });
     }
 
     void MuhleImpl::search(const Position& position, Player player, Result& result) {
+        assert(running);
+        assert(!search_function);
+
         result = {};
 
-        thread = std::thread([this, position, player, &result]() {
+        search_function = [this, position, player, &result]() {
             SearchCtx search;
             search.setup(parameters);
             search.figure_out_position(position);
             search.search(player, result);
-        });
+        };
+
+        cv.notify_one();
     }
 
     void MuhleImpl::join_thread() {
+        // Set dummy work and exit condition for stopping the thread
+        search_function = []() {};
+        running = false;
+
+        cv.notify_one();
+
         thread.join();
     }
 
     void MuhleImpl::set_parameter(std::string_view parameter, int value) {
         parameters[std::string(parameter)] = value;
+    }
+
+    void MuhleImpl::wait_for_work() {
+        std::unique_lock<std::mutex> lock {mutex};
+        cv.wait(lock, [this]() { return search_function; });
     }
 
     void SearchCtx::setup(const std::unordered_map<std::string, int>& parameters) {
@@ -391,7 +425,7 @@ namespace muhle {
         position[node_destination_index] = Piece::None;
     }
 
-    Eval SearchCtx::evaluate_position(Eval evaluation_game_over) {  // TODO also evaluate piece positions
+    Eval SearchCtx::evaluate_position(Eval evaluation_game_over) {
         positions_evaluated++;
 
         Eval evaluation = 0;

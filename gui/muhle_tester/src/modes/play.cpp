@@ -96,8 +96,6 @@ void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
                         break;
                 }
 
-                muhle->join_thread();
-
                 computer_move_history.push_back(muhle_result);
 
                 play_state = PlayState::ComputerEnd;

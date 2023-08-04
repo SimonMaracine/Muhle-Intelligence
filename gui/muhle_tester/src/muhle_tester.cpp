@@ -107,6 +107,7 @@ void MuhleTester::unload_library() {
         return;
     }
 
+    muhle->join_thread();
     muhle_intelligence_destroy(muhle);
 
     just_dl::Error err;
@@ -210,7 +211,7 @@ void MuhleTester::about() {
 
 void MuhleTester::notation() {
     ImGui::Text("A player's turn is described as:");
-    ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.3f, 1.0f), "player move_type node[-node] [move_type node]");
+    ImGui::TextColored(ImVec4(0.8f, 0.3f, 0.4f, 1.0f), "player move_type node[-node] [move_type node]");
     ImGui::Text("1. Player: W for white, B for black");
     ImGui::Text("2. Main move: P for place, M for move, first and second phase respectively");
     ImGui::Text("3. Node: one node - place location, or two nodes - move source and destination");

@@ -54,8 +54,6 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
 
                 result_text = muhle::move_to_string(muhle_result.result);
 
-                muhle->join_thread();
-
                 test_state = TestState::None;
             }
 
