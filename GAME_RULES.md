@@ -9,7 +9,7 @@
 - Any time a mill is formed (3 pieces in line), an opponent piece must be taken
 - Opponent pieces in mills cannot be taken, except when all their pieces are in mills; in that case
   any piece can be taken
-- When an opponent remains with 3 pieces, they can "jump", i.e. they can move the pieces to any
+- When a player remains with 3 pieces, they can "jump", i.e. they can move the pieces to any
   empty node, instead of only moving to neighbor nodes
 - The game is over when either a player remains with only 2 pieces, or they cannot make any legal
   move; in that case, that player loses
