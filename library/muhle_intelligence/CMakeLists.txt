@@ -1,11 +1,21 @@
 cmake_minimum_required(VERSION 3.20)
 
+set(AI_VARIANTS_SOURCES)
+
+if(MUHLE_STANDARD_GAME)
+    list(APPEND AI_VARIANTS_SOURCES
+        "include/muhle_intelligence/internal/games/standard_game.hpp"
+        "src/standard_game.cpp"
+    )
+endif()
+
 set(SOURCES
     "include/muhle_intelligence/internal/implementation.hpp"
     "include/muhle_intelligence/internal/array.hpp"
     "include/muhle_intelligence/muhle_intelligence.hpp"
     "src/api.cpp"
     "src/implementation.cpp"
+    ${AI_VARIANTS_SOURCES}
 )
 
 if(MUHLE_SHARED_LIBRARY)

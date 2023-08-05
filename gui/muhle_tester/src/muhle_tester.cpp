@@ -95,7 +95,7 @@ void MuhleTester::load_library(const char* buffer) {
     }
 
     muhle = muhle_intelligence_create();
-    muhle->initialize();
+    muhle->initialize(muhle::Game::StandardGame);
 
     library_name = muhle_intelligence_version();
 
