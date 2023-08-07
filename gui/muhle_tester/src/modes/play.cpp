@@ -183,7 +183,7 @@ void TesterModePlay::ui() {
     ImGui::BeginChild("Moves");
 
     for (const muhle::Result& result : computer_move_history) {
-        ImGui::Text("%s", muhle::move_to_string(result.result).c_str());
+        ImGui::Text("%s", muhle::move_to_string(result.result, result.player).c_str());
         ImGui::Spacing();
     }
 

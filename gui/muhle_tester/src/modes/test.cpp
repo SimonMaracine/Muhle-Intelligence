@@ -52,7 +52,7 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
             if (muhle_result.done) {
                 muhle::print_result_statistics(muhle_result);
 
-                result_text = muhle::move_to_string(muhle_result.result);
+                result_text = muhle::move_to_string(muhle_result.result, muhle_result.player);
 
                 test_state = TestState::None;
             }

@@ -59,11 +59,12 @@ namespace muhle {
         };
 
         MoveType type {};
-        Piece piece = Piece::None;
     };
 
     struct Result {
         Move result {};
+        Player player {};
+
         double time = 0.0;
         Eval evaluation = 0;
         unsigned int positions_evaluated = 0;

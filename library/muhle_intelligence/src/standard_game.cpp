@@ -78,7 +78,8 @@ namespace muhle {
 
         const auto end = std::chrono::high_resolution_clock::now();
 
-        result.result = best_move;
+        result.result = best_move.move;
+        result.player = player;
         result.time = std::chrono::duration<double>(end - start).count();
         result.evaluation = evaluation;
         result.positions_evaluated = positions_evaluated;
@@ -99,15 +100,16 @@ namespace muhle {
         assert(moves.size() > 0);
 
         for (const Move& move : moves) {
-            make_move(move);
+            make_move(move, Piece::White);
             const Eval evaluation = minimax_b(depth - 1, plies_from_root + 1, alpha, beta);
-            unmake_move(move);
+            unmake_move(move, Piece::White);
 
             if (evaluation > max_evaluation) {
                 max_evaluation = evaluation;
 
                 if (plies_from_root == 0) {
-                    best_move = move;
+                    best_move.move = move;
+                    best_move.piece = Piece::White;
                 }
             }
 
@@ -136,15 +138,16 @@ namespace muhle {
         assert(moves.size() > 0);
 
         for (const Move& move : moves) {
-            make_move(move);
+            make_move(move, Piece::Black);
             const Eval evaluation = minimax_w(depth - 1, plies_from_root + 1, alpha, beta);
-            unmake_move(move);
+            unmake_move(move, Piece::Black);
 
             if (evaluation < min_evaluation) {
                 min_evaluation = evaluation;
 
                 if (plies_from_root == 0) {
-                    best_move = move;
+                    best_move.move = move;
+                    best_move.piece = Piece::Black;
                 }
             }
 
@@ -172,18 +175,18 @@ namespace muhle {
             get_all_moves(Piece::White, moves);
 
             for (const Move& move : moves) {
-                make_move(move);
+                make_move(move, Piece::White);
                 move_count += test_moves(Player::Black, depth - 1);
-                unmake_move(move);
+                unmake_move(move, Piece::White);
             }
         } else {
             Array<Move, MAX_MOVES> moves;
             get_all_moves(Piece::Black, moves);
 
             for (const Move& move : moves) {
-                make_move(move);
+                make_move(move, Piece::Black);
                 move_count += test_moves(Player::White, depth - 1);
-                unmake_move(move);
+                unmake_move(move, Piece::Black);
             }
         }
 
@@ -236,10 +239,10 @@ namespace muhle {
                         continue;
                     }
 
-                    moves.push_back(moves::create_place_take(piece, i, j));
+                    moves.push_back(moves::create_place_take(i, j));
                 }
             } else {
-                moves.push_back(moves::create_place(piece, i));
+                moves.push_back(moves::create_place(i));
             }
 
             unmake_place_move(i);
@@ -272,10 +275,10 @@ namespace muhle {
                             continue;
                         }
 
-                        moves.push_back(moves::create_move_take(piece, i, free_positions[j], k));
+                        moves.push_back(moves::create_move_take(i, free_positions[j], k));
                     }
                 } else {
-                    moves.push_back(moves::create_move(piece, i, free_positions[j]));
+                    moves.push_back(moves::create_move(i, free_positions[j]));
                 }
 
                 unmake_move_move(piece, i, free_positions[j]);
@@ -311,10 +314,10 @@ namespace muhle {
                             continue;
                         }
 
-                        moves.push_back(moves::create_move_take(piece, i, j, k));
+                        moves.push_back(moves::create_move_take(i, j, k));
                     }
                 } else {
-                    moves.push_back(moves::create_move(piece, i, j));
+                    moves.push_back(moves::create_move(i, j));
                 }
 
                 unmake_move_move(piece, i, j);
@@ -322,12 +325,12 @@ namespace muhle {
         }
     }
 
-    void StandardGame::make_move(const Move& move) {
+    void StandardGame::make_move(const Move& move, Piece piece) {
         switch (move.type) {
             case MoveType::Place:
-                position[move.place.node_index] = move.piece;
+                position[move.place.node_index] = piece;
 
-                switch (move.piece) {
+                switch (piece) {
                     case Piece::White:
                         white_pieces_on_board++;
                         break;
@@ -341,14 +344,14 @@ namespace muhle {
                 break;
             case MoveType::Move:
                 position[move.move.node_source_index] = Piece::None;
-                position[move.move.node_destination_index] = move.piece;
+                position[move.move.node_destination_index] = piece;
 
                 break;
             case MoveType::PlaceTake:
-                position[move.place_take.node_index] = move.piece;
+                position[move.place_take.node_index] = piece;
                 position[move.place_take.node_take_index] = Piece::None;
 
-                switch (move.piece) {
+                switch (piece) {
                     case Piece::White:
                         black_pieces_on_board--;
                         break;
@@ -362,10 +365,10 @@ namespace muhle {
                 break;
             case MoveType::MoveTake:
                 position[move.move_take.node_source_index] = Piece::None;
-                position[move.move_take.node_destination_index] = move.piece;
+                position[move.move_take.node_destination_index] = piece;
                 position[move.move_take.node_take_index] = Piece::None;
 
-                switch (move.piece) {
+                switch (piece) {
                     case Piece::White:
                         black_pieces_on_board--;
                         break;
@@ -382,12 +385,12 @@ namespace muhle {
         plies++;
     }
 
-    void StandardGame::unmake_move(const Move& move) {
+    void StandardGame::unmake_move(const Move& move, Piece piece) {
         switch (move.type) {
             case MoveType::Place:
                 position[move.place.node_index] = Piece::None;
 
-                switch (move.piece) {
+                switch (piece) {
                     case Piece::White:
                         white_pieces_on_board--;
                         break;
@@ -400,15 +403,15 @@ namespace muhle {
 
                 break;
             case MoveType::Move:
-                position[move.move.node_source_index] = move.piece;
+                position[move.move.node_source_index] = piece;
                 position[move.move.node_destination_index] = Piece::None;
 
                 break;
             case MoveType::PlaceTake:
                 position[move.place_take.node_index] = Piece::None;
-                position[move.place_take.node_take_index] = opponent_piece(move.piece);
+                position[move.place_take.node_take_index] = opponent_piece(piece);
 
-                switch (move.piece) {
+                switch (piece) {
                     case Piece::White:
                         black_pieces_on_board++;
                         break;
@@ -421,11 +424,11 @@ namespace muhle {
 
                 break;
             case MoveType::MoveTake:
-                position[move.move_take.node_source_index] = move.piece;
+                position[move.move_take.node_source_index] = piece;
                 position[move.move_take.node_destination_index] = Piece::None;
-                position[move.move_take.node_take_index] = opponent_piece(move.piece);
+                position[move.move_take.node_take_index] = opponent_piece(piece);
 
-                switch (move.piece) {
+                switch (piece) {
                     case Piece::White:
                         black_pieces_on_board++;
                         break;
@@ -976,42 +979,38 @@ namespace muhle {
     }
 
     namespace moves {
-        Move create_place(Piece piece, Idx node_index) noexcept {
+        Move create_place(Idx node_index) noexcept {
             Move move;
             move.place.node_index = node_index;
             move.type = MoveType::Place;
-            move.piece = piece;
 
             return move;
         }
 
-        Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index) noexcept {
+        Move create_move(Idx node_source_index, Idx node_destination_index) noexcept {
             Move move;
             move.move.node_source_index = node_source_index;
             move.move.node_destination_index = node_destination_index;
             move.type = MoveType::Move;
-            move.piece = piece;
 
             return move;
         }
 
-        Move create_place_take(Piece piece, Idx node_index, Idx node_take_index) noexcept {
+        Move create_place_take(Idx node_index, Idx node_take_index) noexcept {
             Move move;
             move.place_take.node_index = node_index;
             move.place_take.node_take_index = node_take_index;
             move.type = MoveType::PlaceTake;
-            move.piece = piece;
 
             return move;
         }
 
-        Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index) noexcept {
+        Move create_move_take(Idx node_source_index, Idx node_destination_index, Idx node_take_index) noexcept {
             Move move;
             move.move_take.node_source_index = node_source_index;
             move.move_take.node_destination_index = node_destination_index;
             move.move_take.node_take_index = node_take_index;
             move.type = MoveType::MoveTake;
-            move.piece = piece;
 
             return move;
         }

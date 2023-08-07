@@ -31,8 +31,8 @@ namespace muhle {
         void get_moves_phase2(Piece piece, Array<Move, MAX_MOVES>& moves);
         void get_moves_phase3(Piece piece, Array<Move, MAX_MOVES>& moves);
 
-        void make_move(const Move& move);
-        void unmake_move(const Move& move);
+        void make_move(const Move& move, Piece piece);
+        void unmake_move(const Move& move, Piece piece);
 
         void make_place_move(Piece piece, Idx node_index);
         void unmake_place_move(Idx node_index);
@@ -58,7 +58,10 @@ namespace muhle {
         unsigned int black_pieces_on_board {};
         unsigned int plies {};
 
-        Move best_move {};
+        struct {
+            Move move {};
+            Piece piece {};
+        } best_move;
         unsigned int positions_evaluated = 0;
 
         struct {
@@ -70,9 +73,9 @@ namespace muhle {
     };
 
     namespace moves {
-        Move create_place(Piece piece, Idx node_index) noexcept;
-        Move create_move(Piece piece, Idx node_source_index, Idx node_destination_index) noexcept;
-        Move create_place_take(Piece piece, Idx node_index, Idx node_take_index) noexcept;
-        Move create_move_take(Piece piece, Idx node_source_index, Idx node_destination_index, Idx node_take_index) noexcept;
+        Move create_place(Idx node_index) noexcept;
+        Move create_move(Idx node_source_index, Idx node_destination_index) noexcept;
+        Move create_place_take(Idx node_index, Idx node_take_index) noexcept;
+        Move create_move_take(Idx node_source_index, Idx node_destination_index, Idx node_take_index) noexcept;
     }
 }

@@ -65,18 +65,15 @@ namespace muhle {
         return nullptr;
     }
 
-    std::string move_to_string(const Move& move) {
+    std::string move_to_string(const Move& move, Player player) {
         std::string result;
 
-        switch (move.piece) {
-            case Piece::White:
+        switch (player) {
+            case Player::White:
                 result.push_back('W');
                 break;
-            case Piece::Black:
+            case Player::Black:
                 result.push_back('B');
-                break;
-            default:
-                assert(false);
                 break;
         }
 
