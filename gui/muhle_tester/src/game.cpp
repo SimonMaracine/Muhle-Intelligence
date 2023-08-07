@@ -824,13 +824,15 @@ bool GamePlay::threefold_repetition() {
     for (const ThreefoldRepetition::Position& position : repetition.twos) {
         if (position == current) {
             std::cout << "Threefold repetition\n";
+
             return true;
         }
     }
 
-    for (const ThreefoldRepetition::Position& position : repetition.ones) {
-        if (position == current) {
-            repetition.ones.remove(current);
+    const auto& list = repetition.ones;
+    for (auto iter_p = list.cbefore_begin(), iter = list.cbegin(); iter != list.cend(); iter_p++, iter++) {
+        if (*iter == current) {
+            repetition.ones.erase_after(iter_p);
             repetition.twos.push_front(current);
 
             return false;
