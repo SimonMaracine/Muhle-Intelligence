@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 #include "game.hpp"
 
@@ -16,9 +17,9 @@ struct TesterModePlay {
     void ui();
     void setup();
     void reset();
-    void change_turn();
 
     GamePlay game_play;
+
     int white = PlayerHuman;
     int black = PlayerComputer;
 
@@ -27,8 +28,7 @@ struct TesterModePlay {
         HumanThinking,
         ComputerBegin,
         ComputerThinking,
-        ComputerEnd
-    } play_state = PlayState::NextTurn;
+    } state = PlayState::NextTurn;
 
     std::vector<muhle::Result> computer_move_history;
 };

@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 #include "game.hpp"
 
@@ -18,13 +19,17 @@ struct TesterModeTest {
     void reset();
 
     GameTest game_test;
+
     int piece = PieceWhite;
+
     enum class TestState {
         None,
         ComputerBegin,
         ComputerThinking
     } test_state = TestState::None;
+
     std::string result_text = "[None]";
+    std::string statistics_text = "";
 
     muhle::MuhleIntelligence* muhle = nullptr;
     muhle::Result* muhle_result = nullptr;

@@ -13,38 +13,31 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
         const ImVec2 position = ImGui::GetMousePos();
         const Player player = piece == PieceWhite ? Player::White : Player::Black;
 
-        game_test.user_click(glm::vec2(position.x, position.y), GameTest::MouseButton::Left, player);
+        game_test.user_action(glm::vec2(position.x, position.y), GameTest::MouseButton::Left, player);
     }
 
     if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
         const ImVec2 position = ImGui::GetMousePos();
 
-        game_test.user_click(glm::vec2(position.x, position.y), GameTest::MouseButton::Right);
+        game_test.user_action(glm::vec2(position.x, position.y), GameTest::MouseButton::Right);
     }
 
     switch (test_state) {
         case TestState::None:
             break;
         case TestState::ComputerBegin: {
-            if (muhle != nullptr) {
-                result_text = "[None]";
+            result_text = "[Computing...]";
+            statistics_text = "";
 
-                const auto game_position = game_test.get_position();
+            const muhle::Position position = game_test.get_position();
 
-                muhle::Position position;
-                for (size_t i = 0; i < game_position.size(); i++) {
-                    position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
-                }
-                position.plies = game_test.plies;
+            muhle->search(
+                position,
+                game_test.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
+                muhle_result
+            );
 
-                muhle->search(
-                    position,
-                    game_test.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
-                    muhle_result
-                );
-
-                test_state = TestState::ComputerThinking;
-            }
+            test_state = TestState::ComputerThinking;
 
             break;
         }
@@ -53,6 +46,7 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
                 muhle::print_result_statistics(muhle_result);
 
                 result_text = muhle::move_to_string(muhle_result.result, muhle_result.player);
+                muhle::print_result_statistics(muhle_result, statistics_text);
 
                 test_state = TestState::None;
             }
@@ -131,6 +125,8 @@ void TesterModeTest::ui() {
     vertical_spacing();
 
     ImGui::Text("Result: %s", result_text.c_str());
+    ImGui::Spacing();
+    ImGui::Text("%s", statistics_text.c_str());
 }
 
 void TesterModeTest::setup() {

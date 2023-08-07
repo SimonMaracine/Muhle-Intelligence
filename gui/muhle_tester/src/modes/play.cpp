@@ -9,17 +9,17 @@
 void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhle_result, float board_unit, glm::vec2 board_offset) {
     game_play.update_nodes_positions(board_unit, board_offset);
 
-    switch (play_state) {
+    switch (state) {
         case PlayState::NextTurn:
             if (game_play.phase != GamePhase::GameOver) {
                 switch (game_play.turn) {
                     case Player::White:
                         switch (white) {
                             case PlayerHuman:
-                                play_state = PlayState::HumanThinking;
+                                state = PlayState::HumanThinking;
                                 break;
                             case PlayerComputer:
-                                play_state = PlayState::ComputerBegin;
+                                state = PlayState::ComputerBegin;
                                 break;
                         }
 
@@ -27,10 +27,10 @@ void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
                     case Player::Black:
                         switch (black) {
                             case PlayerHuman:
-                                play_state = PlayState::HumanThinking;
+                                state = PlayState::HumanThinking;
                                 break;
                             case PlayerComputer:
-                                play_state = PlayState::ComputerBegin;
+                                state = PlayState::ComputerBegin;
                                 break;
                         }
 
@@ -42,30 +42,22 @@ void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
         case PlayState::HumanThinking:
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                 const ImVec2 position = ImGui::GetMousePos();
-                game_play.user_click(glm::vec2(position.x, position.y));
+                game_play.user_action(glm::vec2(position.x, position.y));
 
-                play_state = PlayState::NextTurn;
+                state = PlayState::NextTurn;
             }
 
             break;
         case PlayState::ComputerBegin: {
-            if (muhle != nullptr) {
-                const auto game_position = game_play.get_position();
+            const muhle::Position position = game_play.get_position();
 
-                muhle::Position position;
-                for (size_t i = 0; i < game_position.size(); i++) {
-                    position.pieces[i] = static_cast<muhle::Piece>(game_position[i]);
-                }
-                position.plies = game_play.plies;
+            muhle->search(
+                position,
+                game_play.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
+                muhle_result
+            );
 
-                muhle->search(
-                    position,
-                    game_play.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
-                    muhle_result
-                );
-
-                play_state = PlayState::ComputerThinking;
-            }
+            state = PlayState::ComputerThinking;
 
             break;
         }
@@ -98,12 +90,8 @@ void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
 
                 computer_move_history.push_back(muhle_result);
 
-                play_state = PlayState::ComputerEnd;
+                state = PlayState::NextTurn;
             }
-
-            break;
-        case PlayState::ComputerEnd:
-            play_state = PlayState::NextTurn;
 
             break;
     }
@@ -160,7 +148,24 @@ void TesterModePlay::ui() {
 
     vertical_spacing();
 
-    ImGui::Text("State: %d", static_cast<int>(play_state));
+    const char* state_str = nullptr;
+
+    switch (state) {
+        case PlayState::NextTurn:
+            state_str = "NextTurn";
+            break;
+        case PlayState::HumanThinking:
+            state_str = "HumanThinking";
+            break;
+        case PlayState::ComputerBegin:
+            state_str = "ComputerBegin";
+            break;
+        case PlayState::ComputerThinking:
+            state_str = "ComputerThinking";
+            break;
+    }
+
+    ImGui::Text("State: %s", state_str);
     ImGui::Text("White pieces on board: %u", game_play.white_pieces_on_board);
     ImGui::Text("White pieces outside: %u", game_play.white_pieces_outside);
     ImGui::Text("Black pieces on board: %u", game_play.black_pieces_on_board);
@@ -191,33 +196,16 @@ void TesterModePlay::ui() {
 }
 
 void TesterModePlay::setup() {
-    game_play.setup([this]() {
-        this->change_turn();
-    });
+    game_play.setup();
 }
 
 void TesterModePlay::reset() {
     // TODO stop everything
 
     game_play = {};
-    game_play.setup([this]() {
-        this->change_turn();
-    });
+    game_play.setup();
 
-    play_state = PlayState::NextTurn;
+    state = PlayState::NextTurn;
 
     computer_move_history.clear();
-}
-
-void TesterModePlay::change_turn() {
-    switch (play_state) {
-        case PlayState::HumanThinking:
-            play_state = PlayState::ComputerBegin;
-            break;
-        case PlayState::ComputerEnd:
-            play_state = PlayState::HumanThinking;
-            break;
-        default:
-            break;
-    }
 }

@@ -4,8 +4,10 @@
 #include <array>
 #include <forward_list>
 #include <functional>
+#include <string>
 
 #include <glm/glm.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 inline constexpr float NODE_RADIUS = 25.0f;
 inline constexpr int INVALID_INDEX = -1;
@@ -86,22 +88,19 @@ struct GamePlay {
 
     ThreefoldRepetition repetition;
 
-    using ChangedTurn = std::function<void()>;
-    ChangedTurn changed_turn;
-
-    void setup(ChangedTurn changed_turn);
+    void setup();
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
-    void user_click(glm::vec2 mouse_position);
-    std::array<int, 24> get_position();
+    void user_action(glm::vec2 position);
+    muhle::Position get_position();
 
     void place_piece(int node_index);
     void move_piece(int node_source_index, int node_destination_index);
     void take_piece(int node_index);
 
-    void check_select_piece(glm::vec2 mouse_position);
-    void check_place_piece(glm::vec2 mouse_position);
-    void check_move_piece(glm::vec2 mouse_position);
-    void check_take_piece(glm::vec2 mouse_position);
+    void check_select_piece(glm::vec2 position);
+    void check_place_piece(glm::vec2 position);
+    void check_move_piece(glm::vec2 position);
+    void check_take_piece(glm::vec2 position);
 
     unsigned int change_turn();
     Player opponent(Player player);
@@ -111,6 +110,7 @@ struct GamePlay {
     bool player_has_two_pieces(Player player);
     bool player_has_three_pieces(Player player);
     bool player_has_no_legal_moves(Player player);
+    bool phase_two();
     void game_over(Ending ending);
     bool threefold_repetition();
     void clear_repetition();
@@ -132,8 +132,8 @@ struct GameTest {
 
     void setup();
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
-    void user_click(glm::vec2 mouse_position, MouseButton button, Player player = Player::White);
-    std::array<int, 24> get_position();
+    void user_action(glm::vec2 position, MouseButton button, Player player = Player::White);
+    muhle::Position get_position();
 
     void check_add_piece(Player player, int node_index);
     void check_remove_piece(int node_index);

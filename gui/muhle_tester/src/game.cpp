@@ -5,6 +5,7 @@
 #include <array>
 
 #include <glm/glm.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 #include "game.hpp"
 
@@ -43,32 +44,34 @@ static const int MILLS[MILLS_COUNT][3] = {
     { 1, 4, 7 }, { 12, 13, 14 }, { 16, 19, 22 }, { 9, 10, 11 }
 };
 
-static bool point_in_node(glm::vec2 mouse_position, const Node& node) {
-    const glm::vec2 sub = node.position - mouse_position;
+static bool point_in_node(glm::vec2 position, const Node& node) {
+    const glm::vec2 sub = node.position - position;
 
     return glm::length(sub) < NODE_RADIUS;
 }
 
-static std::array<int, 24> position(const std::array<Node, 24>& nodes) {
-    std::array<int, 24> result;
+static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int plies) {
+    muhle::Position result;
 
     for (size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
-            result[i] = nodes[i].piece->player == Player::White ? 1 : -1;  // FIXME find a better way
+            result.pieces[i] = (
+                nodes[i].piece->player == Player::White ? muhle::Piece::White : muhle::Piece::Black
+            );
         } else {
-            result[i] = 0;
+            result.pieces[i] = muhle::Piece::None;
         }
     }
+
+    result.plies = plies;
 
     return result;
 }
 
-void GamePlay::setup(ChangedTurn changed_turn) {
+void GamePlay::setup() {
     for (size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = static_cast<int>(i);
     }
-
-    this->changed_turn = changed_turn;
 }
 
 void GamePlay::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
@@ -84,22 +87,22 @@ void GamePlay::update_nodes_positions(float board_unit, glm::vec2 board_offset) 
     }
 }
 
-void GamePlay::user_click(glm::vec2 mouse_position) {
+void GamePlay::user_action(glm::vec2 position) {
     switch (phase) {
         case GamePhase::PlacePieces:
             if (must_take_piece) {
-                check_take_piece(mouse_position);
+                check_take_piece(position);
             } else {
-                check_place_piece(mouse_position);
+                check_place_piece(position);
             }
 
             break;
         case GamePhase::MovePieces:
             if (must_take_piece) {
-                check_take_piece(mouse_position);
+                check_take_piece(position);
             } else {
-                check_select_piece(mouse_position);
-                check_move_piece(mouse_position);
+                check_select_piece(position);
+                check_move_piece(position);
             }
 
             break;
@@ -110,8 +113,8 @@ void GamePlay::user_click(glm::vec2 mouse_position) {
     }
 }
 
-std::array<int, 24> GamePlay::get_position() {
-    return position(nodes);
+muhle::Position GamePlay::get_position() {
+    return position(nodes, plies);
 }
 
 void GamePlay::place_piece(int node_index) {
@@ -157,7 +160,7 @@ void GamePlay::place_piece(int node_index) {
         return;
     }
 
-    if (white_pieces_outside + black_pieces_outside == 0) {
+    if (plies == 18) {
         phase = GamePhase::MovePieces;
         std::cout << "Phase two\n";
 
@@ -240,11 +243,11 @@ void GamePlay::take_piece(int node_index) {
     clear_repetition();
 }
 
-void GamePlay::check_select_piece(glm::vec2 mouse_position) {
+void GamePlay::check_select_piece(glm::vec2 position) {
     for (size_t i = 0; i < nodes.size(); i++) {
         const Node& node = nodes[i];
 
-        if (!point_in_node(mouse_position, node)) {
+        if (!point_in_node(position, node)) {
             continue;
         }
 
@@ -274,9 +277,9 @@ void GamePlay::check_select_piece(glm::vec2 mouse_position) {
     }
 }
 
-void GamePlay::check_place_piece(glm::vec2 mouse_position) {
+void GamePlay::check_place_piece(glm::vec2 position) {
     for (Node& node : nodes) {
-        if (!point_in_node(mouse_position, node)) {
+        if (!point_in_node(position, node)) {
             continue;
         }
 
@@ -294,7 +297,7 @@ void GamePlay::check_place_piece(glm::vec2 mouse_position) {
     }
 }
 
-void GamePlay::check_move_piece(glm::vec2 mouse_position) {
+void GamePlay::check_move_piece(glm::vec2 position) {
     if (selected_piece_index == INVALID_INDEX) {
         return;
     }
@@ -302,7 +305,7 @@ void GamePlay::check_move_piece(glm::vec2 mouse_position) {
     Node& node_src = nodes[selected_piece_index];
 
     for (Node& node_dest : nodes) {
-        if (!point_in_node(mouse_position, node_dest)) {
+        if (!point_in_node(position, node_dest)) {
             continue;
         }
 
@@ -327,11 +330,11 @@ void GamePlay::check_move_piece(glm::vec2 mouse_position) {
     }
 }
 
-void GamePlay::check_take_piece(glm::vec2 mouse_position) {
+void GamePlay::check_take_piece(glm::vec2 position) {
     assert(must_take_piece);
 
     for (Node& node : nodes) {
-        if (!point_in_node(mouse_position, node)) {
+        if (!point_in_node(position, node)) {
             continue;
         }
 
@@ -366,8 +369,6 @@ void GamePlay::check_take_piece(glm::vec2 mouse_position) {
 
 unsigned int GamePlay::change_turn() {
     turn = opponent(turn);
-
-    changed_turn();
 
     plies++;
     plies_without_mills++;
@@ -548,18 +549,26 @@ unsigned int GamePlay::pieces_in_mills(Player player) {
 }
 
 bool GamePlay::player_has_two_pieces(Player player) {
+    if (!phase_two()) {
+        return false;
+    }
+
     if (player == Player::White) {
-        return white_pieces_on_board + white_pieces_outside == 2;
+        return white_pieces_on_board == 2;
     } else {
-        return black_pieces_on_board + black_pieces_outside == 2;
+        return black_pieces_on_board == 2;
     }
 }
 
 bool GamePlay::player_has_three_pieces(Player player) {
+    if (!phase_two()) {
+        return false;
+    }
+
     if (player == Player::White) {
-        return white_pieces_on_board + white_pieces_outside == 3;
+        return white_pieces_on_board == 3;
     } else {
-        return black_pieces_on_board + black_pieces_outside == 3;
+        return black_pieces_on_board == 3;
     }
 }
 
@@ -568,8 +577,7 @@ bool GamePlay::player_has_no_legal_moves(Player player) {
         return false;
     }
 
-    // If phase is not two
-    if (white_pieces_outside > 0 || black_pieces_outside > 0) {
+    if (!phase_two()) {
         return false;
     }
 
@@ -786,6 +794,10 @@ bool GamePlay::player_has_no_legal_moves(Player player) {
     return true;
 }
 
+bool GamePlay::phase_two() {
+    return plies >= 18;
+}
+
 void GamePlay::game_over(Ending ending) {
     phase = GamePhase::GameOver;
     this->ending = ending;
@@ -854,9 +866,9 @@ void GameTest::update_nodes_positions(float board_unit, glm::vec2 board_offset) 
     }
 }
 
-void GameTest::user_click(glm::vec2 mouse_position, MouseButton button, Player player) {
+void GameTest::user_action(glm::vec2 position, MouseButton button, Player player) {
     for (Node& node : nodes) {
-        if (!point_in_node(mouse_position, node)) {
+        if (!point_in_node(position, node)) {
             continue;
         }
 
@@ -878,8 +890,8 @@ void GameTest::user_click(glm::vec2 mouse_position, MouseButton button, Player p
     }
 }
 
-std::array<int, 24> GameTest::get_position() {
-    return position(nodes);
+muhle::Position GameTest::get_position() {
+    return position(nodes, plies);
 }
 
 void GameTest::check_add_piece(Player player, int node_index) {
