@@ -10,8 +10,8 @@ if(MUHLE_STANDARD_GAME)
 endif()
 
 set(SOURCES
-    "include/muhle_intelligence/internal/implementation.hpp"
     "include/muhle_intelligence/internal/array.hpp"
+    "include/muhle_intelligence/internal/implementation.hpp"
     "include/muhle_intelligence/muhle_intelligence.hpp"
     "src/api.cpp"
     "src/implementation.cpp"

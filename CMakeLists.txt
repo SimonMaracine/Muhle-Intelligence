@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 option(MUHLE_SHARED_LIBRARY "Build the AI library as static or as dynamic" OFF)
 option(MUHLE_BUILD_GUI "Build the GUI components" ON)
 
-# AI's for all the game variants
+# AIs for all the game variants
 option(MUHLE_STANDARD_GAME "Build AI for the standard game" ON)
 
 project("Muhle-Intelligence" LANGUAGES C CXX)

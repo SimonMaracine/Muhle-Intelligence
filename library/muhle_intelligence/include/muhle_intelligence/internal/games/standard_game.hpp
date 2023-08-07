@@ -11,8 +11,6 @@
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 namespace muhle {
-    inline constexpr size_t MAX_MOVES = 57;
-
     // For every invocation of the AI algorithm, create a new search context object
     class StandardGame {
     public:
@@ -20,6 +18,9 @@ namespace muhle {
         void figure_out_position(const Position& position);
         void search(Player player, Result& result);
     private:
+        // Basic thinking concludes that there cannot be more than 58 moves in a ply
+        static constexpr size_t MAX_MOVES = 58;
+
         Eval minimax(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, Player player);
         unsigned int test_moves(Player player, unsigned int depth);
 

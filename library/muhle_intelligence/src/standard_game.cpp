@@ -89,6 +89,8 @@ namespace muhle {
             Array<Move, MAX_MOVES> moves;
             get_all_moves(Piece::White, moves);
 
+            assert(moves.size() > 0);
+
             for (const Move& move : moves) {
                 make_move(move);
                 const Eval evaluation = minimax(depth - 1, plies_from_root + 1, alpha, beta, Player::Black);
@@ -117,6 +119,8 @@ namespace muhle {
 
             Array<Move, MAX_MOVES> moves;
             get_all_moves(Piece::Black, moves);
+
+            assert(moves.size() > 0);
 
             for (const Move& move : moves) {
                 make_move(move);
@@ -310,19 +314,56 @@ namespace muhle {
         switch (move.type) {
             case MoveType::Place:
                 position[move.place.node_index] = move.piece;
+
+                switch (move.piece) {
+                    case Piece::White:
+                        white_pieces_on_board++;
+                        break;
+                    case Piece::Black:
+                        black_pieces_on_board++;
+                        break;
+                    default:
+                        break;
+                }
+
                 break;
             case MoveType::Move:
                 position[move.move.node_source_index] = Piece::None;
                 position[move.move.node_destination_index] = move.piece;
+
                 break;
             case MoveType::PlaceTake:
                 position[move.place_take.node_index] = move.piece;
                 position[move.place_take.node_take_index] = Piece::None;
+
+                switch (move.piece) {
+                    case Piece::White:
+                        black_pieces_on_board--;
+                        break;
+                    case Piece::Black:
+                        white_pieces_on_board--;
+                        break;
+                    default:
+                        break;
+                }
+
                 break;
             case MoveType::MoveTake:
                 position[move.move_take.node_source_index] = Piece::None;
                 position[move.move_take.node_destination_index] = move.piece;
                 position[move.move_take.node_take_index] = Piece::None;
+
+                switch (move.piece) {
+                    case Piece::White:
+                        black_pieces_on_board--;
+                        break;
+                    case Piece::Black:
+                        white_pieces_on_board--;
+                        break;
+                    default:
+                        break;
+                }
+
                 break;
         }
 
@@ -333,19 +374,56 @@ namespace muhle {
         switch (move.type) {
             case MoveType::Place:
                 position[move.place.node_index] = Piece::None;
+
+                switch (move.piece) {
+                    case Piece::White:
+                        white_pieces_on_board--;
+                        break;
+                    case Piece::Black:
+                        black_pieces_on_board--;
+                        break;
+                    default:
+                        break;
+                }
+
                 break;
             case MoveType::Move:
                 position[move.move.node_source_index] = move.piece;
                 position[move.move.node_destination_index] = Piece::None;
+
                 break;
             case MoveType::PlaceTake:
                 position[move.place_take.node_index] = Piece::None;
                 position[move.place_take.node_take_index] = opponent_piece(move.piece);
+
+                switch (move.piece) {
+                    case Piece::White:
+                        black_pieces_on_board++;
+                        break;
+                    case Piece::Black:
+                        white_pieces_on_board++;
+                        break;
+                    default:
+                        break;
+                }
+
                 break;
             case MoveType::MoveTake:
                 position[move.move_take.node_source_index] = move.piece;
                 position[move.move_take.node_destination_index] = Piece::None;
                 position[move.move_take.node_take_index] = opponent_piece(move.piece);
+
+                switch (move.piece) {
+                    case Piece::White:
+                        black_pieces_on_board++;
+                        break;
+                    case Piece::Black:
+                        white_pieces_on_board++;
+                        break;
+                    default:
+                        break;
+                }
+
                 break;
         }
 
