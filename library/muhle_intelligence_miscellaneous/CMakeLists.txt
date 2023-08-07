@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 add_library(muhle_intelligence_miscellaneous STATIC
-    "include/muhle_intelligence_miscellaneous/miscellaneous.hpp"
+    "include/muhle_intelligence/miscellaneous.hpp"
     "src/miscellaneous.cpp"
 )
 

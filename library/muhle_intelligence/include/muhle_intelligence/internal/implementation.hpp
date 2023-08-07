@@ -8,7 +8,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#include <definitions.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 #include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"

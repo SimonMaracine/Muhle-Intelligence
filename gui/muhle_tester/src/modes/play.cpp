@@ -1,7 +1,7 @@
 #include <gui_base.hpp>
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
-#include <muhle_intelligence_miscellaneous/miscellaneous.hpp>
+#include <muhle_intelligence/miscellaneous.hpp>
 
 #include "modes/play.hpp"
 #include "modes/common.hpp"

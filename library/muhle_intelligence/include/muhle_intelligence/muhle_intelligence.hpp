@@ -4,7 +4,7 @@
 #include <string_view>
 #include <string>
 
-#include <definitions.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 namespace muhle {
     enum class Game {

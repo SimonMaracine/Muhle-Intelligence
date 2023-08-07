@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "muhle_intelligence_miscellaneous/miscellaneous.hpp"
+#include "muhle_intelligence/miscellaneous.hpp"
 
 namespace muhle {
     static const char* node_index_to_name(int index) {

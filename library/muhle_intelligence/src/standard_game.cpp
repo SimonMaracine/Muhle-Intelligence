@@ -5,7 +5,7 @@
 #include <chrono>
 #include <cassert>
 
-#include <definitions.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 #include "muhle_intelligence/internal/games/standard_game.hpp"
 #include "muhle_intelligence/internal/array.hpp"

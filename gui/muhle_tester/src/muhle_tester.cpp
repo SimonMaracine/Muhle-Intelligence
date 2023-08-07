@@ -4,7 +4,7 @@
 #include <gui_base.hpp>
 #include <just_dl/just_dl.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
-#include <muhle_intelligence_miscellaneous/miscellaneous.hpp>
+#include <muhle_intelligence/miscellaneous.hpp>
 
 #include "muhle_tester.hpp"
 

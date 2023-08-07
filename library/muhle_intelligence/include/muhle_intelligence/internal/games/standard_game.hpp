@@ -5,7 +5,7 @@
 #include <string>
 #include <cstddef>
 
-#include <definitions.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 #include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
