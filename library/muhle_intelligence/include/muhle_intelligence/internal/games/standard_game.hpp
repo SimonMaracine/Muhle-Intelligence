@@ -21,7 +21,8 @@ namespace muhle {
         // Basic thinking concludes that there cannot be more than 58 moves in a ply
         static constexpr size_t MAX_MOVES = 58;
 
-        Eval minimax(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, Player player);
+        Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
+        Eval minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
         unsigned int test_moves(Player player, unsigned int depth);
 
         Move random_move(Piece piece);

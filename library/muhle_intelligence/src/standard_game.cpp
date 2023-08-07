@@ -56,96 +56,108 @@ namespace muhle {
     }
 
     void StandardGame::search(Player player, Result& result) {
+        Eval evaluation;
+
         const auto start = std::chrono::high_resolution_clock::now();
 
-        const Eval evaluation = minimax(
-            static_cast<unsigned int>(parameters.DEPTH),
-            0u,
-            MIN_EVALUATION,
-            MAX_EVALUATION,
-            player
-        );
+        if (player == Player::White) {
+            evaluation = minimax_w(
+                static_cast<unsigned int>(parameters.DEPTH),
+                0u,
+                MIN_EVALUATION,
+                MAX_EVALUATION
+            );
+        } else {
+            evaluation = minimax_b(
+                static_cast<unsigned int>(parameters.DEPTH),
+                0u,
+                MIN_EVALUATION,
+                MAX_EVALUATION
+            );
+        }
 
         const auto end = std::chrono::high_resolution_clock::now();
 
-        const double time = std::chrono::duration<double>(end - start).count();
-
         result.result = best_move;
-        result.time = time;
+        result.time = std::chrono::duration<double>(end - start).count();
         result.evaluation = evaluation;
         result.positions_evaluated = positions_evaluated;
 
         result.done = true;
     }
 
-    Eval StandardGame::minimax(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, Player player) {
+    Eval StandardGame::minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta) {
         if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(evaluation_game_over)) {
             return evaluate_position(evaluation_game_over);
         }
 
-        if (player == Player::White) {
-            Eval max_evaluation = MIN_EVALUATION;
+        Eval max_evaluation = MIN_EVALUATION;
 
-            Array<Move, MAX_MOVES> moves;
-            get_all_moves(Piece::White, moves);
+        Array<Move, MAX_MOVES> moves;
+        get_all_moves(Piece::White, moves);
 
-            assert(moves.size() > 0);
+        assert(moves.size() > 0);
 
-            for (const Move& move : moves) {
-                make_move(move);
-                const Eval evaluation = minimax(depth - 1, plies_from_root + 1, alpha, beta, Player::Black);
-                unmake_move(move);
+        for (const Move& move : moves) {
+            make_move(move);
+            const Eval evaluation = minimax_b(depth - 1, plies_from_root + 1, alpha, beta);
+            unmake_move(move);
 
-                if (evaluation > max_evaluation) {
-                    max_evaluation = evaluation;
+            if (evaluation > max_evaluation) {
+                max_evaluation = evaluation;
 
-                    if (plies_from_root == 0) {
-                        best_move = move;
-                    }
+                if (plies_from_root == 0) {
+                    best_move = move;
                 }
-
-                // if (evaluation > alpha) {
-                //     alpha = evaluation;  // FIXME
-                // }
-
-                // if (beta <= alpha) {
-                //     break;
-                // }
             }
 
-            return max_evaluation;
-        } else {
-            Eval min_evaluation = MAX_EVALUATION;
+            // if (evaluation > alpha) {
+            //     alpha = evaluation;  // FIXME
+            // }
 
-            Array<Move, MAX_MOVES> moves;
-            get_all_moves(Piece::Black, moves);
-
-            assert(moves.size() > 0);
-
-            for (const Move& move : moves) {
-                make_move(move);
-                const Eval evaluation = minimax(depth - 1, plies_from_root + 1, alpha, beta, Player::White);
-                unmake_move(move);
-
-                if (evaluation < min_evaluation) {
-                    min_evaluation = evaluation;
-
-                    if (plies_from_root == 0) {
-                        best_move = move;
-                    }
-                }
-
-                // if (evaluation < beta) {
-                //     alpha = evaluation;  // FIXME
-                // }
-
-                // if (beta <= alpha) {
-                //     break;
-                // }
-            }
-
-            return min_evaluation;
+            // if (beta <= alpha) {
+            //     break;
+            // }
         }
+
+        return max_evaluation;
+    }
+
+    Eval StandardGame::minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta) {
+        if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(evaluation_game_over)) {
+            return evaluate_position(evaluation_game_over);
+        }
+
+        Eval min_evaluation = MAX_EVALUATION;
+
+        Array<Move, MAX_MOVES> moves;
+        get_all_moves(Piece::Black, moves);
+
+        assert(moves.size() > 0);
+
+        for (const Move& move : moves) {
+            make_move(move);
+            const Eval evaluation = minimax_w(depth - 1, plies_from_root + 1, alpha, beta);
+            unmake_move(move);
+
+            if (evaluation < min_evaluation) {
+                min_evaluation = evaluation;
+
+                if (plies_from_root == 0) {
+                    best_move = move;
+                }
+            }
+
+            // if (evaluation < beta) {
+            //     alpha = evaluation;  // FIXME
+            // }
+
+            // if (beta <= alpha) {
+            //     break;
+            // }
+        }
+
+        return min_evaluation;
     }
 
     unsigned int StandardGame::test_moves(Player player, unsigned int depth) {
