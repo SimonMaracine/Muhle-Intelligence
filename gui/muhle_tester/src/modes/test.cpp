@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <gui_base.hpp>
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
@@ -43,7 +45,7 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
         }
         case TestState::ComputerThinking: {
             if (muhle_result.done) {
-                muhle::print_result_statistics(muhle_result);
+                muhle::print_result_statistics(muhle_result, std::cout);
 
                 result_text = muhle::move_to_string(muhle_result.result, muhle_result.player);
                 muhle::print_result_statistics(muhle_result, statistics_text);

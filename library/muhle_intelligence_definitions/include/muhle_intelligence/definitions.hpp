@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace muhle {
-    using Idx = int_fast8_t;
+    using Idx = std::int_fast8_t;
     using IterIdx = int;
 
     inline constexpr IterIdx NODES = 24;
@@ -23,7 +23,7 @@ namespace muhle {
         White = 1
     };
 
-    enum class MoveType : int_fast8_t {
+    enum class MoveType : std::int_fast8_t {
         Place,
         Move,
         PlaceTake,

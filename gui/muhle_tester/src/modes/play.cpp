@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <gui_base.hpp>
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
@@ -63,7 +65,7 @@ void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
         }
         case PlayState::ComputerThinking:
             if (muhle_result.done) {
-                muhle::print_result_statistics(muhle_result);
+                muhle::print_result_statistics(muhle_result, std::cout);
 
                 switch (muhle_result.result.type) {
                     case muhle::MoveType::Place:

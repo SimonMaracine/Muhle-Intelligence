@@ -5,7 +5,7 @@
 #include <cstddef>
 
 namespace muhle {
-    template<typename T, size_t Size>
+    template<typename T, std::size_t Size>
     class Array {
     public:
         Array() noexcept = default;
@@ -23,11 +23,11 @@ namespace muhle {
             data_size++;
         }
 
-        const T& operator[](size_t index) const noexcept {
+        const T& operator[](std::size_t index) const noexcept {
             return data[index];
         }
 
-        size_t size() const noexcept {
+        std::size_t size() const noexcept {
             return data_size;
         }
 
@@ -89,6 +89,6 @@ namespace muhle {
         }
     private:
         T data[Size];
-        size_t data_size = 0;
+        std::size_t data_size = 0;
     };
 }

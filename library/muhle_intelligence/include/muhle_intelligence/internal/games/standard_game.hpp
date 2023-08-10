@@ -19,7 +19,7 @@ namespace muhle {
         void search(Player player, Result& result);
     private:
         // Basic thinking concludes that there cannot be more than 58 moves in a ply
-        static constexpr size_t MAX_MOVES = 58;
+        static constexpr std::size_t MAX_MOVES = 58;
 
         Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
         Eval minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);

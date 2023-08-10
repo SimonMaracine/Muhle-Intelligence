@@ -53,7 +53,7 @@ static bool point_in_node(glm::vec2 position, const Node& node) {
 static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int plies) {
     muhle::Position result;
 
-    for (size_t i = 0; i < nodes.size(); i++) {
+    for (std::size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
             result.pieces[i] = (
                 nodes[i].piece->player == Player::White ? muhle::Piece::White : muhle::Piece::Black
@@ -69,13 +69,13 @@ static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int 
 }
 
 void GamePlay::setup() {
-    for (size_t i = 0; i < nodes.size(); i++) {
+    for (std::size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = static_cast<int>(i);
     }
 }
 
 void GamePlay::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
-    for (size_t i = 0; i < nodes.size(); i++) {
+    for (std::size_t i = 0; i < nodes.size(); i++) {
         nodes[i].position = glm::vec2(
             NODE_POSITIONS[i][0] * board_unit + board_offset.x,
             NODE_POSITIONS[i][1] * board_unit + board_offset.y
@@ -230,7 +230,7 @@ void GamePlay::take_piece(int node_index) {
 
     // Check jumping
     if (player_has_three_pieces(turn)) {
-        can_jump[static_cast<size_t>(turn)] = true;
+        can_jump[static_cast<std::size_t>(turn)] = true;
     }
 
     // Check game over
@@ -244,7 +244,7 @@ void GamePlay::take_piece(int node_index) {
 }
 
 void GamePlay::check_select_piece(glm::vec2 position) {
-    for (size_t i = 0; i < nodes.size(); i++) {
+    for (std::size_t i = 0; i < nodes.size(); i++) {
         const Node& node = nodes[i];
 
         if (!point_in_node(position, node)) {
@@ -388,7 +388,7 @@ bool GamePlay::can_potentially_move(Node& node_src, Node& node_dest) {
     assert(node_src.piece != std::nullopt);
     assert(node_dest.piece == std::nullopt);
 
-    if (can_jump[static_cast<size_t>(turn)]) {
+    if (can_jump[static_cast<std::size_t>(turn)]) {
         return true;
     }
 
@@ -573,7 +573,7 @@ bool GamePlay::player_has_three_pieces(Player player) {
 }
 
 bool GamePlay::player_has_no_legal_moves(Player player) {
-    if (can_jump[static_cast<size_t>(player)]) {
+    if (can_jump[static_cast<std::size_t>(player)]) {
         return false;
     }
 
@@ -807,7 +807,7 @@ void GamePlay::game_over(Ending ending) {
 bool GamePlay::threefold_repetition() {
     ThreefoldRepetition::Position current;
 
-    for (size_t i = 0; i < nodes.size(); i++) {
+    for (std::size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
             current.nodes[i] = (
                 nodes[i].piece->player == Player::White
@@ -850,13 +850,13 @@ void GamePlay::clear_repetition() {
 }
 
 void GameTest::setup() {
-    for (size_t i = 0; i < nodes.size(); i++) {
+    for (std::size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = static_cast<int>(i);
     }
 }
 
 void GameTest::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
-    for (size_t i = 0; i < nodes.size(); i++) {
+    for (std::size_t i = 0; i < nodes.size(); i++) {
         nodes[i].position = glm::vec2(
             NODE_POSITIONS[i][0] * board_unit + board_offset.x,
             NODE_POSITIONS[i][1] * board_unit + board_offset.y
