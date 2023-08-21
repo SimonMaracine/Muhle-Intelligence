@@ -10,6 +10,13 @@
 #include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
+/*
+    FIXME
+    gui logic bug: phase two detection is not working properly
+    AI doesn't do smart ending moves
+    segmentation fault in the middle of a game
+*/
+
 namespace muhle {
     // For every invocation of the AI algorithm, create a new search context object
     class StandardGame {
