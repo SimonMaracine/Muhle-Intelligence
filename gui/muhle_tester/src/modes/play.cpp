@@ -172,9 +172,9 @@ void TesterModePlay::ui() {
     ImGui::Text("White pieces outside: %u", game_play.white_pieces_outside);
     ImGui::Text("Black pieces on board: %u", game_play.black_pieces_on_board);
     ImGui::Text("Black pieces outside: %u", game_play.black_pieces_outside);
-    ImGui::Text("Turn: %s", game_play.turn == Player::White ? "white" : "black");
-    ImGui::Text("Phase: %d", static_cast<int>(game_play.phase));
-    ImGui::Text("Ending: %d", static_cast<int>(game_play.ending));
+    ImGui::Text("Turn: %s", game_play.player_to_string());
+    ImGui::Text("Phase: %s", game_play.phase_to_string());
+    ImGui::Text("Ending: %s", game_play.ending_to_string());
     ImGui::Text("Plies: %u", game_play.plies);
     ImGui::Text("Selected piece: %d", game_play.selected_piece_index);
     ImGui::Text("Can jump: white %d, black %d", game_play.can_jump[0], game_play.can_jump[1]);

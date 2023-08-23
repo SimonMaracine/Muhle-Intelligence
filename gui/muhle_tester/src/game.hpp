@@ -3,8 +3,6 @@
 #include <optional>
 #include <array>
 #include <forward_list>
-#include <functional>
-#include <string>
 
 #include <glm/glm.hpp>
 #include <muhle_intelligence/definitions.hpp>
@@ -93,6 +91,10 @@ struct GamePlay {
     void user_action(glm::vec2 position);
     muhle::Position get_position();
 
+    const char* player_to_string();
+    const char* phase_to_string();
+    const char* ending_to_string();
+
     void place_piece(int node_index);
     void move_piece(int node_source_index, int node_destination_index);
     void take_piece(int node_index);
@@ -110,8 +112,9 @@ struct GamePlay {
     bool player_has_two_pieces(Player player);
     bool player_has_three_pieces(Player player);
     bool player_has_no_legal_moves(Player player);
-    bool phase_two();
+    bool is_phase_two();
     void game_over(Ending ending);
+    void phase_two();
     bool threefold_repetition();
     void clear_repetition();
 };

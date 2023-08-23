@@ -1,8 +1,10 @@
+#include <optional>
+#include <array>
+#include <forward_list>
 #include <iostream>
 #include <cassert>
 #include <algorithm>
 #include <cstddef>
-#include <array>
 
 #include <glm/glm.hpp>
 #include <muhle_intelligence/definitions.hpp>
@@ -117,6 +119,38 @@ muhle::Position GamePlay::get_position() {
     return position(nodes, plies);
 }
 
+const char* GamePlay::player_to_string() {
+    return turn == Player::White ? "white" : "black";
+}
+
+const char* GamePlay::phase_to_string() {
+    switch (phase) {
+        case GamePhase::PlacePieces:
+            return "PlacePieces";
+        case GamePhase::MovePieces:
+            return "MovePieces";
+        case GamePhase::GameOver:
+            return "GameOver";
+    }
+
+    return nullptr;
+}
+
+const char* GamePlay::ending_to_string() {
+    switch (ending) {
+        case Ending::None:
+            return "None";
+        case Ending::WinnerWhite:
+            return "WinnerWhite";
+        case Ending::WinnerBlack:
+            return "WinnerBlack";
+        case Ending::TieBetweenBothPlayers:
+            return "TieBetweenBothPlayers";
+    }
+
+    return nullptr;
+}
+
 void GamePlay::place_piece(int node_index) {
     Node& node = nodes[node_index];
 
@@ -161,11 +195,7 @@ void GamePlay::place_piece(int node_index) {
     }
 
     if (plies == 18) {
-        phase = GamePhase::MovePieces;
-        std::cout << "Phase two\n";
-
-        // Remember this position; now threefold repetition rule can apply
-        threefold_repetition();
+        phase_two();
     }
 }
 
@@ -237,6 +267,11 @@ void GamePlay::take_piece(int node_index) {
     if (player_has_two_pieces(turn) || player_has_no_legal_moves(turn)) {
         game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
         return;
+    }
+
+    // Check for phase two here too
+    if (plies == 18) {
+        phase_two();
     }
 
     // Previous positions can occur no more
@@ -549,7 +584,7 @@ unsigned int GamePlay::pieces_in_mills(Player player) {
 }
 
 bool GamePlay::player_has_two_pieces(Player player) {
-    if (!phase_two()) {
+    if (!is_phase_two()) {
         return false;
     }
 
@@ -561,7 +596,7 @@ bool GamePlay::player_has_two_pieces(Player player) {
 }
 
 bool GamePlay::player_has_three_pieces(Player player) {
-    if (!phase_two()) {
+    if (!is_phase_two()) {
         return false;
     }
 
@@ -577,7 +612,7 @@ bool GamePlay::player_has_no_legal_moves(Player player) {
         return false;
     }
 
-    if (!phase_two()) {
+    if (!is_phase_two()) {
         return false;
     }
 
@@ -794,7 +829,7 @@ bool GamePlay::player_has_no_legal_moves(Player player) {
     return true;
 }
 
-bool GamePlay::phase_two() {
+bool GamePlay::is_phase_two() {
     return plies >= 18;
 }
 
@@ -802,6 +837,14 @@ void GamePlay::game_over(Ending ending) {
     phase = GamePhase::GameOver;
     this->ending = ending;
     std::cout << "Game over: " << static_cast<int>(ending) << '\n';
+}
+
+void GamePlay::phase_two() {
+    phase = GamePhase::MovePieces;
+    std::cout << "Phase two\n";
+
+    // Remember this position; now threefold repetition rule can apply
+    threefold_repetition();
 }
 
 bool GamePlay::threefold_repetition() {
