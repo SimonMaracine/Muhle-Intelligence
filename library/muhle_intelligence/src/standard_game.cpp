@@ -23,6 +23,9 @@ namespace muhle {
     static constexpr Eval MIN_EVALUATION = std::numeric_limits<Eval>::min();
     static constexpr Eval MAX_EVALUATION = std::numeric_limits<Eval>::max();
 
+    static constexpr int BLACK_ADVANTAGE = -1;
+    static constexpr int WHITE_ADVANTAGE = 1;
+
     void StandardGame::setup(std::unordered_map<std::string, int>& parameters) {
         // Here the default values are set
         parameters.try_emplace("PIECE", 7);
@@ -506,7 +509,7 @@ namespace muhle {
         return evaluation_material;
     }
 
-    void StandardGame::calculate_freedom_both(unsigned int& white, unsigned int& black) {
+    void StandardGame::calculate_freedom_both(unsigned int& white, unsigned int& black) {  // FIXME at 3 pieces, a player should have freedom 36
         unsigned int total_white_free_positions = 0;
         unsigned int total_black_free_positions = 0;
 
@@ -650,7 +653,7 @@ namespace muhle {
         return freedom;
     }
 
-    Eval StandardGame::calculate_freedom_both() {
+    Eval StandardGame::calculate_freedom_both() {  // FIXME at 3 pieces, a player should have freedom 36
         Eval evaluation_freedom = 0;
 
         for (IterIdx i = 0; i < NODES; i++) {
@@ -937,12 +940,12 @@ namespace muhle {
         }
 
         if (white_pieces_on_board < 3) {
-            evaluation_game_over = -1;
+            evaluation_game_over = BLACK_ADVANTAGE;
             return true;
         }
 
         if (black_pieces_on_board < 3) {
-            evaluation_game_over = 1;
+            evaluation_game_over = WHITE_ADVANTAGE;
             return true;
         }
 
@@ -951,12 +954,12 @@ namespace muhle {
         calculate_freedom_both(white_free_positions, black_free_positions);
 
         if (white_free_positions == 0) {
-            evaluation_game_over = -1;
+            evaluation_game_over = BLACK_ADVANTAGE;
             return true;
         }
 
         if (black_free_positions == 0) {
-            evaluation_game_over = 1;
+            evaluation_game_over = WHITE_ADVANTAGE;
             return true;
         }
 

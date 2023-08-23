@@ -13,7 +13,7 @@
 
 namespace muhle {
     template<typename T>
-    static void search_process(std::unordered_map<std::string, int>& parameters, const Position& position, Player player, Result& result) {
+    static void search_instance(std::unordered_map<std::string, int>& parameters, const Position& position, Player player, Result& result) {
         T search;
         search.setup(parameters);
         search.figure_out_position(position);
@@ -37,7 +37,7 @@ namespace muhle {
 
                 search_function();
 
-                // Reset the function
+                // After the search, reset the function
                 search_function = {};
             }
         });
@@ -52,7 +52,7 @@ namespace muhle {
         switch (game) {
             case Game::StandardGame:
                 search_function = [this, position, player, &result]() {
-                    search_process<StandardGame>(parameters, position, player, result);
+                    search_instance<StandardGame>(parameters, position, player, result);
                 };
                 break;
         }

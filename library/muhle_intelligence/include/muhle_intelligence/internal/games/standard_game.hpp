@@ -12,8 +12,7 @@
 
 /*
     FIXME
-    gui logic bug: phase two detection is not working properly
-    AI doesn't do smart ending moves
+    AI doesn't do smart ending moves (for example, it doesn't make a mill and end the game when opponent has its three pieces in mill)
     segmentation fault in the middle of a game
 */
 
