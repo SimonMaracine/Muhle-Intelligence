@@ -23,14 +23,14 @@ namespace muhle {
     static constexpr Eval MIN_EVALUATION = std::numeric_limits<Eval>::min();
     static constexpr Eval MAX_EVALUATION = std::numeric_limits<Eval>::max();
 
-    static constexpr int BLACK_ADVANTAGE = -1;
-    static constexpr int WHITE_ADVANTAGE = 1;
+    static constexpr Eval BLACK_ADVANTAGE = -1;
+    static constexpr Eval WHITE_ADVANTAGE = 1;
 
     void StandardGame::setup(std::unordered_map<std::string, int>& parameters) {
         // Here the default values are set
         parameters.try_emplace("PIECE", 7);
         parameters.try_emplace("FREEDOM", 1);
-        parameters.try_emplace("END_GAME", 100);
+        parameters.try_emplace("END_GAME", MAX_EVALUATION);
         parameters.try_emplace("DEPTH", 5);
 
         this->parameters.PIECE = parameters.at("PIECE");
@@ -92,7 +92,7 @@ namespace muhle {
 
     Eval StandardGame::minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta) {
         if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(evaluation_game_over)) {
-            return evaluate_position(evaluation_game_over);
+            return evaluate_position(evaluation_game_over, plies_from_root);
         }
 
         Eval max_evaluation = MIN_EVALUATION;
@@ -130,7 +130,7 @@ namespace muhle {
 
     Eval StandardGame::minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta) {
         if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(evaluation_game_over)) {
-            return evaluate_position(evaluation_game_over);
+            return evaluate_position(evaluation_game_over, plies_from_root);
         }
 
         Eval min_evaluation = MAX_EVALUATION;
@@ -466,10 +466,20 @@ namespace muhle {
         position[node_destination_index] = Piece::None;
     }
 
-    Eval StandardGame::evaluate_position(Eval evaluation_game_over) {
+    Eval StandardGame::evaluate_position(Eval evaluation_game_over, unsigned int plies_from_root) {
         positions_evaluated++;
 
         Eval evaluation = 0;
+
+        if (evaluation_game_over != 0) {
+            // Teach what is end game
+            evaluation = evaluation_game_over * static_cast<Eval>(parameters.END_GAME);
+
+            // Use the quickest solution
+            evaluation += -evaluation_game_over * plies_from_root;
+
+            return evaluation;
+        }
 
         const Eval evaluation_material = calculate_material_both();
 
@@ -480,9 +490,6 @@ namespace muhle {
 
         // Calculate pieces' freedom
         evaluation += evaluation_freedom * static_cast<Eval>(parameters.FREEDOM);
-
-        // Teach what is end game
-        evaluation += evaluation_game_over * static_cast<Eval>(parameters.END_GAME);
 
         return evaluation;
     }
@@ -509,25 +516,54 @@ namespace muhle {
         return evaluation_material;
     }
 
-    void StandardGame::calculate_freedom_both(unsigned int& white, unsigned int& black) {  // FIXME at 3 pieces, a player should have freedom 36
-        unsigned int total_white_free_positions = 0;
-        unsigned int total_black_free_positions = 0;
+    void StandardGame::calculate_freedom_both(unsigned int& white, unsigned int& black) {
+        unsigned int white_free_positions = 0;
+        unsigned int black_free_positions = 0;
 
-        for (IterIdx i = 0; i < NODES; i++) {
-            switch (position[i]) {
-                case Piece::White:
-                    total_white_free_positions += calculate_piece_freedom(i);
-                    break;
-                case Piece::Black:
-                    total_black_free_positions += calculate_piece_freedom(i);
-                    break;
-                default:
-                    break;
+        const bool phase_two = plies >= 18;
+        const bool three_piece_white = white_pieces_on_board == 3;
+        const bool three_piece_black = black_pieces_on_board == 3;
+
+        if (three_piece_white && three_piece_black && phase_two) {  // Both have three pieces
+            white_free_positions = THREE_PIECES_FREEDOM;
+            black_free_positions = THREE_PIECES_FREEDOM;
+        } else if (three_piece_white && phase_two) {  // White has three pieces
+            white_free_positions = THREE_PIECES_FREEDOM;
+
+            for (IterIdx i = 0; i < NODES; i++) {
+                if (position[i] != Piece::Black) {
+                    continue;
+                }
+
+                black_free_positions += calculate_piece_freedom(i);
+            }
+        } else if (three_piece_black && phase_two) {  // Black has three pieces
+            black_free_positions = THREE_PIECES_FREEDOM;
+
+            for (IterIdx i = 0; i < NODES; i++) {
+                if (position[i] != Piece::White) {
+                    continue;
+                }
+
+                white_free_positions += calculate_piece_freedom(i);
+            }
+        } else {  // No one has three pieces
+            for (IterIdx i = 0; i < NODES; i++) {
+                switch (position[i]) {
+                    case Piece::White:
+                        white_free_positions += calculate_piece_freedom(i);
+                        break;
+                    case Piece::Black:
+                        black_free_positions += calculate_piece_freedom(i);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
-        white = total_white_free_positions;
-        black = total_black_free_positions;
+        white = white_free_positions;
+        black = black_free_positions;
     }
 
     unsigned int StandardGame::calculate_piece_freedom(Idx index) {
@@ -653,17 +689,49 @@ namespace muhle {
         return freedom;
     }
 
-    Eval StandardGame::calculate_freedom_both() {  // FIXME at 3 pieces, a player should have freedom 36
+    Eval StandardGame::calculate_freedom_both() {
         Eval evaluation_freedom = 0;
 
-        for (IterIdx i = 0; i < NODES; i++) {
-            if (position[i] == Piece::None) {
-                continue;
-            }
+        const bool phase_two = plies >= 18;
+        const bool three_piece_white = white_pieces_on_board == 3;
+        const bool three_piece_black = black_pieces_on_board == 3;
 
-            evaluation_freedom += (
-                static_cast<Eval>(calculate_piece_freedom(i)) * static_cast<Eval>(position[i])
-            );
+        if (three_piece_white && three_piece_black && phase_two) {  // Both have three pieces
+            evaluation_freedom = 0;
+        } else if (three_piece_white && phase_two) {  // Only white has three pieces
+            evaluation_freedom += THREE_PIECES_FREEDOM;
+
+            for (IterIdx i = 0; i < NODES; i++) {
+                if (position[i] != Piece::Black) {
+                    continue;
+                }
+
+                evaluation_freedom += (
+                    static_cast<Eval>(calculate_piece_freedom(i)) * static_cast<Eval>(position[i])
+                );
+            }
+        } else if (three_piece_black && phase_two) {  // Only black has three pieces
+            evaluation_freedom -= THREE_PIECES_FREEDOM;
+
+            for (IterIdx i = 0; i < NODES; i++) {
+                if (position[i] != Piece::White) {
+                    continue;
+                }
+
+                evaluation_freedom += (
+                    static_cast<Eval>(calculate_piece_freedom(i)) * static_cast<Eval>(position[i])
+                );
+            }
+        } else {  // No one has three pieces
+            for (IterIdx i = 0; i < NODES; i++) {
+                if (position[i] == Piece::None) {
+                    continue;
+                }
+
+                evaluation_freedom += (
+                    static_cast<Eval>(calculate_piece_freedom(i)) * static_cast<Eval>(position[i])
+                );
+            }
         }
 
         return evaluation_freedom;

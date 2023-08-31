@@ -27,6 +27,8 @@ namespace muhle {
         // Basic thinking concludes that there cannot be more than 58 moves in a ply
         static constexpr std::size_t MAX_MOVES = 58;
 
+        static constexpr Eval THREE_PIECES_FREEDOM = 36;
+
         Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
         Eval minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
         unsigned int test_moves(Player player, unsigned int depth);
@@ -45,7 +47,7 @@ namespace muhle {
         void make_move_move(Piece piece, Idx node_source_index, Idx node_destination_index);
         void unmake_move_move(Piece piece, Idx node_source_index, Idx node_destination_index);
 
-        Eval evaluate_position(Eval evaluation_game_over);
+        Eval evaluate_position(Eval evaluation_game_over, unsigned int plies_from_root);
         unsigned int calculate_material(Piece piece);
         Eval calculate_material_both();
         void calculate_freedom_both(unsigned int& white, unsigned int& black);
