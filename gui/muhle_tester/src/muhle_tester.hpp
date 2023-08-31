@@ -16,7 +16,7 @@ inline constexpr int ModeTest = 1;
 
 struct MuhleTester : public gui_base::GuiApplication {
     MuhleTester()
-        : gui_base::GuiApplication(1024, 576, u8"Mühle Tester", false) {}
+        : gui_base::GuiApplication(1024, 576, reinterpret_cast<const char*>(u8"Mühle Tester"), false) {}
 
     virtual void start() override;
     virtual void update() override;

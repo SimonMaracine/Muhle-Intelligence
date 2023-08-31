@@ -1,8 +1,12 @@
+#include <vector>
+#include <utility>
 #include <iostream>
+#include <cstddef>
 
 #include <gui_base.hpp>
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
+#include <muhle_intelligence/definitions.hpp>
 #include <muhle_intelligence/miscellaneous.hpp>
 
 #include "modes/play.hpp"
@@ -90,8 +94,6 @@ void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
                         break;
                 }
 
-                computer_move_history.push_back(muhle_result);
-
                 state = PlayState::NextTurn;
             }
 
@@ -124,6 +126,11 @@ void TesterModePlay::draw(ImDrawList* draw_list) {
 }
 
 void TesterModePlay::ui() {
+    ImGui::Columns(2);
+
+    ImGui::SetColumnWidth(0, 300);
+    ImGui::BeginChild("Left");
+
     vertical_spacing();
 
     if (ImGui::Button("Stop AI")) {
@@ -181,33 +188,38 @@ void TesterModePlay::ui() {
     ImGui::Text("Must take piece: %d", game_play.must_take_piece);
     ImGui::Text("Plies without mills: %u", game_play.plies_without_mills);
 
-    vertical_spacing();
+    ImGui::EndChild();
 
-    ImGui::Separator();
+    ImGui::NextColumn();
 
-    vertical_spacing();
+    ImGui::SetColumnWidth(1, 200);
+    ImGui::BeginChild("Right", {}, false, ImGuiWindowFlags_AlwaysAutoResize);
 
-    ImGui::BeginChild("Moves");
-
-    for (const muhle::Result& result : computer_move_history) {
-        ImGui::Text("%s", muhle::move_to_string(result.result, result.player).c_str());
+    for (std::size_t i = 0; const auto& [move, player] : move_history) {
+        ImGui::Text("%lu. %s", i++, muhle::move_to_string(move, player).c_str());
         ImGui::Spacing();
     }
 
     ImGui::EndChild();
+
+    ImGui::Columns(1);
 }
 
 void TesterModePlay::setup() {
-    game_play.setup();
+    game_play.setup([this](muhle::Move move, muhle::Player player) {
+        move_history.push_back(std::make_tuple(move, player));
+    });
 }
 
 void TesterModePlay::reset() {
     // TODO stop everything
 
     game_play = {};
-    game_play.setup();
+    game_play.setup([this](muhle::Move move, muhle::Player player) {
+        move_history.push_back(std::make_tuple(move, player));
+    });
 
     state = PlayState::NextTurn;
 
-    computer_move_history.clear();
+    move_history.clear();
 }

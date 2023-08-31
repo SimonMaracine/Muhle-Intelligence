@@ -3,6 +3,7 @@
 #include <gui_base.hpp>
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
+#include <muhle_intelligence/definitions.hpp>
 #include <muhle_intelligence/miscellaneous.hpp>
 
 #include "modes/test.hpp"

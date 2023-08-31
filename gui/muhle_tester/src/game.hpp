@@ -3,6 +3,7 @@
 #include <optional>
 #include <array>
 #include <forward_list>
+#include <functional>
 
 #include <glm/glm.hpp>
 #include <muhle_intelligence/definitions.hpp>
@@ -63,6 +64,8 @@ struct ThreefoldRepetition {
     std::forward_list<Position> twos;
 };
 
+using ChangeTurnCallback = std::function<void(muhle::Move, muhle::Player)>;
+
 struct GamePlay {
     unsigned int white_pieces_on_board = 0;
     unsigned int white_pieces_outside = 9;
@@ -86,7 +89,16 @@ struct GamePlay {
 
     ThreefoldRepetition repetition;
 
-    void setup();
+    struct {
+        ChangeTurnCallback callback = nullptr;
+
+        struct {
+            muhle::Move move;
+            muhle::Player player;
+        } current_move;
+    } log;
+
+    void setup(ChangeTurnCallback callback);
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_action(glm::vec2 position);
     muhle::Position get_position();
@@ -117,6 +129,10 @@ struct GamePlay {
     void phase_two();
     bool threefold_repetition();
     void clear_repetition();
+
+    void record_place_move(int node_index);
+    void record_move_move(int node_source_index, int node_destination_index);
+    void record_take_move(int node_index);
 };
 
 struct GameTest {

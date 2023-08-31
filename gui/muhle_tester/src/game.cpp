@@ -1,6 +1,7 @@
 #include <optional>
 #include <array>
 #include <forward_list>
+#include <functional>
 #include <iostream>
 #include <cassert>
 #include <algorithm>
@@ -70,10 +71,12 @@ static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int 
     return result;
 }
 
-void GamePlay::setup() {
+void GamePlay::setup(ChangeTurnCallback callback) {
     for (std::size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = static_cast<int>(i);
     }
+
+    log.callback = callback;
 }
 
 void GamePlay::update_nodes_positions(float board_unit, glm::vec2 board_offset) {
@@ -175,6 +178,7 @@ void GamePlay::place_piece(int node_index) {
     }
 
     std::cout << "Placed piece\n";
+    record_place_move(node_index);
 
     // Check for mills
     if (piece_in_mill(node, turn)) {
@@ -209,6 +213,7 @@ void GamePlay::move_piece(int node_source_index, int node_destination_index) {
     std::swap(node_src.piece, node_dest.piece);
 
     std::cout << "Moved piece\n";
+    record_move_move(node_source_index, node_destination_index);
 
     // Check for mills
     if (piece_in_mill(node_dest, turn)) {
@@ -243,6 +248,7 @@ void GamePlay::take_piece(int node_index) {
     node.piece = std::nullopt;
 
     std::cout << "Took piece\n";
+    record_take_move(node_index);
 
     if (turn == Player::White) {
         black_pieces_on_board--;
@@ -403,6 +409,10 @@ void GamePlay::check_take_piece(glm::vec2 position) {
 }
 
 unsigned int GamePlay::change_turn() {
+    // Log move
+    log.callback(log.current_move.move, log.current_move.player);
+    log.current_move = {};
+
     turn = opponent(turn);
 
     plies++;
@@ -890,6 +900,57 @@ bool GamePlay::threefold_repetition() {
 void GamePlay::clear_repetition() {
     repetition.ones.clear();
     repetition.twos.clear();
+}
+
+void GamePlay::record_place_move(int node_index) {
+    muhle::Move move;
+    move.type = muhle::MoveType::Place;
+    move.place.node_index = node_index;
+
+    const muhle::Player player = (
+        turn == Player::White ? muhle::Player::White : muhle::Player::Black
+    );
+
+    log.current_move.move = move;
+    log.current_move.player = player;
+}
+
+void GamePlay::record_move_move(int node_source_index, int node_destination_index) {
+    muhle::Move move;
+    move.type = muhle::MoveType::Move;
+    move.move.node_source_index = node_source_index;
+    move.move.node_destination_index = node_destination_index;
+
+    const muhle::Player player = (
+        turn == Player::White ? muhle::Player::White : muhle::Player::Black
+    );
+
+    log.current_move.move = move;
+    log.current_move.player = player;
+}
+
+void GamePlay::record_take_move(int node_index) {
+    switch (log.current_move.move.type) {
+        case muhle::MoveType::Place:
+            log.current_move.move.type = muhle::MoveType::PlaceTake;
+            log.current_move.move.place_take.node_index = log.current_move.move.place.node_index;
+            log.current_move.move.place_take.node_take_index = node_index;
+
+            break;
+        case muhle::MoveType::Move: {
+            log.current_move.move.type = muhle::MoveType::MoveTake;
+            const muhle::Idx node_source_index = log.current_move.move.move.node_source_index;
+            const muhle::Idx node_destination_index = log.current_move.move.move.node_destination_index;
+            log.current_move.move.move_take.node_source_index = node_source_index;
+            log.current_move.move.move_take.node_destination_index = node_destination_index;
+            log.current_move.move.move_take.node_take_index = node_index;
+
+            break;
+        }
+        default:
+            assert(false);
+            break;
+    }
 }
 
 void GameTest::setup() {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <utility>
 
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
@@ -30,5 +31,5 @@ struct TesterModePlay {
         ComputerThinking,
     } state = PlayState::NextTurn;
 
-    std::vector<muhle::Result> computer_move_history;
+    std::vector<std::tuple<muhle::Move, muhle::Player>> move_history;
 };

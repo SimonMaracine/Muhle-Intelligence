@@ -206,7 +206,7 @@ void MuhleTester::load_library() {
 }
 
 void MuhleTester::about() {
-    ImGui::Text(u8"Mühle Tester - for testing and developing Mühle Intelligence");
+    ImGui::Text(reinterpret_cast<const char*>(u8"Mühle Tester - for testing and developing Mühle Intelligence"));
 }
 
 void MuhleTester::notation() {
@@ -214,8 +214,8 @@ void MuhleTester::notation() {
     ImGui::TextColored(ImVec4(0.8f, 0.3f, 0.4f, 1.0f), "player move_type node[-node] [move_type node]");
     ImGui::Text("1. Player: W for white, B for black");
     ImGui::Text("2. Main move: P for place, M for move, first and second phase respectively");
-    ImGui::Text("3. Node: one node - place location, or two nodes - move source and destination");
-    ImGui::Text("4. Optional, take move: T preceeded by a node - which piece was taken");
+    ImGui::Text("3. Node: one node - place location, two nodes - move source and destination");
+    ImGui::Text("4. Take move: T preceeded by a node - which piece was taken");
 }
 
 void MuhleTester::board_canvas() {

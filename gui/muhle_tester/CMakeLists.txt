@@ -24,7 +24,7 @@ target_link_libraries(muhle_tester PRIVATE
 
 target_include_directories(muhle_tester PRIVATE "src")
 
-target_compile_features(muhle_tester PRIVATE cxx_std_17)
+target_compile_features(muhle_tester PRIVATE cxx_std_20)  # This is the only component which uses C++20 for now
 set_target_properties(muhle_tester PROPERTIES CXX_EXTENSIONS OFF)
 
 enable_warnings(muhle_tester)
