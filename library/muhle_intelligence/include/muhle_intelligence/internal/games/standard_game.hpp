@@ -12,7 +12,6 @@
 
 /*
     FIXME
-    AI doesn't do smart ending moves (for example, it doesn't make a mill and end the game when opponent has its three pieces in mill)
     segmentation fault in the middle of a game
 */
 
@@ -24,9 +23,10 @@ namespace muhle {
         void figure_out_position(const Position& position);
         void search(Player player, Result& result);
     private:
-        // Basic thinking concludes that there cannot be more than 58 moves in a ply
+        // Some thinking concludes that there cannot be more than 58 moves in a ply
         static constexpr std::size_t MAX_MOVES = 58;
 
+        // At three pieces, a player has this freedom value, it simplifies things a bit
         static constexpr Eval THREE_PIECES_FREEDOM = 36;
 
         Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);

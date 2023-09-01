@@ -71,7 +71,7 @@ static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int 
     return result;
 }
 
-void GamePlay::setup(ChangeTurnCallback callback) {
+void GamePlay::setup(MoveLogging::ChangeTurnCallback callback) {
     for (std::size_t i = 0; i < nodes.size(); i++) {
         nodes[i].index = static_cast<int>(i);
     }

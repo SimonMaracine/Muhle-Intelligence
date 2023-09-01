@@ -17,7 +17,7 @@ namespace muhle {
         Black
     };
 
-    enum class Piece : Idx {
+    enum class Piece : std::int_fast8_t {
         Black = -1,
         None = 0,
         White = 1

@@ -193,9 +193,9 @@ void TesterModePlay::ui() {
     ImGui::NextColumn();
 
     ImGui::SetColumnWidth(1, 200);
-    ImGui::BeginChild("Right", {}, false, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::BeginChild("Right");
 
-    for (std::size_t i = 0; const auto& [move, player] : move_history) {
+    for (std::size_t i = 1; const auto& [move, player] : move_history) {
         ImGui::Text("%lu. %s", i++, muhle::move_to_string(move, player).c_str());
         ImGui::Spacing();
     }

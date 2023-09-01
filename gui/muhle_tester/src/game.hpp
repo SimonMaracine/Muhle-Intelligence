@@ -64,7 +64,16 @@ struct ThreefoldRepetition {
     std::forward_list<Position> twos;
 };
 
-using ChangeTurnCallback = std::function<void(muhle::Move, muhle::Player)>;
+struct MoveLogging {
+    using ChangeTurnCallback = std::function<void(muhle::Move, muhle::Player)>;
+
+    ChangeTurnCallback callback = nullptr;
+
+    struct {
+        muhle::Move move;
+        muhle::Player player;
+    } current_move;
+};
 
 struct GamePlay {
     unsigned int white_pieces_on_board = 0;
@@ -88,17 +97,9 @@ struct GamePlay {
     unsigned int plies_without_mills = 0;
 
     ThreefoldRepetition repetition;
+    MoveLogging log;
 
-    struct {
-        ChangeTurnCallback callback = nullptr;
-
-        struct {
-            muhle::Move move;
-            muhle::Player player;
-        } current_move;
-    } log;
-
-    void setup(ChangeTurnCallback callback);
+    void setup(MoveLogging::ChangeTurnCallback callback);
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_action(glm::vec2 position);
     muhle::Position get_position();

@@ -2,6 +2,7 @@
 #include <string>
 
 #include <gui_base.hpp>
+#include <font.hpp>
 #include <just_dl/just_dl.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
 #include <muhle_intelligence/miscellaneous.hpp>
@@ -15,9 +16,22 @@ void MuhleTester::start() {
     ImGuiIO& io = ImGui::GetIO();
 
     ImFontConfig config {};
-    io.Fonts->AddFontDefault();
-    config.SizePixels = 15;
-    label_font = io.Fonts->AddFontDefault(&config);
+    // config.FontDataOwnedByAtlas = false;  // FIXME
+
+    io.Fonts->AddFontFromMemoryTTF(
+        const_cast<char*>(gui_base::LIBERATION_MONO_FONT),
+        gui_base::LIBERATION_MONO_SIZE,
+        16,
+        &config
+    );
+
+    label_font = io.Fonts->AddFontFromMemoryTTF(
+        const_cast<char*>(gui_base::LIBERATION_MONO_FONT),
+        gui_base::LIBERATION_MONO_SIZE,
+        18,
+        &config
+    );
+
     io.Fonts->Build();
 }
 
