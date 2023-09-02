@@ -6,7 +6,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_glfw.h>
 
-#include "gui_base.hpp"
+#include "gui_base/gui_base.hpp"
 
 namespace gui_base {
     GuiApplication::GuiApplication(int width, int height, const char* title, bool resizable) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gui_base.hpp>
+#include <gui_base/gui_base.hpp>
 
 #include "game.hpp"
 

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <gui_base.hpp>
+#include <gui_base/gui_base.hpp>
 #include <glm/glm.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
 

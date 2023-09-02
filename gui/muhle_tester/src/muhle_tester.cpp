@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include <gui_base.hpp>
-#include <font.hpp>
+#include <gui_base/gui_base.hpp>
+#include <gui_base/font.hpp>
 #include <just_dl/just_dl.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
 #include <muhle_intelligence/miscellaneous.hpp>
@@ -15,20 +15,20 @@ void MuhleTester::start() {
 
     ImGuiIO& io = ImGui::GetIO();
 
-    ImFontConfig config {};
-    // config.FontDataOwnedByAtlas = false;  // FIXME
+    ImFontConfig config;
+    config.FontDataOwnedByAtlas = false;
 
     io.Fonts->AddFontFromMemoryTTF(
         const_cast<char*>(gui_base::LIBERATION_MONO_FONT),
         gui_base::LIBERATION_MONO_SIZE,
-        16,
+        16.0f,
         &config
     );
 
     label_font = io.Fonts->AddFontFromMemoryTTF(
         const_cast<char*>(gui_base::LIBERATION_MONO_FONT),
         gui_base::LIBERATION_MONO_SIZE,
-        18,
+        19.0f,
         &config
     );
 

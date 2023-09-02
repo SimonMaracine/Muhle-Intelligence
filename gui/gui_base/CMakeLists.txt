@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
 add_library(gui_base STATIC
-    "include/font.hpp"
-    "include/gui_base.hpp"
+    "include/gui_base/font.hpp"
+    "include/gui_base/gui_base.hpp"
     "src/font.cpp"
     "src/gui_base.cpp"
 )
