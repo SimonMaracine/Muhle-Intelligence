@@ -17,6 +17,6 @@ extern "C" {
     }
 
     MUHLE_API const char* muhle_intelligence_version() {
-        return "simple 0.1.0";
+        return "simple 0.2.0";
     }
 }
