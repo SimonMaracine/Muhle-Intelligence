@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
+#include <filesystem>
 
 #include <gui_base/gui_base.hpp>
-#include <gui_base/font.hpp>
 #include <just_dl/just_dl.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
 #include <muhle_intelligence/miscellaneous.hpp>
@@ -13,26 +13,7 @@ void MuhleTester::start() {
     mode_play.setup();
     mode_test.setup();
 
-    ImGuiIO& io = ImGui::GetIO();
-
-    ImFontConfig config;
-    config.FontDataOwnedByAtlas = false;
-
-    io.Fonts->AddFontFromMemoryTTF(
-        const_cast<char*>(gui_base::LIBERATION_MONO_FONT),
-        gui_base::LIBERATION_MONO_SIZE,
-        16.0f,
-        &config
-    );
-
-    label_font = io.Fonts->AddFontFromMemoryTTF(
-        const_cast<char*>(gui_base::LIBERATION_MONO_FONT),
-        gui_base::LIBERATION_MONO_SIZE,
-        19.0f,
-        &config
-    );
-
-    io.Fonts->Build();
+    load_font();
 }
 
 void MuhleTester::update() {
@@ -57,6 +38,29 @@ void MuhleTester::update() {
 
 void MuhleTester::dispose() {
     unload_library();
+}
+
+void MuhleTester::load_font() {
+    const char* FONT = "LiberationMono-Regular.ttf";
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (!std::filesystem::exists(FONT)) {
+        std::cout << "Could not find font; using default one\n";
+
+        ImFontConfig config;
+
+        config.SizePixels = 16.0f;
+        io.Fonts->AddFontDefault(&config);
+
+        config.SizePixels = 18.0f;
+        label_font = io.Fonts->AddFontDefault(&config);
+    } else {
+        io.Fonts->AddFontFromFileTTF(FONT, 16.0f);
+        label_font = io.Fonts->AddFontFromFileTTF(FONT, 18.0f);
+    }
+
+    io.Fonts->Build();
 }
 
 void MuhleTester::draw_all_pieces(ImDrawList* draw_list) {

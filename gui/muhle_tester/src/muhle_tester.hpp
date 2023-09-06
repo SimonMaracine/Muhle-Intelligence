@@ -22,6 +22,7 @@ struct MuhleTester : public gui_base::GuiApplication {
     virtual void update() override;
     virtual void dispose() override;
 
+    void load_font();
     void draw_all_pieces(ImDrawList* draw_list);
 
     void load_library(const char* buffer);

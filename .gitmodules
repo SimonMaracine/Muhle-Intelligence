@@ -1,12 +1,9 @@
-[submodule "gui/extern/glfw"]
-	path = gui/extern/glfw
-	url = https://github.com/SimonMaracine/glfw
-[submodule "gui/extern/imgui"]
-	path = gui/extern/imgui
-	url = https://github.com/SimonMaracine/imgui
 [submodule "gui/extern/glm"]
 	path = gui/extern/glm
 	url = https://github.com/SimonMaracine/glm
 [submodule "gui/extern/just-dl"]
 	path = gui/extern/just-dl
 	url = https://github.com/SimonMaracine/just-dl
+[submodule "gui/extern/tiny-gui-base"]
+	path = gui/extern/tiny-gui-base
+	url = https://github.com/SimonMaracine/tiny-gui-base/
