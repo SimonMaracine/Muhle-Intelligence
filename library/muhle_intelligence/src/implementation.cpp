@@ -9,7 +9,7 @@
 #include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
-#include "muhle_intelligence/internal/games/standard_game.hpp"
+#include "muhle_intelligence/internal/variants/standard_game.hpp"
 
 namespace muhle {
     template<typename T>

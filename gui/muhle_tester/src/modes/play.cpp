@@ -126,10 +126,17 @@ void TesterModePlay::draw(ImDrawList* draw_list) {
 }
 
 void TesterModePlay::ui() {
-    ImGui::Columns(2);
+    static constexpr auto CHILD_SIZE = ImVec2(0.0f, 450.0f);
 
-    ImGui::SetColumnWidth(0, 300);
-    ImGui::BeginChild("Left");
+    ImGui::BeginTable("RightLayout", 2, ImGuiTableFlags_BordersInnerV);
+
+    ImGui::TableSetupColumn("RightLayoutColumn1", ImGuiTableColumnFlags_WidthStretch);
+    ImGui::TableSetupColumn("RightLayoutColumn2", ImGuiTableColumnFlags_WidthStretch);
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+
+    ImGui::BeginChild("Left", CHILD_SIZE);
 
     vertical_spacing();
 
@@ -190,10 +197,9 @@ void TesterModePlay::ui() {
 
     ImGui::EndChild();
 
-    ImGui::NextColumn();
+    ImGui::TableNextColumn();
 
-    ImGui::SetColumnWidth(1, 200);
-    ImGui::BeginChild("Right");
+    ImGui::BeginChild("Right", CHILD_SIZE);
 
     for (std::size_t i = 1; const auto& [move, player] : move_history) {
         ImGui::Text("%lu. %s", i++, muhle::move_to_string(move, player).c_str());
@@ -202,7 +208,7 @@ void TesterModePlay::ui() {
 
     ImGui::EndChild();
 
-    ImGui::Columns(1);
+    ImGui::EndTable();
 }
 
 void TesterModePlay::setup() {

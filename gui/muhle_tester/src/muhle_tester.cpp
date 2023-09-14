@@ -14,6 +14,9 @@ void MuhleTester::start() {
     mode_test.setup();
 
     load_font();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = nullptr;
 }
 
 void MuhleTester::update() {
@@ -193,7 +196,7 @@ void MuhleTester::main_menu_bar() {
 
 void MuhleTester::main_window() {
     const ImGuiWindowFlags flags = (
-        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove
     );
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -204,9 +207,21 @@ void MuhleTester::main_window() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 
     if (ImGui::Begin("Main", nullptr, flags)) {
+        ImGui::BeginTable("MainLayout", 2);
+
+        ImGui::TableSetupColumn("MainLayoutColumn1", ImGuiTableColumnFlags_None);
+        ImGui::TableSetupColumn("MainLayoutColumn2", ImGuiTableColumnFlags_None);
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
         board_canvas();
-        ImGui::SameLine();
+
+        ImGui::TableNextColumn();
+
         right_side();
+
+        ImGui::EndTable();
 
         ImGui::End();
     }
@@ -240,10 +255,7 @@ void MuhleTester::board_canvas() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(90, 90, 90, 255));
 
-    ImGui::BeginChild("Canvas", ImVec2(500.0f, 500.0f));
-
-    ImGui::PopStyleColor();
-    ImGui::PopStyleVar();
+    ImGui::BeginChild("Canvas", ImVec2(450.0f, 450.0f));
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 cursor_position = ImGui::GetCursorScreenPos();
@@ -311,11 +323,12 @@ void MuhleTester::board_canvas() {
     draw_all_pieces(draw_list);
 
     ImGui::EndChild();
+
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
 }
 
 void MuhleTester::right_side() {
-    ImGui::BeginChild("Right side buttons");
-
     ImGui::Text("AI library name: %s", library_name.c_str());
     ImGui::Separator();
 
@@ -327,6 +340,4 @@ void MuhleTester::right_side() {
             mode_test.ui();
             break;
     }
-
-    ImGui::EndChild();
 }

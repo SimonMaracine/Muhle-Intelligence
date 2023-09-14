@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <muhle_intelligence/definitions.hpp>
 
-inline constexpr float NODE_RADIUS = 25.0f;
+inline constexpr float NODE_RADIUS = 22.0f;
 inline constexpr int INVALID_INDEX = -1;
 inline constexpr unsigned int MAX_PLIES_WITHOUT_MILLS = 50;
 
