@@ -58,4 +58,6 @@ struct MuhleTester : public gui_base::GuiApplication {
     muhle::MuhleIntelligence* muhle = nullptr;
     muhle::Result muhle_result;
     std::string library_name = "";
+
+    bool board_has_focus = true;
 };

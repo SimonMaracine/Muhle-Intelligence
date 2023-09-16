@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include <gui_base/gui_base.hpp>
+#include <ImGuiFileDialog.h>
 #include <just_dl/just_dl.hpp>
 #include <muhle_intelligence/muhle_intelligence.hpp>
 #include <muhle_intelligence/miscellaneous.hpp>
@@ -25,7 +26,7 @@ void MuhleTester::update() {
 
     // ImGui::ShowDemoWindow();
 
-    if (muhle == nullptr) {
+    if (muhle == nullptr || !board_has_focus) {
         return;
     }
 
@@ -53,10 +54,10 @@ void MuhleTester::load_font() {
 
         ImFontConfig config;
 
-        config.SizePixels = 16.0f;
+        config.SizePixels = 13.0f;
         io.Fonts->AddFontDefault(&config);
 
-        config.SizePixels = 18.0f;
+        config.SizePixels = 15.0f;
         label_font = io.Fonts->AddFontDefault(&config);
     } else {
         io.Fonts->AddFontFromFileTTF(FONT, 16.0f);
@@ -233,8 +234,28 @@ void MuhleTester::load_library() {
     static char buffer[128] {};
     ImGui::InputText("File Path", buffer, 128);
 
+    ImGui::Spacing();
+
     if (ImGui::Button("Load")) {
         load_library(buffer);
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Open File Dialog")) {
+        ImGuiFileDialog::Instance()->OpenDialog("FileDialog", "Choose File", ".so,.dll", ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
+        board_has_focus = false;
+    }
+
+    if (ImGuiFileDialog::Instance()->Display("FileDialog", 32, ImVec2(768, 432))) {
+        if (ImGuiFileDialog::Instance()->IsOk()) {
+            const std::string file_path = ImGuiFileDialog::Instance()->GetFilePathName();
+
+            load_library(file_path.c_str());
+            board_has_focus = true;
+        }
+
+        ImGuiFileDialog::Instance()->Close();
     }
 }
 

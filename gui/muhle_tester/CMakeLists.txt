@@ -16,6 +16,7 @@ add_executable(muhle_tester
 
 target_link_libraries(muhle_tester PRIVATE
     gui_base
+    ImGuiFileDialog
     glm::glm
     just_dl
     muhle_intelligence_api
