@@ -11,6 +11,3 @@
 	path = tests/extern/googletest
 	url = https://github.com/google/googletest
 	branch = v1.14.x
-[submodule "gui/extern/ImGuiFileDialog"]
-	path = gui/extern/ImGuiFileDialog
-	url = https://github.com/aiekick/ImGuiFileDialog

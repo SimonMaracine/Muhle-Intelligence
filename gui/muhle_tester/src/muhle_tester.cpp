@@ -243,7 +243,10 @@ void MuhleTester::load_library() {
     ImGui::SameLine();
 
     if (ImGui::Button("Open File Dialog")) {
-        ImGuiFileDialog::Instance()->OpenDialog("FileDialog", "Choose File", ".so,.dll", ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
+        ImGuiFileDialog::Instance()->OpenDialog(
+            "FileDialog", "Choose File", ".so,.dll", ".", 1, nullptr, ImGuiFileDialogFlags_Modal
+        );
+
         board_has_focus = false;
     }
 
@@ -252,6 +255,7 @@ void MuhleTester::load_library() {
             const std::string file_path = ImGuiFileDialog::Instance()->GetFilePathName();
 
             load_library(file_path.c_str());
+
             board_has_focus = true;
         }
 
