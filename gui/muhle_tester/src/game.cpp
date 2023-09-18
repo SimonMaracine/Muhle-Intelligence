@@ -53,7 +53,7 @@ static bool point_in_node(glm::vec2 position, const Node& node) {
     return glm::length(sub) < NODE_RADIUS;
 }
 
-static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int plies) {
+static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int plies, Player player) {
     muhle::Position result;
 
     for (std::size_t i = 0; i < nodes.size(); i++) {
@@ -66,6 +66,7 @@ static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int 
         }
     }
 
+    result.player = player == Player::White ? muhle::Player::White : muhle::Player::Black;
     result.plies = plies;
 
     return result;
@@ -119,7 +120,7 @@ void GamePlay::user_action(glm::vec2 position) {
 }
 
 muhle::Position GamePlay::get_position() {
-    return position(nodes, plies);
+    return position(nodes, plies, turn);
 }
 
 const char* GamePlay::player_to_string() {
@@ -997,7 +998,7 @@ void GameTest::user_action(glm::vec2 position, MouseButton button, Player player
 }
 
 muhle::Position GameTest::get_position() {
-    return position(nodes, plies);
+    return position(nodes, plies, turn);
 }
 
 void GameTest::check_add_piece(Player player, int node_index) {

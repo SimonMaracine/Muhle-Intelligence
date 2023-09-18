@@ -34,11 +34,7 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
 
             const muhle::Position position = game_test.get_position();
 
-            muhle->search(
-                position,
-                game_test.turn == Player::White ? muhle::Player::White : muhle::Player::Black,
-                muhle_result
-            );
+            muhle->search(position, muhle_result);
 
             test_state = TestState::ComputerThinking;
 

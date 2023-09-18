@@ -7,9 +7,8 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "muhle_intelligence/internal/variants/standard_game.hpp"
-#include "muhle_intelligence/internal/array.hpp"
-#include "muhle_intelligence/muhle_intelligence.hpp"
+#include "standard_game.hpp"
+#include "array.hpp"
 
 /*
     Maximizing player is white.
@@ -39,31 +38,14 @@ namespace muhle {
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
-    void StandardGame::figure_out_position(const Position& position) {
-        this->position = position.pieces;
+    void StandardGame::search(const Position& position, Result& result) {
+        figure_out_position(position);
 
-        for (IterIdx i = 0; i < NODES; i++) {
-            switch (this->position[i]) {
-                case Piece::White:
-                    white_pieces_on_board++;
-                    break;
-                case Piece::Black:
-                    black_pieces_on_board++;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        plies = position.plies;
-    }
-
-    void StandardGame::search(Player player, Result& result) {
         Eval evaluation;
 
         const auto start = std::chrono::high_resolution_clock::now();
 
-        if (player == Player::White) {
+        if (position.player == Player::White) {
             evaluation = minimax_w(
                 static_cast<unsigned int>(parameters.DEPTH),
                 0u,
@@ -82,12 +64,31 @@ namespace muhle {
         const auto end = std::chrono::high_resolution_clock::now();
 
         result.result = best_move.move;
-        result.player = player;
+        result.player = position.player;
         result.time = std::chrono::duration<double>(end - start).count();
         result.evaluation = evaluation;
         result.positions_evaluated = positions_evaluated;
 
         result.done = true;
+    }
+
+    void StandardGame::figure_out_position(const Position& position) {
+        this->position = position.pieces;
+
+        for (IterIdx i = 0; i < NODES; i++) {
+            switch (this->position[i]) {
+                case Piece::White:
+                    white_pieces_on_board++;
+                    break;
+                case Piece::Black:
+                    black_pieces_on_board++;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        plies = position.plies;
     }
 
     Eval StandardGame::minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta) {

@@ -10,6 +10,11 @@
 
 #include "muhle_tester.hpp"
 
+/*
+    TODO
+    cache and load last library path location
+*/
+
 void MuhleTester::start() {
     mode_play.setup();
     mode_test.setup();
@@ -117,7 +122,7 @@ void MuhleTester::load_library(const char* buffer) {
     }
 
     muhle = muhle_intelligence_create();
-    muhle->initialize(muhle::Game::StandardGame);
+    muhle->initialize();
 
     library_name = muhle_intelligence_version();
 
@@ -264,7 +269,10 @@ void MuhleTester::load_library() {
 }
 
 void MuhleTester::about() {
-    ImGui::Text(reinterpret_cast<const char*>(u8"Mühle Tester - for testing and developing Mühle Intelligence"));
+    ImGui::Text(
+        "%s",
+        reinterpret_cast<const char*>(u8"Mühle Tester - for testing and developing Mühle Intelligence")
+    );
 }
 
 void MuhleTester::notation() {

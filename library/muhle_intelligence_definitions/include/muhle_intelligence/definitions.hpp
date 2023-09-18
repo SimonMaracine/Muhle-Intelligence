@@ -32,6 +32,7 @@ namespace muhle {
 
     struct Position {
         std::array<Piece, NODES> pieces {};
+        Player player {};
         unsigned int plies {};
     };
 

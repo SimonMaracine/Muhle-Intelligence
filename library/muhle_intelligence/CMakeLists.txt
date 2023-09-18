@@ -1,26 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 
-# For DRY code
-set(AI_VARIANT_HEADER "include/muhle_intelligence/internal/variants")
-set(AI_VARIANT_SOURCE "src/variants")
-
-# List with active variants
-set(AI_VARIANTS_SOURCES)
-
-if(MUHLE_STANDARD_GAME)
-    list(APPEND AI_VARIANTS_SOURCES
-        "${AI_VARIANT_HEADER}/standard_game.hpp"
-        "${AI_VARIANT_SOURCE}/standard_game.cpp"
-    )
-endif()
-
 set(SOURCES
-    "include/muhle_intelligence/internal/array.hpp"
-    "include/muhle_intelligence/internal/implementation.hpp"
     "include/muhle_intelligence/muhle_intelligence.hpp"
     "src/api.cpp"
-    "src/implementation.cpp"
-    ${AI_VARIANTS_SOURCES}
+    "src/array.hpp"
+    "src/library.cpp"
+    "src/library.hpp"
+    "src/standard_game.cpp"
+    "src/standard_game.hpp"
 )
 
 if(MUHLE_SHARED_LIBRARY)

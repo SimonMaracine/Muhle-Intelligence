@@ -7,8 +7,7 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "muhle_intelligence/internal/array.hpp"
-#include "muhle_intelligence/muhle_intelligence.hpp"
+#include "array.hpp"
 
 /*
     FIXME
@@ -20,14 +19,15 @@ namespace muhle {
     class StandardGame {
     public:
         void setup(std::unordered_map<std::string, int>& parameters);
-        void figure_out_position(const Position& position);
-        void search(Player player, Result& result);
+        void search(const Position& position, Result& result);
     private:
         // Some thinking concludes that there cannot be more than 58 moves in a ply
         static constexpr std::size_t MAX_MOVES = 58;
 
-        // At three pieces, a player has this freedom value, it simplifies things a bit
+        // At three pieces, a player will have this freedom value, it simplifies things a bit
         static constexpr Eval THREE_PIECES_FREEDOM = 36;
+
+        void figure_out_position(const Position& position);
 
         Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
         Eval minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);

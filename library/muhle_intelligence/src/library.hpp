@@ -10,20 +10,17 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
 
 namespace muhle {
     class MuhleImpl : public MuhleIntelligence {
     public:
-        virtual void initialize(Game game) override;
-        virtual void search(const Position& position, Player player, Result& result) override;
+        virtual void initialize() override;
+        virtual void search(const Position& position, Result& result) override;
         virtual void join_thread() override;
         virtual void set_parameter(std::string_view parameter, int value) override;
     private:
         void wait_for_work();
-
-        Game game {};
 
         std::thread thread;
         std::function<void()> search_function;

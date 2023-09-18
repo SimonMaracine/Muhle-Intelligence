@@ -5,25 +5,13 @@
 #include <cassert>
 #include <mutex>
 
-#include "muhle_intelligence/internal/implementation.hpp"
-#include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/muhle_intelligence.hpp"
-
-#include "muhle_intelligence/internal/variants/standard_game.hpp"
+#include "library.hpp"
+#include "standard_game.hpp"
 
 namespace muhle {
-    template<typename T>
-    static void search_instance(std::unordered_map<std::string, int>& parameters, const Position& position, Player player, Result& result) {
-        T search;
-        search.setup(parameters);
-        search.figure_out_position(position);
-        search.search(player, result);
-    }
-
-    void MuhleImpl::initialize(Game game) {
+    void MuhleImpl::initialize() {
         assert(!running);
-
-        this->game = game;
 
         running = true;
 
@@ -43,19 +31,15 @@ namespace muhle {
         });
     }
 
-    void MuhleImpl::search(const Position& position, Player player, Result& result) {
+    void MuhleImpl::search(const Position& position, Result& result) {
         assert(running);
         assert(!search_function);
 
         result = {};
 
-        switch (game) {
-            case Game::StandardGame:
-                search_function = [this, position, player, &result]() {
-                    search_instance<StandardGame>(parameters, position, player, result);
-                };
-                break;
-        }
+        StandardGame instance;
+        instance.setup(parameters);
+        instance.search(position, result);
 
         cv.notify_one();
     }
@@ -63,7 +47,7 @@ namespace muhle {
     void MuhleImpl::join_thread() {
         assert(running);
 
-        // Set dummy work and exit condition for stopping the thread
+        // Set dummy work and set exit condition for stopping the thread
         search_function = []() {};
         running = false;
 

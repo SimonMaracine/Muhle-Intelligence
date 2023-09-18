@@ -1,5 +1,5 @@
 #include "muhle_intelligence/muhle_intelligence.hpp"
-#include "muhle_intelligence/internal/implementation.hpp"
+#include "library.hpp"
 
 #ifdef _WIN32
     #define MUHLE_API __declspec(dllexport)
