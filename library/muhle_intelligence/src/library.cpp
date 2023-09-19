@@ -6,8 +6,8 @@
 #include <mutex>
 
 #include "muhle_intelligence/muhle_intelligence.hpp"
-#include "library.hpp"
-#include "search.hpp"
+#include "muhle_intelligence/internal/library.hpp"
+#include "muhle_intelligence/internal/search.hpp"
 
 namespace muhle {
     void MuhleImpl::initialize() {

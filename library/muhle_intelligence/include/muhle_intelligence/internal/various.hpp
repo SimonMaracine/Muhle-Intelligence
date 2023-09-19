@@ -4,7 +4,7 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search_context.hpp"
+#include "muhle_intelligence/internal/search_context.hpp"
 
 namespace muhle {
     bool all_pieces_in_mills(SearchCtx& ctx, Piece piece);

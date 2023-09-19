@@ -4,10 +4,10 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search_context.hpp"
-#include "array.hpp"
-#include "moves.hpp"
-#include "various.hpp"
+#include "muhle_intelligence/internal/search_context.hpp"
+#include "muhle_intelligence/internal/array.hpp"
+#include "muhle_intelligence/internal/moves.hpp"
+#include "muhle_intelligence/internal/various.hpp"
 
 namespace muhle {
     static std::mt19937 random = std::mt19937(std::random_device()());

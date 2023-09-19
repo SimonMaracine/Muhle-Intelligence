@@ -6,11 +6,11 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search.hpp"
-#include "array.hpp"
-#include "moves.hpp"
-#include "evaluation.hpp"
-#include "various.hpp"
+#include "muhle_intelligence/internal/search.hpp"
+#include "muhle_intelligence/internal/array.hpp"
+#include "muhle_intelligence/internal/moves.hpp"
+#include "muhle_intelligence/internal/evaluation.hpp"
+#include "muhle_intelligence/internal/various.hpp"
 
 /*
     Maximizing player is white.
@@ -164,35 +164,5 @@ namespace muhle {
         }
 
         return min_evaluation;
-    }
-
-    unsigned int Search::test_moves(Player player, unsigned int depth) {
-        if (depth == 0) {
-            return 1;
-        }
-
-        unsigned int move_count = 0;
-
-        if (player == Player::White) {
-            Array<Move, MAX_MOVES> moves;
-            generate_moves(ctx, Piece::White, moves);
-
-            for (const Move& move : moves) {
-                make_move(ctx, move, Piece::White);
-                move_count += test_moves(Player::Black, depth - 1);
-                unmake_move(ctx, move, Piece::White);
-            }
-        } else {
-            Array<Move, MAX_MOVES> moves;
-            generate_moves(ctx, Piece::Black, moves);
-
-            for (const Move& move : moves) {
-                make_move(ctx, move, Piece::Black);
-                move_count += test_moves(Player::White, depth - 1);
-                unmake_move(ctx, move, Piece::Black);
-            }
-        }
-
-        return move_count;
     }
 }

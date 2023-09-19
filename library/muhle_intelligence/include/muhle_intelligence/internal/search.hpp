@@ -5,7 +5,7 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search_context.hpp"
+#include "muhle_intelligence/internal/search_context.hpp"
 
 /*
     FIXME
@@ -23,7 +23,6 @@ namespace muhle {
 
         Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
         Eval minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
-        unsigned int test_moves(Player player, unsigned int depth);
 
         SearchCtx ctx;
 

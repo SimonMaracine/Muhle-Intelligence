@@ -2,8 +2,8 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search_context.hpp"
-#include "evaluation.hpp"
+#include "muhle_intelligence/internal/search_context.hpp"
+#include "muhle_intelligence/internal/evaluation.hpp"
 
 namespace muhle {
     Eval evaluate_position(SearchCtx& ctx, const Parameters& parameters, Eval evaluation_game_over,

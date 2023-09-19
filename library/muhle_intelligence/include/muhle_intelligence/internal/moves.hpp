@@ -4,8 +4,8 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search_context.hpp"
-#include "array.hpp"
+#include "muhle_intelligence/internal/search_context.hpp"
+#include "muhle_intelligence/internal/array.hpp"
 
 namespace muhle {
     // Some thinking concludes that there cannot be more than 58 moves in a ply

@@ -2,7 +2,7 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search_context.hpp"
+#include "muhle_intelligence/internal/search_context.hpp"
 
 namespace muhle {
     // At three pieces, a player will have this freedom value, it simplifies things a bit

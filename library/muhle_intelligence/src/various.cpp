@@ -3,9 +3,9 @@
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "search_context.hpp"
-#include "various.hpp"
-#include "evaluation.hpp"
+#include "muhle_intelligence/internal/search_context.hpp"
+#include "muhle_intelligence/internal/various.hpp"
+#include "muhle_intelligence/internal/evaluation.hpp"
 
 namespace muhle {
     static constexpr Eval BLACK_ADVANTAGE = -1;
