@@ -4,10 +4,17 @@ set(SOURCES
     "include/muhle_intelligence/muhle_intelligence.hpp"
     "src/api.cpp"
     "src/array.hpp"
+    "src/evaluation.cpp"
+    "src/evaluation.hpp"
     "src/library.cpp"
     "src/library.hpp"
-    "src/standard_game.cpp"
-    "src/standard_game.hpp"
+    "src/moves.cpp"
+    "src/moves.hpp"
+    "src/search_context.hpp"
+    "src/search.cpp"
+    "src/search.hpp"
+    "src/various.cpp"
+    "src/various.hpp"
 )
 
 if(MUHLE_SHARED_LIBRARY)

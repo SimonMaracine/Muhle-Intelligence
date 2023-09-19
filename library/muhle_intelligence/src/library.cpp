@@ -7,7 +7,7 @@
 
 #include "muhle_intelligence/muhle_intelligence.hpp"
 #include "library.hpp"
-#include "standard_game.hpp"
+#include "search.hpp"
 
 namespace muhle {
     void MuhleImpl::initialize() {
@@ -37,7 +37,7 @@ namespace muhle {
 
         result = {};
 
-        StandardGame instance;
+        Search instance;
         instance.setup(parameters);
         instance.search(position, result);
 
