@@ -1,9 +1,9 @@
-#include <array>
 #include <cassert>
 
 #include <muhle_intelligence/definitions.hpp>
 
 #include "muhle_intelligence/internal/search_context.hpp"
+#include "muhle_intelligence/internal/array.hpp"
 #include "muhle_intelligence/internal/various.hpp"
 #include "muhle_intelligence/internal/evaluation.hpp"
 
@@ -27,14 +27,11 @@ namespace muhle {
 
 #define IS_FREE_CHECK(const_index) \
     if (ctx.position[const_index] == Piece::None) { \
-        result[pos++] = (const_index); \
+        result.push_back(const_index); \
     }
 
-    std::array<Idx, 5> neighbor_free_positions(SearchCtx& ctx, Idx index) {
-        std::array<Idx, 5> result = {
-            INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX
-        };
-        unsigned int pos = 0;
+    Array<Idx, 4> neighbor_free_positions(SearchCtx& ctx, Idx index) {
+        Array<Idx, 4> result;
 
         switch (index) {
             case 0:

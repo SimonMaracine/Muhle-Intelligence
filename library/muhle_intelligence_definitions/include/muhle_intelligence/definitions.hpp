@@ -1,11 +1,10 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
 
 namespace muhle {
-    using Idx = std::int_fast8_t;
-    using IterIdx = int;
+    using Idx = signed char;
+    using IterIdx = unsigned int;
 
     inline constexpr IterIdx NODES = 24;
     inline constexpr Idx INVALID_INDEX = -1;
@@ -17,13 +16,13 @@ namespace muhle {
         Black
     };
 
-    enum class Piece : std::int_fast8_t {
+    enum class Piece : signed char {
         Black = -1,
         None = 0,
         White = 1
     };
 
-    enum class MoveType : std::int_fast8_t {
+    enum class MoveType : signed char {
         Place,
         Move,
         PlaceTake,
