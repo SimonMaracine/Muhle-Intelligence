@@ -1,4 +1,7 @@
 #include <cstddef>
+#include <forward_list>
+#include <array>
+#include <tuple>
 #include <cassert>
 #include <random>
 
@@ -320,5 +323,41 @@ namespace muhle {
         const auto random_index = distribution(random);
 
         return moves[random_index];
+    }
+
+    bool ThreefoldRepetition::threefold_repetition() {
+
+    }
+
+    void ThreefoldRepetition::clear_repetition() {
+        ones.clear();
+        twos.clear();
+    }
+
+    ThreefoldRepetition::Position ThreefoldRepetition::write_position(const std::array<Piece, NODES>& pieces, Player turn) {
+        std::uint64_t position1 = 0;
+        std::uint16_t position2 = 0;
+
+        for (IterIdx i = 0; i < NODES; i++) {
+            switch (pieces[i]) {
+                case Piece::Black:
+                    // const std::uint64_t mask = 1 <<
+
+                    break;
+                case Piece::None:
+                    break;
+                case Piece::White:
+                    break;
+            }
+
+
+
+        }
+
+        return {};
+    }
+
+    std::pair<std::array<Piece, NODES>, Player> ThreefoldRepetition::read_position(Position position) {
+        return {};
     }
 }
