@@ -1,16 +1,17 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <forward_list>
-#include <array>
-#include <tuple>
+#include <utility>
 
 #include <muhle_intelligence/definitions.hpp>
 
-#include "muhle_intelligence/internal/search_context.hpp"
 #include "muhle_intelligence/internal/array.hpp"
 
 namespace muhle {
+    struct SearchCtx;
+
     // Some thinking concludes that there cannot be more than 58 moves in a ply
     inline constexpr std::size_t MAX_MOVES = 58;
 
@@ -21,10 +22,10 @@ namespace muhle {
 
     class ThreefoldRepetition {
     public:
-        enum BinaryPiece {
-            Black = 0b00,
-            None = 0b01,
-            White = 0b10
+        enum {
+            None = 0b00,
+            White = 0b01,
+            Black = 0b10
         };
 
         struct Position {
@@ -36,11 +37,10 @@ namespace muhle {
             }
         };
 
-        bool threefold_repetition();
+        bool threefold_repetition(const Pieces& pieces, Player turn);
         void clear_repetition();
     private:
-        Position write_position(const std::array<Piece, NODES>& pieces, Player turn);
-        std::pair<std::array<Piece, NODES>, Player> read_position(Position position);
+        Position make_position_bitboard(const Pieces& pieces, Player turn);
 
         std::forward_list<Position> ones;
         std::forward_list<Position> twos;

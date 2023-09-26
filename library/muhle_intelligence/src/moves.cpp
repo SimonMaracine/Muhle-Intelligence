@@ -1,7 +1,7 @@
 #include <cstddef>
+#include <cstdint>
 #include <forward_list>
-#include <array>
-#include <tuple>
+#include <utility>
 #include <cassert>
 #include <random>
 
@@ -325,8 +325,29 @@ namespace muhle {
         return moves[random_index];
     }
 
-    bool ThreefoldRepetition::threefold_repetition() {
+    bool ThreefoldRepetition::threefold_repetition(const Pieces& pieces, Player turn) {
+        const Position current_position = make_position_bitboard(pieces, turn);
 
+        for (const Position position : twos) {
+            if (position == current_position) {
+                return true;
+            }
+        }
+
+        for (auto iter_before = ones.cbefore_begin(), iter = ones.cbegin(); iter != ones.cend(); iter_before++, iter++) {
+            const Position position = *iter;
+
+            if (position == current_position) {
+                ones.erase_after(iter_before);
+                twos.push_front(current_position);
+
+                return false;
+            }
+        }
+
+        ones.push_front(current_position);
+
+        return false;
     }
 
     void ThreefoldRepetition::clear_repetition() {
@@ -334,30 +355,42 @@ namespace muhle {
         twos.clear();
     }
 
-    ThreefoldRepetition::Position ThreefoldRepetition::write_position(const std::array<Piece, NODES>& pieces, Player turn) {
-        std::uint64_t position1 = 0;
-        std::uint16_t position2 = 0;
+    ThreefoldRepetition::Position ThreefoldRepetition::make_position_bitboard(const Pieces& pieces, Player turn) {
+        Position position;
 
-        for (IterIdx i = 0; i < NODES; i++) {
+        // Iterate 21 times for the first part
+        for (IterIdx i = 0; i < NODES - 3; i++) {
             switch (pieces[i]) {
-                case Piece::Black:
-                    // const std::uint64_t mask = 1 <<
-
-                    break;
                 case Piece::None:
+                    // Nothing
                     break;
                 case Piece::White:
+                    position.part1 |= White << i * 2;
+                    break;
+                case Piece::Black:
+                    position.part1 |= Black << i * 2;
                     break;
             }
-
-
-
         }
 
-        return {};
-    }
+        // Last bit means the player
+        position.part1 |= static_cast<std::uint64_t>(turn) << 63;
 
-    std::pair<std::array<Piece, NODES>, Player> ThreefoldRepetition::read_position(Position position) {
-        return {};
+        // Iterate 3 times for the second part
+        for (IterIdx i = 0; i < 3; i++) {
+            switch (pieces[i + 21]) {
+                case Piece::None:
+                    // Nothing
+                    break;
+                case Piece::White:
+                    position.part2 |= White << i * 2;
+                    break;
+                case Piece::Black:
+                    position.part2 |= Black << i * 2;
+                    break;
+            }
+        }
+
+        return position;
     }
 }

@@ -95,6 +95,10 @@ namespace muhle {
             return evaluate_position(ctx, parameters, evaluation_game_over, plies_from_root, positions_evaluated);
         }
 
+        // if (ctx.repetition.threefold_repetition(ctx.position, Player::White)) {
+        //     return 0;  // This means a tie
+        // }
+
         Eval max_evaluation = MIN_EVALUATION;
 
         Array<Move, MAX_MOVES> moves;

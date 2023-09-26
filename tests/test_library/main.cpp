@@ -48,3 +48,65 @@ TEST(MovesTest, MakeMove) {
 
     ASSERT_EQ(ctx.position, make_up_position({0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
 }
+
+TEST(MovesTest, ThreefoldRepetition) {
+    muhle::ThreefoldRepetition repetition;
+
+    {
+        const muhle::Pieces pieces = make_up_position({0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::Black;
+
+        ASSERT_FALSE(repetition.threefold_repetition(pieces, player));
+    }
+
+    {
+        const muhle::Pieces pieces = make_up_position({1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::White;
+
+        ASSERT_FALSE(repetition.threefold_repetition(pieces, player));
+    }
+
+    {
+        const muhle::Pieces pieces = make_up_position({1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::White;
+
+        ASSERT_FALSE(repetition.threefold_repetition(pieces, player));
+    }
+
+    {
+        const muhle::Pieces pieces = make_up_position({0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::White;
+
+        ASSERT_FALSE(repetition.threefold_repetition(pieces, player));
+    }
+
+    {
+        const muhle::Pieces pieces = make_up_position({0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::Black;
+
+        ASSERT_FALSE(repetition.threefold_repetition(pieces, player));
+    }
+
+    {
+        const muhle::Pieces pieces = make_up_position({0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::Black;
+
+        ASSERT_FALSE(repetition.threefold_repetition(pieces, player));
+    }
+
+    {
+        const muhle::Pieces pieces = make_up_position({0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::Black;
+
+        ASSERT_TRUE(repetition.threefold_repetition(pieces, player));
+    }
+
+    repetition.clear_repetition();
+
+    {
+        const muhle::Pieces pieces = make_up_position({0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        const muhle::Player player = muhle::Player::Black;
+
+        ASSERT_FALSE(repetition.threefold_repetition(pieces, player));
+    }
+}

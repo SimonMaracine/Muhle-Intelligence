@@ -29,8 +29,10 @@ namespace muhle {
         MoveTake
     };
 
+    using Pieces = std::array<Piece, NODES>;
+
     struct Position {
-        std::array<Piece, NODES> pieces {};
+        Pieces pieces {};
         Player player {};
         unsigned int plies {};
     };

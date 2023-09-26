@@ -188,19 +188,23 @@ void GamePlay::place_piece(int node_index) {
         return;
     }
 
-    if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
-        game_over(Ending::TieBetweenBothPlayers);
-        return;
-    }
-
     // Check game over; only by blocking
     if (player_has_no_legal_moves(turn)) {
         game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
         return;
     }
 
+    // Only now check if the game is too long
+    if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
+        game_over(Ending::TieBetweenBothPlayers);
+        return;
+    }
+
     if (plies == 18) {
         phase_two();
+
+        // Now threefold repetition rule can apply
+        threefold_repetition();
     }
 }
 
@@ -223,20 +227,21 @@ void GamePlay::move_piece(int node_source_index, int node_destination_index) {
         return;
     }
 
+    // Check game over by blocking
+    if (player_has_no_legal_moves(turn)) {
+        game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+        return;
+    }
+
+    // Check if the game is too long
     if (change_turn() == MAX_PLIES_WITHOUT_MILLS) {
         game_over(Ending::TieBetweenBothPlayers);
         return;
     }
 
-    // Check game over by repetition
+    // Only now check game over by repetition
     if (threefold_repetition()) {
         game_over(Ending::TieBetweenBothPlayers);
-        return;
-    }
-
-    // Check game over by blocking
-    if (player_has_no_legal_moves(turn)) {
-        game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
         return;
     }
 }
@@ -276,13 +281,16 @@ void GamePlay::take_piece(int node_index) {
         return;
     }
 
+    // Previous positions can occur no more
+    clear_repetition();
+
     // Check for phase two here too
     if (plies == 18) {
         phase_two();
-    }
 
-    // Previous positions can occur no more
-    clear_repetition();
+        // Now threefold repetition rule can apply
+        threefold_repetition();
+    }
 }
 
 void GamePlay::check_select_piece(glm::vec2 position) {
@@ -853,13 +861,12 @@ void GamePlay::game_over(Ending ending) {
 void GamePlay::phase_two() {
     phase = GamePhase::MovePieces;
     std::cout << "Phase two\n";
-
-    // Remember this position; now threefold repetition rule can apply
-    threefold_repetition();
 }
 
 bool GamePlay::threefold_repetition() {
     ThreefoldRepetition::Position current;
+
+    current.turn = turn;
 
     for (std::size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
@@ -884,9 +891,9 @@ bool GamePlay::threefold_repetition() {
     }
 
     const auto& list = repetition.ones;
-    for (auto iter_p = list.cbefore_begin(), iter = list.cbegin(); iter != list.cend(); iter_p++, iter++) {
+    for (auto iter_before = list.cbefore_begin(), iter = list.cbegin(); iter != list.cend(); iter_before++, iter++) {
         if (*iter == current) {
-            repetition.ones.erase_after(iter_p);
+            repetition.ones.erase_after(iter_before);
             repetition.twos.push_front(current);
 
             return false;
