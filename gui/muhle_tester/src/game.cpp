@@ -58,11 +58,11 @@ static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int 
 
     for (std::size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
-            result.pieces[i] = (
+            result.board[i] = (
                 nodes[i].piece->player == Player::White ? muhle::Piece::White : muhle::Piece::Black
             );
         } else {
-            result.pieces[i] = muhle::Piece::None;
+            result.board[i] = muhle::Piece::None;
         }
     }
 
@@ -228,8 +228,8 @@ void GamePlay::move_piece(int node_source_index, int node_destination_index) {
     }
 
     // Check game over by blocking
-    if (player_has_no_legal_moves(turn)) {
-        game_over(turn == Player::White ? Ending::WinnerBlack : Ending::WinnerWhite);
+    if (player_has_no_legal_moves(opponent(turn))) {
+        game_over(turn == Player::White ? Ending::WinnerWhite : Ending::WinnerBlack);
         return;
     }
 
@@ -399,9 +399,9 @@ void GamePlay::check_take_piece(glm::vec2 position) {
             break;
         }
 
-        // If a piece in mill and not all pieces on the board are in mills
+        // If a piece is in mill and not all pieces on the board are in mills
         const Player player = opponent(turn);
-        unsigned int& player_pieces = (
+        unsigned int player_pieces = (
             player == Player::White ? white_pieces_on_board : black_pieces_on_board
         );
 

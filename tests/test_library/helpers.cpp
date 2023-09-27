@@ -37,7 +37,7 @@ unsigned int get_total_move_count(muhle::SearchCtx& ctx, muhle::Player player, u
     return move_count;
 }
 
-std::array<muhle::Piece, muhle::NODES> make_up_position(const std::array<int, muhle::NODES>& numbers) {
+std::array<muhle::Piece, muhle::NODES> make_up_board(const std::array<int, muhle::NODES>& numbers) {
     std::array<muhle::Piece, muhle::NODES> result;
 
     for (muhle::IterIdx i = 0; i < muhle::NODES; i++) {

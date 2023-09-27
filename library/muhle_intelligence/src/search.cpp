@@ -3,6 +3,7 @@
 #include <climits>
 #include <chrono>
 #include <cassert>
+#include <memory>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -40,25 +41,16 @@ namespace muhle {
     void Search::search(const Position& position, Result& result) {
         figure_out_position(position);
 
-        Eval evaluation;
-
         const auto start = std::chrono::high_resolution_clock::now();
 
-        if (position.player == Player::White) {
-            evaluation = minimax_w(
-                static_cast<unsigned int>(parameters.DEPTH),
-                0u,
-                MIN_EVALUATION,
-                MAX_EVALUATION
-            );
-        } else {
-            evaluation = minimax_b(
-                static_cast<unsigned int>(parameters.DEPTH),
-                0u,
-                MIN_EVALUATION,
-                MAX_EVALUATION
-            );
-        }
+        const Eval evaluation = minimax(
+            position.player,
+            static_cast<unsigned int>(parameters.DEPTH),
+            0u,
+            MIN_EVALUATION,
+            MAX_EVALUATION,
+            ctx.previous_nodes.get()
+        );
 
         const auto end = std::chrono::high_resolution_clock::now();
 
@@ -72,10 +64,12 @@ namespace muhle {
     }
 
     void Search::figure_out_position(const Position& position) {
-        ctx.position = position.pieces;
+        ctx.board = position.board;
+        ctx.plies = position.plies;
+        // ctx.previous_nodes = std::make_unique<threefold_repetition::Node>();  // FIXME implement this
 
         for (IterIdx i = 0; i < NODES; i++) {
-            switch (ctx.position[i]) {
+            switch (position.board[i]) {
                 case Piece::White:
                     ctx.white_pieces_on_board++;
                     break;
@@ -86,87 +80,83 @@ namespace muhle {
                     break;
             }
         }
-
-        ctx.plies = position.plies;
     }
 
-    Eval Search::minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta) {
+    Eval Search::minimax(Player player, unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, repetition::Node* previous_node) {
         if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(ctx, evaluation_game_over)) {
             return evaluate_position(ctx, parameters, evaluation_game_over, plies_from_root, positions_evaluated);
         }
 
-        // if (ctx.repetition.threefold_repetition(ctx.position, Player::White)) {
-        //     return 0;  // This means a tie
-        // }
+        repetition::Node current_node;
 
-        Eval max_evaluation = MIN_EVALUATION;
+        if (repetition::check_current_node(ctx.board, player, current_node, previous_node)) {
+            return 0;  // This means a tie
+        }
 
-        Array<Move, MAX_MOVES> moves;
-        generate_moves(ctx, Piece::White, moves);
+        if (player == Player::White) {
+            Eval max_evaluation = MIN_EVALUATION;
 
-        assert(moves.size() > 0);
+            Array<Move, MAX_MOVES> moves;
+            generate_moves(ctx, Piece::White, moves);
 
-        for (const Move& move : moves) {
-            make_move(ctx, move, Piece::White);
-            const Eval evaluation = minimax_b(depth - 1, plies_from_root + 1, alpha, beta);
-            unmake_move(ctx, move, Piece::White);
+            assert(moves.size() > 0);
 
-            if (evaluation > max_evaluation) {
-                max_evaluation = evaluation;
+            for (const Move& move : moves) {
+                make_move(ctx, move, Piece::White);
+                const Eval evaluation = minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, &current_node);
+                unmake_move(ctx, move, Piece::White);
 
-                if (plies_from_root == 0) {
-                    best_move.move = move;
-                    best_move.piece = Piece::White;
+                if (evaluation > max_evaluation) {
+                    max_evaluation = evaluation;
+
+                    if (plies_from_root == 0) {
+                        best_move.move = move;
+                        best_move.piece = Piece::White;
+                    }
                 }
+
+                // if (evaluation > alpha) {
+                //     alpha = evaluation;  // FIXME
+                // }
+
+                // if (beta <= alpha) {
+                //     break;
+                // }
             }
 
-            // if (evaluation > alpha) {
-            //     alpha = evaluation;  // FIXME
-            // }
+            return max_evaluation;
+        } else {
+            Eval min_evaluation = MAX_EVALUATION;
 
-            // if (beta <= alpha) {
-            //     break;
-            // }
-        }
+            Array<Move, MAX_MOVES> moves;
+            generate_moves(ctx, Piece::Black, moves);
 
-        return max_evaluation;
-    }
+            assert(moves.size() > 0);
 
-    Eval Search::minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta) {
-        if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(ctx, evaluation_game_over)) {
-            return evaluate_position(ctx, parameters, evaluation_game_over, plies_from_root, positions_evaluated);
-        }
+            for (const Move& move : moves) {
+                make_move(ctx, move, Piece::Black);
+                const Eval evaluation = minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, &current_node);
+                unmake_move(ctx, move, Piece::Black);
 
-        Eval min_evaluation = MAX_EVALUATION;
+                if (evaluation < min_evaluation) {
+                    min_evaluation = evaluation;
 
-        Array<Move, MAX_MOVES> moves;
-        generate_moves(ctx, Piece::Black, moves);
-
-        assert(moves.size() > 0);
-
-        for (const Move& move : moves) {
-            make_move(ctx, move, Piece::Black);
-            const Eval evaluation = minimax_w(depth - 1, plies_from_root + 1, alpha, beta);
-            unmake_move(ctx, move, Piece::Black);
-
-            if (evaluation < min_evaluation) {
-                min_evaluation = evaluation;
-
-                if (plies_from_root == 0) {
-                    best_move.move = move;
-                    best_move.piece = Piece::Black;
+                    if (plies_from_root == 0) {
+                        best_move.move = move;
+                        best_move.piece = Piece::Black;
+                    }
                 }
+
+                // if (evaluation < beta) {
+                //     alpha = evaluation;  // FIXME
+                // }
+
+                // if (beta <= alpha) {
+                //     break;
+                // }
             }
 
-            // if (evaluation < beta) {
-            //     alpha = evaluation;  // FIXME
-            // }
-
-            // if (beta <= alpha) {
-            //     break;
-            // }
+            return min_evaluation;
         }
-
-        return min_evaluation;
     }
 }

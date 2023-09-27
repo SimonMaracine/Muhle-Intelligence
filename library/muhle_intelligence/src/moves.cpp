@@ -1,6 +1,5 @@
 #include <cstddef>
 #include <cstdint>
-#include <forward_list>
 #include <utility>
 #include <cassert>
 #include <random>
@@ -16,21 +15,21 @@ namespace muhle {
     static std::mt19937 random = std::mt19937(std::random_device()());
 
     static void make_place_move(SearchCtx& ctx, Piece piece, Idx node_index) {
-        ctx.position[node_index] = piece;
+        ctx.board[node_index] = piece;
     }
 
     static void unmake_place_move(SearchCtx& ctx, Idx node_index) {
-        ctx.position[node_index] = Piece::None;
+        ctx.board[node_index] = Piece::None;
     }
 
     static void make_move_move(SearchCtx& ctx, Piece piece, Idx node_source_index, Idx node_destination_index) {
-        ctx.position[node_source_index] = Piece::None;
-        ctx.position[node_destination_index] = piece;
+        ctx.board[node_source_index] = Piece::None;
+        ctx.board[node_destination_index] = piece;
     }
 
     static void unmake_move_move(SearchCtx& ctx, Piece piece, Idx node_source_index, Idx node_destination_index) {
-        ctx.position[node_source_index] = piece;
-        ctx.position[node_destination_index] = Piece::None;
+        ctx.board[node_source_index] = piece;
+        ctx.board[node_destination_index] = Piece::None;
     }
 
     static Move create_place(Idx node_index) {
@@ -73,7 +72,7 @@ namespace muhle {
         assert(piece != Piece::None);
 
         for (IterIdx i = 0; i < NODES; i++) {
-            if (ctx.position[i] != Piece::None) {
+            if (ctx.board[i] != Piece::None) {
                 continue;
             }
 
@@ -84,7 +83,7 @@ namespace muhle {
                 const bool all_in_mills = all_pieces_in_mills(ctx, opponent);
 
                 for (IterIdx j = 0; j < NODES; j++) {
-                    if (ctx.position[j] != opponent) {
+                    if (ctx.board[j] != opponent) {
                         continue;
                     }
 
@@ -106,7 +105,7 @@ namespace muhle {
         assert(piece != Piece::None);
 
         for (IterIdx i = 0; i < NODES; i++) {
-            if (ctx.position[i] != piece) {
+            if (ctx.board[i] != piece) {
                 continue;
             }
 
@@ -120,7 +119,7 @@ namespace muhle {
                     const bool all_in_mills = all_pieces_in_mills(ctx, opponent);
 
                     for (IterIdx k = 0; k < NODES; k++) {
-                        if (ctx.position[k] != opponent) {
+                        if (ctx.board[k] != opponent) {
                             continue;
                         }
 
@@ -143,12 +142,12 @@ namespace muhle {
         assert(piece != Piece::None);
 
         for (IterIdx i = 0; i < NODES; i++) {
-            if (ctx.position[i] != piece) {
+            if (ctx.board[i] != piece) {
                 continue;
             }
 
             for (IterIdx j = 0; j < NODES; j++) {
-                if (ctx.position[j] != Piece::None) {
+                if (ctx.board[j] != Piece::None) {
                     continue;
                 }
 
@@ -159,7 +158,7 @@ namespace muhle {
                     const bool all_in_mills = all_pieces_in_mills(ctx, opponent);
 
                     for (IterIdx k = 0; k < NODES; k++) {
-                        if (ctx.position[k] != opponent) {
+                        if (ctx.board[k] != opponent) {
                             continue;
                         }
 
@@ -181,7 +180,7 @@ namespace muhle {
     void make_move(SearchCtx& ctx, const Move& move, Piece piece) {
         switch (move.type) {
             case MoveType::Place:
-                ctx.position[move.place.node_index] = piece;
+                ctx.board[move.place.node_index] = piece;
 
                 switch (piece) {
                     case Piece::White:
@@ -196,13 +195,13 @@ namespace muhle {
 
                 break;
             case MoveType::Move:
-                ctx.position[move.move.node_source_index] = Piece::None;
-                ctx.position[move.move.node_destination_index] = piece;
+                ctx.board[move.move.node_source_index] = Piece::None;
+                ctx.board[move.move.node_destination_index] = piece;
 
                 break;
             case MoveType::PlaceTake:
-                ctx.position[move.place_take.node_index] = piece;
-                ctx.position[move.place_take.node_take_index] = Piece::None;
+                ctx.board[move.place_take.node_index] = piece;
+                ctx.board[move.place_take.node_take_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
@@ -217,9 +216,9 @@ namespace muhle {
 
                 break;
             case MoveType::MoveTake:
-                ctx.position[move.move_take.node_source_index] = Piece::None;
-                ctx.position[move.move_take.node_destination_index] = piece;
-                ctx.position[move.move_take.node_take_index] = Piece::None;
+                ctx.board[move.move_take.node_source_index] = Piece::None;
+                ctx.board[move.move_take.node_destination_index] = piece;
+                ctx.board[move.move_take.node_take_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
@@ -241,7 +240,7 @@ namespace muhle {
     void unmake_move(SearchCtx& ctx, const Move& move, Piece piece) {
         switch (move.type) {
             case MoveType::Place:
-                ctx.position[move.place.node_index] = Piece::None;
+                ctx.board[move.place.node_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
@@ -256,13 +255,13 @@ namespace muhle {
 
                 break;
             case MoveType::Move:
-                ctx.position[move.move.node_source_index] = piece;
-                ctx.position[move.move.node_destination_index] = Piece::None;
+                ctx.board[move.move.node_source_index] = piece;
+                ctx.board[move.move.node_destination_index] = Piece::None;
 
                 break;
             case MoveType::PlaceTake:
-                ctx.position[move.place_take.node_index] = Piece::None;
-                ctx.position[move.place_take.node_take_index] = opponent_piece(piece);
+                ctx.board[move.place_take.node_index] = Piece::None;
+                ctx.board[move.place_take.node_take_index] = opponent_piece(piece);
 
                 switch (piece) {
                     case Piece::White:
@@ -277,9 +276,9 @@ namespace muhle {
 
                 break;
             case MoveType::MoveTake:
-                ctx.position[move.move_take.node_source_index] = piece;
-                ctx.position[move.move_take.node_destination_index] = Piece::None;
-                ctx.position[move.move_take.node_take_index] = opponent_piece(piece);
+                ctx.board[move.move_take.node_source_index] = piece;
+                ctx.board[move.move_take.node_destination_index] = Piece::None;
+                ctx.board[move.move_take.node_take_index] = opponent_piece(piece);
 
                 switch (piece) {
                     case Piece::White:
@@ -325,72 +324,68 @@ namespace muhle {
         return moves[random_index];
     }
 
-    bool ThreefoldRepetition::threefold_repetition(const Pieces& pieces, Player turn) {
-        const Position current_position = make_position_bitboard(pieces, turn);
+    namespace repetition {
+        bool check_current_node(const Board& board, Player turn, Node& current, const Node* previous) {
+            const Position current_position = make_position_bitboard(board, turn);
 
-        for (const Position position : twos) {
-            if (position == current_position) {
-                return true;
+            current.previous = previous;  // TODO cut previous nodes, if a take move occurs
+            current.position = current_position;
+
+            const Node* node = previous;
+            unsigned int repetition = 1;
+
+            while (node != nullptr) {
+                if (node->position == current_position) {
+                    repetition++;
+
+                    if (repetition == 3) {
+                        return true;  // Early out
+                    }
+                }
+
+                node = node->previous;
             }
+
+            return false;
         }
 
-        for (auto iter_before = ones.cbefore_begin(), iter = ones.cbegin(); iter != ones.cend(); iter_before++, iter++) {
-            const Position position = *iter;
+        Position make_position_bitboard(const Board& board, Player turn) {
+            Position position;
 
-            if (position == current_position) {
-                ones.erase_after(iter_before);
-                twos.push_front(current_position);
-
-                return false;
+            // Iterate 21 times for the first part
+            for (IterIdx i = 0; i < NODES - 3; i++) {
+                switch (board[i]) {
+                    case Piece::None:
+                        // Nothing
+                        break;
+                    case Piece::White:
+                        position.part1 |= White << i * 2;
+                        break;
+                    case Piece::Black:
+                        position.part1 |= Black << i * 2;
+                        break;
+                }
             }
-        }
 
-        ones.push_front(current_position);
+            // Last bit means the player
+            position.part1 |= static_cast<std::uint64_t>(turn) << 63;
 
-        return false;
-    }
-
-    void ThreefoldRepetition::clear_repetition() {
-        ones.clear();
-        twos.clear();
-    }
-
-    ThreefoldRepetition::Position ThreefoldRepetition::make_position_bitboard(const Pieces& pieces, Player turn) {
-        Position position;
-
-        // Iterate 21 times for the first part
-        for (IterIdx i = 0; i < NODES - 3; i++) {
-            switch (pieces[i]) {
-                case Piece::None:
-                    // Nothing
-                    break;
-                case Piece::White:
-                    position.part1 |= White << i * 2;
-                    break;
-                case Piece::Black:
-                    position.part1 |= Black << i * 2;
-                    break;
+            // Iterate 3 times for the second part
+            for (IterIdx i = 0; i < 3; i++) {
+                switch (board[i + 21]) {
+                    case Piece::None:
+                        // Nothing
+                        break;
+                    case Piece::White:
+                        position.part2 |= White << i * 2;
+                        break;
+                    case Piece::Black:
+                        position.part2 |= Black << i * 2;
+                        break;
+                }
             }
+
+            return position;
         }
-
-        // Last bit means the player
-        position.part1 |= static_cast<std::uint64_t>(turn) << 63;
-
-        // Iterate 3 times for the second part
-        for (IterIdx i = 0; i < 3; i++) {
-            switch (pieces[i + 21]) {
-                case Piece::None:
-                    // Nothing
-                    break;
-                case Piece::White:
-                    position.part2 |= White << i * 2;
-                    break;
-                case Piece::Black:
-                    position.part2 |= Black << i * 2;
-                    break;
-            }
-        }
-
-        return position;
     }
 }

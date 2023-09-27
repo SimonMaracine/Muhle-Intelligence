@@ -21,8 +21,7 @@ namespace muhle {
     private:
         void figure_out_position(const Position& position);
 
-        Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
-        Eval minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
+        Eval minimax(Player player, unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, repetition::Node* previous_node);
 
         SearchCtx ctx;
 
