@@ -37,9 +37,11 @@ namespace muhle {
 
         result = {};
 
-        Search instance;
-        instance.setup(parameters);
-        instance.search(position, result);
+        search_function = [this, position, &result]() {
+            Search instance;
+            instance.setup(parameters);
+            instance.search(position, result);
+        };
 
         cv.notify_one();
     }
