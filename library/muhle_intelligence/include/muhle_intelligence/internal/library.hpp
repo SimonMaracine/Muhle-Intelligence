@@ -16,7 +16,7 @@ namespace muhle {
     class MuhleImpl : public MuhleIntelligence {
     public:
         virtual void initialize() override;
-        virtual void search(const Position& position, Result& result) override;
+        virtual void search(const SearchInput& input, Result& result) override;
         virtual void join_thread() override;
         virtual void set_parameter(std::string_view parameter, int value) override;
     private:

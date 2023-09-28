@@ -31,5 +31,5 @@ struct TesterModePlay {
         ComputerThinking,
     } state = PlayState::NextTurn;
 
-    std::vector<std::tuple<muhle::Move, muhle::Player>> move_history;
+    std::vector<std::pair<muhle::Move, muhle::Player>> move_history;
 };

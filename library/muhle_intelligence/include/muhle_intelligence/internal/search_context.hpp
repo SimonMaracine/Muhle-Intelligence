@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <vector>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -9,10 +9,16 @@
 namespace muhle {
     struct SearchCtx {
         Board board {};
+
         unsigned int white_pieces_on_board {};
         unsigned int black_pieces_on_board {};
+
         unsigned int plies {};
-        std::unique_ptr<repetition::Node> previous_nodes;
+
+        struct {
+            const repetition::Node* previous = nullptr;
+            std::vector<repetition::Node> nodes;
+        } previous;
     };
 
     struct Parameters {

@@ -3,7 +3,7 @@
 #include <climits>
 #include <chrono>
 #include <cassert>
-#include <memory>
+#include <cstddef>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -38,24 +38,24 @@ namespace muhle {
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
-    void Search::search(const Position& position, Result& result) {
-        figure_out_position(position);
+    void Search::search(const SearchInput& input, Result& result) {
+        figure_out_position(input);
 
         const auto start = std::chrono::high_resolution_clock::now();
 
         const Eval evaluation = minimax(
-            position.player,
+            input.current_position.player,
             static_cast<unsigned int>(parameters.DEPTH),
             0u,
             MIN_EVALUATION,
             MAX_EVALUATION,
-            ctx.previous_nodes.get()
+            ctx.previous.previous
         );
 
         const auto end = std::chrono::high_resolution_clock::now();
 
         result.result = best_move.move;
-        result.player = position.player;
+        result.player = input.current_position.player;
         result.time = std::chrono::duration<double>(end - start).count();
         result.evaluation = evaluation;
         result.positions_evaluated = positions_evaluated;
@@ -63,13 +63,12 @@ namespace muhle {
         result.done = true;
     }
 
-    void Search::figure_out_position(const Position& position) {
-        ctx.board = position.board;
-        ctx.plies = position.plies;
-        // ctx.previous_nodes = std::make_unique<threefold_repetition::Node>();  // FIXME implement this
+    void Search::figure_out_position(const SearchInput& input) {
+        ctx.board = input.current_position.board;
+        ctx.plies = input.plies;
 
         for (IterIdx i = 0; i < NODES; i++) {
-            switch (position.board[i]) {
+            switch (input.current_position.board[i]) {
                 case Piece::White:
                     ctx.white_pieces_on_board++;
                     break;
@@ -80,9 +79,28 @@ namespace muhle {
                     break;
             }
         }
+
+        if (!input.previous_positions.empty()) {
+            for (const Position& position : input.previous_positions) {
+                repetition::Node node;
+                node.position = repetition::make_position_bitboard(position.board, position.player);
+                // Setup their pointers after
+
+                ctx.previous.nodes.push_back(node);
+            }
+
+            for (std::size_t i = 0; i < ctx.previous.nodes.size() - 1; i++) {
+                ctx.previous.nodes[i].previous = &ctx.previous.nodes[i + 1];
+            }
+
+            ctx.previous.previous = &ctx.previous.nodes[0];
+        }
+
+        // Pointer ctx.previous.previous remains null otherwise
     }
 
-    Eval Search::minimax(Player player, unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta, repetition::Node* previous_node) {
+    Eval Search::minimax(Player player, unsigned int depth, unsigned int plies_from_root,
+            Eval alpha, Eval beta, const repetition::Node* previous_node) {
         if (Eval evaluation_game_over = 0; depth == 0 || is_game_over(ctx, evaluation_game_over)) {
             return evaluate_position(ctx, parameters, evaluation_game_over, plies_from_root, positions_evaluated);
         }

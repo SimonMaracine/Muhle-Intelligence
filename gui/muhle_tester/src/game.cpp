@@ -1,6 +1,6 @@
 #include <optional>
 #include <array>
-#include <forward_list>
+#include <vector>
 #include <functional>
 #include <iostream>
 #include <cassert>
@@ -53,23 +53,98 @@ static bool point_in_node(glm::vec2 position, const Node& node) {
     return glm::length(sub) < NODE_RADIUS;
 }
 
-static muhle::Position position(const std::array<Node, 24>& nodes, unsigned int plies, Player player) {
-    muhle::Position result;
+static muhle::Board to_muhle_board(const std::array<Node, 24>& nodes) {
+    muhle::Board board;
 
     for (std::size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].piece.has_value()) {
-            result.board[i] = (
+            board[i] = (
                 nodes[i].piece->player == Player::White ? muhle::Piece::White : muhle::Piece::Black
             );
         } else {
-            result.board[i] = muhle::Piece::None;
+            board[i] = muhle::Piece::None;
         }
     }
 
-    result.player = player == Player::White ? muhle::Player::White : muhle::Player::Black;
+    return board;
+}
+
+static muhle::Board to_muhle_board(const std::array<ThreefoldRepetition::Node, 24>& nodes) {
+    muhle::Board board;
+
+    for (std::size_t i = 0; i < nodes.size(); i++) {
+        switch (nodes[i]) {
+            case ThreefoldRepetition::Node::Empty:
+                board[i] = muhle::Piece::None;
+                break;
+            case ThreefoldRepetition::Node::White:
+                board[i] = muhle::Piece::White;
+                break;
+            case ThreefoldRepetition::Node::Black:
+                board[i] = muhle::Piece::Black;
+                break;
+        }
+    }
+
+    return board;
+}
+
+static muhle::SearchInput input_for_search(const std::array<Node, 24>& nodes, unsigned int plies, Player player,
+        const std::vector<ThreefoldRepetition::Position>& previous_positions) {
+    muhle::SearchInput result;
+    result.current_position.board = to_muhle_board(nodes);
+    result.current_position.player = player == Player::White ? muhle::Player::White : muhle::Player::Black;
     result.plies = plies;
 
+    for (const ThreefoldRepetition::Position& previous_position : previous_positions) {
+        muhle::Position position;
+        position.board = to_muhle_board(previous_position.nodes);
+        position.player = previous_position.turn == Player::White ? muhle::Player::White : muhle::Player::Black;
+
+        result.previous_positions.push_front(position);
+    }
+
     return result;
+}
+
+bool ThreefoldRepetition::check_position(const std::array<::Node, 24>& nodes, Player turn) {
+    Position current_position;
+
+    current_position.turn = turn;
+
+    for (std::size_t i = 0; i < nodes.size(); i++) {
+        if (nodes[i].piece.has_value()) {
+            current_position.nodes[i] = (
+                nodes[i].piece->player == Player::White
+                ?
+                ThreefoldRepetition::Node::White
+                :
+                ThreefoldRepetition::Node::Black
+            );
+        } else {
+            current_position.nodes[i] = ThreefoldRepetition::Node::Empty;
+        }
+    }
+
+    unsigned int repetition = 1;
+
+    for (const Position& position : positions) {
+        if (position == current_position) {
+            repetition++;
+
+            if (repetition == 3) {
+                return true;
+            }
+        }
+    }
+
+    positions.push_back(current_position);
+
+    return false;
+}
+
+void ThreefoldRepetition::clear_repetition() {
+    positions.clear();
 }
 
 void GamePlay::setup(MoveLogging::ChangeTurnCallback callback) {
@@ -119,8 +194,8 @@ void GamePlay::user_action(glm::vec2 position) {
     }
 }
 
-muhle::Position GamePlay::get_position() {
-    return position(nodes, plies, turn);
+muhle::SearchInput GamePlay::get_input_for_search() {
+    return input_for_search(nodes, plies, turn, repetition.get_positions());
 }
 
 const char* GamePlay::player_to_string() {
@@ -203,8 +278,8 @@ void GamePlay::place_piece(int node_index) {
     if (plies == 18) {
         phase_two();
 
-        // Now threefold repetition rule can apply
-        threefold_repetition();
+        // Now threefold repetition rule can apply; don't check expression
+        repetition.check_position(nodes, turn);
     }
 }
 
@@ -240,7 +315,7 @@ void GamePlay::move_piece(int node_source_index, int node_destination_index) {
     }
 
     // Only now check game over by repetition
-    if (threefold_repetition()) {
+    if (repetition.check_position(nodes, turn)) {
         game_over(Ending::TieBetweenBothPlayers);
         return;
     }
@@ -282,14 +357,14 @@ void GamePlay::take_piece(int node_index) {
     }
 
     // Previous positions can occur no more
-    clear_repetition();
+    repetition.clear_repetition();
 
     // Check for phase two here too
     if (plies == 18) {
         phase_two();
 
-        // Now threefold repetition rule can apply
-        threefold_repetition();
+        // Now threefold repetition rule can apply; don't check expression
+        repetition.check_position(nodes, turn);
     }
 }
 
@@ -863,53 +938,6 @@ void GamePlay::phase_two() {
     std::cout << "Phase two\n";
 }
 
-bool GamePlay::threefold_repetition() {
-    ThreefoldRepetition::Position current;
-
-    current.turn = turn;
-
-    for (std::size_t i = 0; i < nodes.size(); i++) {
-        if (nodes[i].piece.has_value()) {
-            current.nodes[i] = (
-                nodes[i].piece->player == Player::White
-                ?
-                ThreefoldRepetition::Node::White
-                :
-                ThreefoldRepetition::Node::Black
-            );
-        } else {
-            current.nodes[i] = ThreefoldRepetition::Node::Empty;
-        }
-    }
-
-    for (const ThreefoldRepetition::Position& position : repetition.twos) {
-        if (position == current) {
-            std::cout << "Threefold repetition\n";
-
-            return true;
-        }
-    }
-
-    const auto& list = repetition.ones;
-    for (auto iter_before = list.cbefore_begin(), iter = list.cbegin(); iter != list.cend(); iter_before++, iter++) {
-        if (*iter == current) {
-            repetition.ones.erase_after(iter_before);
-            repetition.twos.push_front(current);
-
-            return false;
-        }
-    }
-
-    repetition.ones.push_front(current);
-
-    return false;
-}
-
-void GamePlay::clear_repetition() {
-    repetition.ones.clear();
-    repetition.twos.clear();
-}
-
 void GamePlay::record_place_move(int node_index) {
     muhle::Move move;
     move.type = muhle::MoveType::Place;
@@ -980,7 +1008,7 @@ void GameTest::update_nodes_positions(float board_unit, glm::vec2 board_offset) 
     }
 }
 
-void GameTest::user_action(glm::vec2 position, MouseButton button, Player player) {
+void GameTest::user_action(glm::vec2 position, bool left_click, Player player) {
     for (Node& node : nodes) {
         if (!point_in_node(position, node)) {
             continue;
@@ -988,24 +1016,18 @@ void GameTest::user_action(glm::vec2 position, MouseButton button, Player player
 
         // This is the selected node
 
-        switch (button) {
-            case MouseButton::Left:
-                check_add_piece(player, node.index);
-
-                break;
-            case MouseButton::Right:
-
-                check_remove_piece(node.index);
-
-                break;
+        if (left_click) {
+            check_add_piece(player, node.index);
+        } else {
+            check_remove_piece(node.index);
         }
 
         break;
     }
 }
 
-muhle::Position GameTest::get_position() {
-    return position(nodes, plies, turn);
+muhle::SearchInput GameTest::get_input_for_search() {
+    return input_for_search(nodes, plies, turn, {});
 }
 
 void GameTest::check_add_piece(Player player, int node_index) {

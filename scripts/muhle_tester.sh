@@ -1,6 +1,6 @@
 #! /bin/bash
 
-./build.sh
+./build.sh muhle_tester
 
 if [ "$?" -ne 0 ]; then
     exit 1

@@ -55,9 +55,9 @@ void TesterModePlay::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
 
             break;
         case PlayState::ComputerBegin: {
-            const muhle::Position position = game_play.get_position();
+            const muhle::SearchInput input = game_play.get_input_for_search();
 
-            muhle->search(position, muhle_result);
+            muhle->search(input, muhle_result);
 
             state = PlayState::ComputerThinking;
 
@@ -209,7 +209,7 @@ void TesterModePlay::ui() {
 
 void TesterModePlay::setup() {
     game_play.setup([this](muhle::Move move, muhle::Player player) {
-        move_history.push_back(std::make_tuple(move, player));
+        move_history.push_back(std::make_pair(move, player));
     });
 }
 
@@ -218,7 +218,7 @@ void TesterModePlay::reset() {
 
     game_play = {};
     game_play.setup([this](muhle::Move move, muhle::Player player) {
-        move_history.push_back(std::make_tuple(move, player));
+        move_history.push_back(std::make_pair(move, player));
     });
 
     state = PlayState::NextTurn;

@@ -31,16 +31,16 @@ namespace muhle {
         });
     }
 
-    void MuhleImpl::search(const Position& position, Result& result) {
+    void MuhleImpl::search(const SearchInput& input, Result& result) {
         assert(running);
         assert(!search_function);
 
         result = {};
 
-        search_function = [this, position, &result]() {
+        search_function = [this, input, &result]() {
             Search instance;
             instance.setup(parameters);
-            instance.search(position, result);
+            instance.search(input, result);
         };
 
         cv.notify_one();

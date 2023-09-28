@@ -1,8 +1,6 @@
 #! /bin/bash
 
-clear
-cd ../build
-cmake --build . -j 8 --target test_move_generation_speed
+./build.sh test_move_generation_speed
 
 if [ "$?" -ne 0 ]; then
     exit 1

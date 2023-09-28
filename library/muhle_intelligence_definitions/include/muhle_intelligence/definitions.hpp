@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <forward_list>
 
 namespace muhle {
     using Idx = signed char;
@@ -34,7 +35,16 @@ namespace muhle {
     struct Position {
         Board board {};
         Player player {};
+    };
+
+    // This is passed the the search instance
+    // The AI needs to know, of course, the current position to search, the number of plies of
+    // the game and the previous positions
+    // Technically, not all previous positions are needed for the AI to know
+    struct SearchInput {
+        Position current_position;
         unsigned int plies {};
+        std::forward_list<Position> previous_positions;  // Push them in order from oldest to newest
     };
 
     struct Move {

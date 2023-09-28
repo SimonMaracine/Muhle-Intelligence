@@ -2,7 +2,7 @@
 
 #include <optional>
 #include <array>
-#include <forward_list>
+#include <vector>
 #include <functional>
 
 #include <glm/glm.hpp>
@@ -44,7 +44,8 @@ struct Node {
     int index = INVALID_INDEX;
 };
 
-struct ThreefoldRepetition {
+class ThreefoldRepetition {
+public:
     enum class Node {
         Empty,
         White,
@@ -60,14 +61,20 @@ struct ThreefoldRepetition {
         }
     };
 
-    std::forward_list<Position> ones;
-    std::forward_list<Position> twos;
+    // Check position only after changed turn
+    bool check_position(const std::array<::Node, 24>& nodes, Player turn);
+
+    void clear_repetition();
+
+    const std::vector<Position>& get_positions() const { return positions; }
+private:
+    std::vector<Position> positions;
 };
 
 struct MoveLogging {
     using ChangeTurnCallback = std::function<void(muhle::Move, muhle::Player)>;
 
-    ChangeTurnCallback callback = nullptr;
+    ChangeTurnCallback callback;
 
     struct {
         muhle::Move move;
@@ -75,34 +82,12 @@ struct MoveLogging {
     } current_move;
 };
 
-struct GamePlay {
-    unsigned int white_pieces_on_board = 0;
-    unsigned int white_pieces_outside = 9;
-    unsigned int black_pieces_on_board = 0;
-    unsigned int black_pieces_outside = 9;
-
-    Player turn = Player::White;
-    GamePhase phase = GamePhase::PlacePieces;
-    Ending ending = Ending::None;
-    unsigned int plies = 0;
-
-    std::array<Node, 24> nodes {};
-
-    int selected_piece_index = INVALID_INDEX;
-
-    std::array<bool, 2> can_jump { false, false };
-
-    bool must_take_piece = false;
-
-    unsigned int plies_without_mills = 0;
-
-    ThreefoldRepetition repetition;
-    MoveLogging log;
-
+class GamePlay {
+public:
     void setup(MoveLogging::ChangeTurnCallback callback);
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
     void user_action(glm::vec2 position);
-    muhle::Position get_position();
+    muhle::SearchInput get_input_for_search();
 
     const char* player_to_string();
     const char* phase_to_string();
@@ -112,6 +97,22 @@ struct GamePlay {
     void move_piece(int node_source_index, int node_destination_index);
     void take_piece(int node_index);
 
+    unsigned int white_pieces_on_board = 0;
+    unsigned int white_pieces_outside = 9;
+    unsigned int black_pieces_on_board = 0;
+    unsigned int black_pieces_outside = 9;
+
+    Player turn = Player::White;
+    GamePhase phase = GamePhase::PlacePieces;
+    Ending ending = Ending::None;
+
+    unsigned int plies = 0;
+    std::array<Node, 24> nodes {};
+    int selected_piece_index = INVALID_INDEX;
+    std::array<bool, 2> can_jump = { false, false };
+    bool must_take_piece = false;
+    unsigned int plies_without_mills = 0;
+private:
     void check_select_piece(glm::vec2 position);
     void check_place_piece(glm::vec2 position);
     void check_move_piece(glm::vec2 position);
@@ -128,33 +129,30 @@ struct GamePlay {
     bool is_phase_two();
     void game_over(Ending ending);
     void phase_two();
-    bool threefold_repetition();
-    void clear_repetition();
 
     void record_place_move(int node_index);
     void record_move_move(int node_source_index, int node_destination_index);
     void record_take_move(int node_index);
+
+    ThreefoldRepetition repetition;
+    MoveLogging log;
 };
 
-struct GameTest {
+class GameTest {
+public:
     unsigned int white_pieces_on_board = 0;
     unsigned int black_pieces_on_board = 0;
 
     Player turn = Player::White;
+
     unsigned int plies = 0;
-
     std::array<Node, 24> nodes {};
-
-    enum class MouseButton {
-        Left,
-        Right
-    };
 
     void setup();
     void update_nodes_positions(float board_unit, glm::vec2 board_offset);
-    void user_action(glm::vec2 position, MouseButton button, Player player = Player::White);
-    muhle::Position get_position();
-
+    void user_action(glm::vec2 position, bool left_click, Player player = Player::White);
+    muhle::SearchInput get_input_for_search();
+private:
     void check_add_piece(Player player, int node_index);
     void check_remove_piece(int node_index);
 };
