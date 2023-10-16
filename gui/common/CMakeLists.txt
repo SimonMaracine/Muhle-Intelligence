@@ -19,3 +19,7 @@ target_compile_features(common PRIVATE cxx_std_17)
 set_target_properties(common PROPERTIES CXX_EXTENSIONS OFF)
 
 enable_warnings(common)
+
+if(UNIX)
+    target_compile_options(common PRIVATE "-Wno-parentheses")
+endif()

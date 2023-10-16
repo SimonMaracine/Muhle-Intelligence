@@ -2,21 +2,51 @@
 #include <vector>
 #include <filesystem>
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 
 #include <gui_base/gui_base.hpp>
 
 #include "common/game.hpp"
 #include "common/board.hpp"
 
+static const int NODE_POSITIONS[24][2] = {
+    { 2, 2 },
+    { 5, 2 },
+    { 8, 2 },
+    { 3, 3 },
+    { 5, 3 },
+    { 7, 3 },
+    { 4, 4 },
+    { 5, 4 },
+    { 6, 4 },
+    { 2, 5 },
+    { 3, 5 },
+    { 4, 5 },
+    { 6, 5 },
+    { 7, 5 },
+    { 8, 5 },
+    { 4, 6 },
+    { 5, 6 },
+    { 6, 6 },
+    { 3, 7 },
+    { 5, 7 },
+    { 7, 7 },
+    { 2, 8 },
+    { 5, 8 },
+    { 8, 8 }
+};
+
 void MuhleBoard::update() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(350.0f, 350.0f));
 
     if (ImGui::Begin("Board")) {
         const ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
         ImVec2 canvas_size = ImGui::GetContentRegionAvail();
 
-        canvas_size.x = std::max(canvas_size.x, 400.0f);
-        canvas_size.y = std::max(canvas_size.y, 400.0f);
+        canvas_size.x = std::max(canvas_size.x, 350.0f);
+        canvas_size.y = std::max(canvas_size.y, 350.0f);
 
         const ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_size.x, canvas_p0.y + canvas_size.y);
 
@@ -27,6 +57,9 @@ void MuhleBoard::update() {
 
         const ImColor COLOR = ImColor(210, 210, 210);
         const float THICKNESS = 2.0f;
+
+        board_unit = UNIT;
+        board_offset = OFFSET;
 
         draw_list->AddRect(ImVec2(2.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), ImVec2(8.0f * UNIT + OFFSET.x, 2.0f * UNIT + OFFSET.y), COLOR, 0.0f, 0, THICKNESS);
         draw_list->AddRect(ImVec2(3.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), ImVec2(7.0f * UNIT + OFFSET.x, 3.0f * UNIT + OFFSET.y), COLOR, 0.0f, 0, THICKNESS);
@@ -73,16 +106,76 @@ void MuhleBoard::update() {
 
         ImGui::PopFont();
 
+        update_nodes();
         draw_pieces(draw_list);
+        update_input();
     }
 
     ImGui::End();
 
-    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
+}
+
+void MuhleBoard::update_nodes() {
+    for (Idx i = 0; i < 24; i++) {
+        board[i].index = i;
+        board[i].position = ImVec2(
+            NODE_POSITIONS[i][0] * board_unit + board_offset.x,
+            NODE_POSITIONS[i][1] * board_unit + board_offset.y
+        );
+    }
+}
+
+void MuhleBoard::update_input() {
+    if (!ImGui::IsWindowFocused()) {
+        return;
+    }
+
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        const ImVec2 position = ImGui::GetMousePos();
+        const Idx index = get_index(position);
+
+        if (index == INVALID_INDEX) {
+            return;
+        }
+
+        const auto legal_moves = generate_moves();
+
+        for (const Move& move : legal_moves) {
+            switch (move.type) {
+                case MoveType::Place:
+                    try_place_piece(move, index);
+                    break;
+                case MoveType::Move:
+                    break;
+                case MoveType::PlaceTake:
+                    break;
+                case MoveType::MoveTake:
+                    break;
+            }
+        }
+    }
 }
 
 void MuhleBoard::draw_pieces(ImDrawList* draw_list) {
+    for (const Node& node : board) {
+        switch (node.piece) {
+            case Piece::None:
+                break;
+            case Piece::White:
+                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(255, 255, 255, 255));
+                break;
+            case Piece::Black:
+                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(0, 0, 0, 255));
+                break;
+        }
+    }
 
+    if (selected_piece_index != INVALID_INDEX) {
+        const Node& node = board[selected_piece_index];
+
+        draw_list->AddCircle(node.position, NODE_RADIUS + 1.0f, ImColor(255, 30, 30, 255), 0, 2.0f);
+    }
 }
 
 void MuhleBoard::load_font() {
@@ -106,6 +199,507 @@ void MuhleBoard::load_font() {
     io.Fonts->Build();
 }
 
+Idx MuhleBoard::get_index(ImVec2 position) {
+    for (Idx i = 0; i < 24; i++) {
+        if (point_in_node(position, board[i])) {
+            return board[i].index;
+        }
+    }
+
+    return INVALID_INDEX;
+}
+
+void MuhleBoard::try_place_piece(const Move& move, Idx index) {
+    if (move.place.node_index != index) {
+        return;
+    }
+
+    if (turn == Player::White) {
+        board[index].piece = Piece::White;
+        white_pieces_on_board++;
+        white_pieces_outside--;
+    } else {
+        board[index].piece = Piece::Black;
+        black_pieces_on_board++;
+        black_pieces_outside--;
+    }
+
+    plies++;
+    turn = opponent(turn);
+}
+
 std::vector<Move> MuhleBoard::generate_moves() {
+    std::vector<Move> moves;
+
+    const Piece piece = turn == Player::White ? Piece::White : Piece::Black;
+
+    if (plies < 18) {
+        get_moves_phase1(piece, moves);
+    } else {
+        if (pieces_on_board(piece) == 3) {
+            get_moves_phase3(piece, moves);
+        } else {
+            get_moves_phase2(piece, moves);
+        }
+    }
+
+    return moves;
+}
+
+void MuhleBoard::get_moves_phase1(Piece piece, std::vector<Move>& moves) {
+    assert(piece != Piece::None);
+
+    for (Idx i = 0; i < 24; i++) {
+        if (board[i].piece != Piece::None) {
+            continue;
+        }
+
+        make_place_move(piece, i);
+
+        if (is_mill(piece, i)) {
+            const Piece opponent = opponent_piece(piece);
+            const bool all_in_mills = all_pieces_in_mills(opponent);
+
+            for (Idx j = 0; j < 24; j++) {
+                if (board[j].piece != opponent) {
+                    continue;
+                }
+
+                if (is_mill(opponent, j) && !all_in_mills) {
+                    continue;
+                }
+
+                moves.push_back(create_place_take(i, j));
+            }
+        } else {
+            moves.push_back(create_place(i));
+        }
+
+        unmake_place_move(i);
+    }
+}
+
+void MuhleBoard::get_moves_phase2(Piece piece, std::vector<Move>& moves) {
+    assert(piece != Piece::None);
+
+    for (Idx i = 0; i < 24; i++) {
+        if (board[i].piece != piece) {
+            continue;
+        }
+
+        const auto free_positions = neighbor_free_positions(i);
+
+        for (Idx j = 0; j < static_cast<Idx>(free_positions.size()); j++) {
+            make_move_move(piece, i, free_positions[j]);
+
+            if (is_mill(piece, free_positions[j])) {
+                const auto opponent = opponent_piece(piece);
+                const bool all_in_mills = all_pieces_in_mills(opponent);
+
+                for (Idx k = 0; k < 24; k++) {
+                    if (board[k].piece != opponent) {
+                        continue;
+                    }
+
+                    if (is_mill(opponent, k) && !all_in_mills) {
+                        continue;
+                    }
+
+                    moves.push_back(create_move_take(i, free_positions[j], k));
+                }
+            } else {
+                moves.push_back(create_move(i, free_positions[j]));
+            }
+
+            unmake_move_move(piece, i, free_positions[j]);
+        }
+    }
+}
+
+void MuhleBoard::get_moves_phase3(Piece piece, std::vector<Move>& moves) {
+    assert(piece != Piece::None);
+
+    for (Idx i = 0; i < 24; i++) {
+        if (board[i].piece != piece) {
+            continue;
+        }
+
+        for (Idx j = 0; j < 24; j++) {
+            if (board[j].piece != Piece::None) {
+                continue;
+            }
+
+            make_move_move(piece, i, j);
+
+            if (is_mill(piece, j)) {
+                const auto opponent = opponent_piece(piece);
+                const bool all_in_mills = all_pieces_in_mills(opponent);
+
+                for (Idx k = 0; k < 24; k++) {
+                    if (board[k].piece != opponent) {
+                        continue;
+                    }
+
+                    if (is_mill(opponent, k) && !all_in_mills) {
+                        continue;
+                    }
+
+                    moves.push_back(create_move_take(i, j, k));
+                }
+            } else {
+                moves.push_back(create_move(i, j));
+            }
+
+            unmake_move_move(piece, i, j);
+        }
+    }
+}
+
+unsigned int MuhleBoard::pieces_on_board(Piece piece) {
+    assert(piece != Piece::None);
+
+    switch (piece) {
+        case Piece::White:
+            return white_pieces_on_board;
+        case Piece::Black:
+            return black_pieces_on_board;
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+Player MuhleBoard::opponent(Player player) {
+    switch (player) {
+        case Player::White:
+            return Player::Black;
+        case Player::Black:
+            return Player::White;
+    }
+
     return {};
+}
+
+Piece MuhleBoard::opponent_piece(Piece type) {
+    assert(type != Piece::None);
+
+    switch (type) {
+        case Piece::White:
+            return Piece::Black;
+        case Piece::Black:
+            return Piece::White;
+        default:
+            break;
+    }
+
+    return {};
+}
+
+void MuhleBoard::make_place_move(Piece piece, Idx node_index) {
+    board[node_index].piece = piece;
+}
+
+void MuhleBoard::unmake_place_move(Idx node_index) {
+    board[node_index].piece = Piece::None;
+}
+
+void MuhleBoard::make_move_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
+    board[node_source_index].piece = Piece::None;
+    board[node_destination_index].piece = piece;
+}
+
+void MuhleBoard::unmake_move_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
+    board[node_source_index].piece = piece;
+    board[node_destination_index].piece = Piece::None;
+}
+
+Move MuhleBoard::create_place(Idx node_index) {
+    Move move;
+    move.place.node_index = node_index;
+    move.type = MoveType::Place;
+
+    return move;
+}
+
+Move MuhleBoard::create_move(Idx node_source_index, Idx node_destination_index) {
+    Move move;
+    move.move.node_source_index = node_source_index;
+    move.move.node_destination_index = node_destination_index;
+    move.type = MoveType::Move;
+
+    return move;
+}
+
+Move MuhleBoard::create_place_take(Idx node_index, Idx node_take_index) {
+    Move move;
+    move.place_take.node_index = node_index;
+    move.place_take.node_take_index = node_take_index;
+    move.type = MoveType::PlaceTake;
+
+    return move;
+}
+
+Move MuhleBoard::create_move_take(Idx node_source_index, Idx node_destination_index, Idx node_take_index) {
+    Move move;
+    move.move_take.node_source_index = node_source_index;
+    move.move_take.node_destination_index = node_destination_index;
+    move.move_take.node_take_index = node_take_index;
+    move.type = MoveType::MoveTake;
+
+    return move;
+}
+
+#define IS_PC(const_index) (board[const_index].piece == piece)
+
+bool MuhleBoard::is_mill(Piece piece, Idx index) {
+    assert(piece != Piece::None);
+
+    switch (index) {
+        case 0:
+            if (IS_PC(1) && IS_PC(2) || IS_PC(9) && IS_PC(21))
+                return true;
+            break;
+        case 1:
+            if (IS_PC(0) && IS_PC(2) || IS_PC(4) && IS_PC(7))
+                return true;
+            break;
+        case 2:
+            if (IS_PC(0) && IS_PC(1) || IS_PC(14) && IS_PC(23))
+                return true;
+            break;
+        case 3:
+            if (IS_PC(4) && IS_PC(5) || IS_PC(10) && IS_PC(18))
+                return true;
+            break;
+        case 4:
+            if (IS_PC(3) && IS_PC(5) || IS_PC(1) && IS_PC(7))
+                return true;
+            break;
+        case 5:
+            if (IS_PC(3) && IS_PC(4) || IS_PC(13) && IS_PC(20))
+                return true;
+            break;
+        case 6:
+            if (IS_PC(7) && IS_PC(8) || IS_PC(11) && IS_PC(15))
+                return true;
+            break;
+        case 7:
+            if (IS_PC(6) && IS_PC(8) || IS_PC(1) && IS_PC(4))
+                return true;
+            break;
+        case 8:
+            if (IS_PC(6) && IS_PC(7) || IS_PC(12) && IS_PC(17))
+                return true;
+            break;
+        case 9:
+            if (IS_PC(0) && IS_PC(21) || IS_PC(10) && IS_PC(11))
+                return true;
+            break;
+        case 10:
+            if (IS_PC(9) && IS_PC(11) || IS_PC(3) && IS_PC(18))
+                return true;
+            break;
+        case 11:
+            if (IS_PC(9) && IS_PC(10) || IS_PC(6) && IS_PC(15))
+                return true;
+            break;
+        case 12:
+            if (IS_PC(13) && IS_PC(14) || IS_PC(8) && IS_PC(17))
+                return true;
+            break;
+        case 13:
+            if (IS_PC(12) && IS_PC(14) || IS_PC(5) && IS_PC(20))
+                return true;
+            break;
+        case 14:
+            if (IS_PC(12) && IS_PC(13) || IS_PC(2) && IS_PC(23))
+                return true;
+            break;
+        case 15:
+            if (IS_PC(16) && IS_PC(17) || IS_PC(6) && IS_PC(11))
+                return true;
+            break;
+        case 16:
+            if (IS_PC(15) && IS_PC(17) || IS_PC(19) && IS_PC(22))
+                return true;
+            break;
+        case 17:
+            if (IS_PC(15) && IS_PC(16) || IS_PC(8) && IS_PC(12))
+                return true;
+            break;
+        case 18:
+            if (IS_PC(19) && IS_PC(20) || IS_PC(3) && IS_PC(10))
+                return true;
+            break;
+        case 19:
+            if (IS_PC(18) && IS_PC(20) || IS_PC(16) && IS_PC(22))
+                return true;
+            break;
+        case 20:
+            if (IS_PC(18) && IS_PC(19) || IS_PC(5) && IS_PC(13))
+                return true;
+            break;
+        case 21:
+            if (IS_PC(22) && IS_PC(23) || IS_PC(0) && IS_PC(9))
+                return true;
+            break;
+        case 22:
+            if (IS_PC(21) && IS_PC(23) || IS_PC(16) && IS_PC(19))
+                return true;
+            break;
+        case 23:
+            if (IS_PC(21) && IS_PC(22) || IS_PC(2) && IS_PC(14))
+                return true;
+            break;
+    }
+
+    return false;
+}
+
+#define IS_FREE_CHECK(const_index) \
+    if (board[const_index].piece == Piece::None) { \
+        result.push_back(const_index); \
+    }
+
+std::vector<Idx> MuhleBoard::neighbor_free_positions(Idx index) {
+    std::vector<Idx> result {4};
+
+    switch (index) {
+        case 0:
+            IS_FREE_CHECK(1)
+            IS_FREE_CHECK(9)
+            break;
+        case 1:
+            IS_FREE_CHECK(0)
+            IS_FREE_CHECK(2)
+            IS_FREE_CHECK(4)
+            break;
+        case 2:
+            IS_FREE_CHECK(1)
+            IS_FREE_CHECK(14)
+            break;
+        case 3:
+            IS_FREE_CHECK(4)
+            IS_FREE_CHECK(10)
+            break;
+        case 4:
+            IS_FREE_CHECK(1)
+            IS_FREE_CHECK(3)
+            IS_FREE_CHECK(5)
+            IS_FREE_CHECK(7)
+            break;
+        case 5:
+            IS_FREE_CHECK(4)
+            IS_FREE_CHECK(13)
+            break;
+        case 6:
+            IS_FREE_CHECK(7)
+            IS_FREE_CHECK(11)
+            break;
+        case 7:
+            IS_FREE_CHECK(4)
+            IS_FREE_CHECK(6)
+            IS_FREE_CHECK(8)
+            break;
+        case 8:
+            IS_FREE_CHECK(7)
+            IS_FREE_CHECK(12)
+            break;
+        case 9:
+            IS_FREE_CHECK(0)
+            IS_FREE_CHECK(10)
+            IS_FREE_CHECK(21)
+            break;
+        case 10:
+            IS_FREE_CHECK(3)
+            IS_FREE_CHECK(9)
+            IS_FREE_CHECK(11)
+            IS_FREE_CHECK(18)
+            break;
+        case 11:
+            IS_FREE_CHECK(6)
+            IS_FREE_CHECK(10)
+            IS_FREE_CHECK(15)
+            break;
+        case 12:
+            IS_FREE_CHECK(8)
+            IS_FREE_CHECK(13)
+            IS_FREE_CHECK(17)
+            break;
+        case 13:
+            IS_FREE_CHECK(5)
+            IS_FREE_CHECK(12)
+            IS_FREE_CHECK(14)
+            IS_FREE_CHECK(20)
+            break;
+        case 14:
+            IS_FREE_CHECK(2)
+            IS_FREE_CHECK(13)
+            IS_FREE_CHECK(23)
+            break;
+        case 15:
+            IS_FREE_CHECK(11)
+            IS_FREE_CHECK(16)
+            break;
+        case 16:
+            IS_FREE_CHECK(15)
+            IS_FREE_CHECK(17)
+            IS_FREE_CHECK(19)
+            break;
+        case 17:
+            IS_FREE_CHECK(12)
+            IS_FREE_CHECK(16)
+            break;
+        case 18:
+            IS_FREE_CHECK(10)
+            IS_FREE_CHECK(19)
+            break;
+        case 19:
+            IS_FREE_CHECK(16)
+            IS_FREE_CHECK(18)
+            IS_FREE_CHECK(20)
+            IS_FREE_CHECK(22)
+            break;
+        case 20:
+            IS_FREE_CHECK(13)
+            IS_FREE_CHECK(19)
+            break;
+        case 21:
+            IS_FREE_CHECK(9)
+            IS_FREE_CHECK(22)
+            break;
+        case 22:
+            IS_FREE_CHECK(19)
+            IS_FREE_CHECK(21)
+            IS_FREE_CHECK(23)
+            break;
+        case 23:
+            IS_FREE_CHECK(14)
+            IS_FREE_CHECK(22)
+            break;
+    }
+
+    return result;
+}
+
+bool MuhleBoard::all_pieces_in_mills(Piece piece) {
+    for (Idx i = 0; i < 24; i++) {
+        if (board[i].piece != piece) {
+            continue;
+        }
+
+        if (!is_mill(piece, i)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool MuhleBoard::point_in_node(ImVec2 position, const Node& node) {
+    const ImVec2 subtracted = ImVec2(node.position.x - position.x, node.position.y - position.y);
+    const float length = std::pow(subtracted.x * subtracted.x + subtracted.y * subtracted.y, 0.5f);
+
+    return length < NODE_RADIUS;
 }

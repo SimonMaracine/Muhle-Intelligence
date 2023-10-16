@@ -1,6 +1,5 @@
 #pragma once
 
-#include <optional>
 #include <array>
 #include <vector>
 #include <functional>
@@ -19,19 +18,6 @@ enum class Player {
     Black
 };
 
-enum class GamePhase {
-    PlacePieces = 1,
-    MovePieces,
-    GameOver
-};
-
-enum class Ending {
-    None,
-    WinnerWhite,
-    WinnerBlack,
-    TieBetweenBothPlayers
-};
-
 enum class MoveType {
     Place,
     Move,
@@ -39,15 +25,16 @@ enum class MoveType {
     MoveTake
 };
 
-struct Piece {
-    ImVec2 position;
-    Player player {};
+enum class Piece {
+    None,
+    White,
+    Black
 };
 
 struct Node {
     ImVec2 position;
-    std::optional<Piece> piece;
     int index = INVALID_INDEX;
+    Piece piece {};
 };
 
 struct Move {
