@@ -37,7 +37,7 @@ namespace muhle {
         Player player {};
     };
 
-    // This is passed the the search instance
+    // This is passed to the search instance
     // The AI needs to know, of course, the current position to search, the number of plies of
     // the game and the previous positions
     // Technically, not all previous positions are needed for the AI to know

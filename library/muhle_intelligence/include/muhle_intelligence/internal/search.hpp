@@ -9,6 +9,8 @@
 
 /*
     FIXME
+    finish implementing threefold repetition (correctly pass and store previous positions, cut irrelevant positions)
+    implement 50 move rule
 */
 
 namespace muhle {

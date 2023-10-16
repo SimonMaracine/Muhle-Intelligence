@@ -132,14 +132,6 @@ namespace muhle {
                         best_move.piece = Piece::White;
                     }
                 }
-
-                // if (evaluation > alpha) {
-                //     alpha = evaluation;  // FIXME
-                // }
-
-                // if (beta <= alpha) {
-                //     break;
-                // }
             }
 
             return max_evaluation;
@@ -164,14 +156,6 @@ namespace muhle {
                         best_move.piece = Piece::Black;
                     }
                 }
-
-                // if (evaluation < beta) {
-                //     alpha = evaluation;  // FIXME
-                // }
-
-                // if (beta <= alpha) {
-                //     break;
-                // }
             }
 
             return min_evaluation;
