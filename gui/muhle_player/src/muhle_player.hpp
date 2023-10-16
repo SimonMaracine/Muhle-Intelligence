@@ -9,13 +9,11 @@
 
 struct MuhlePlayer : public gui_base::GuiApplication {
     MuhlePlayer()
-        : gui_base::GuiApplication(1024, 576, reinterpret_cast<const char*>(u8"Mühle Player"), false) {}
+        : gui_base::GuiApplication(1024, 576, reinterpret_cast<const char*>(u8"Mühle Player")) {}
 
     virtual void start() override;
     virtual void update() override;
     virtual void dispose() override;
-
-    void load_font();
 
     void load_library(const char* buffer);
     void unload_library();
@@ -28,8 +26,6 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     void controls();
 
     MuhleBoard muhle_board;
-
-    ImFont* label_font = nullptr;
 
     using LibraryCreate = muhle::MuhleIntelligence*(*)();
     using LibraryDestroy = void(*)(muhle::MuhleIntelligence*);

@@ -16,7 +16,7 @@
 */
 
 void MuhlePlayer::start() {
-    load_font();
+
 }
 
 void MuhlePlayer::update() {
@@ -24,7 +24,7 @@ void MuhlePlayer::update() {
     board();
     controls();
 
-    // ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
 
     if (muhle == nullptr || !board_has_focus) {
         return;
@@ -33,29 +33,6 @@ void MuhlePlayer::update() {
 
 void MuhlePlayer::dispose() {
     unload_library();
-}
-
-void MuhlePlayer::load_font() {
-    const char* FONT = "LiberationMono-Regular.ttf";
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    if (!std::filesystem::exists(FONT)) {
-        std::cout << "Could not find font; using default one\n";
-
-        ImFontConfig config;
-
-        config.SizePixels = 13.0f;
-        io.Fonts->AddFontDefault(&config);
-
-        config.SizePixels = 15.0f;
-        label_font = io.Fonts->AddFontDefault(&config);
-    } else {
-        io.Fonts->AddFontFromFileTTF(FONT, 16.0f);
-        label_font = io.Fonts->AddFontFromFileTTF(FONT, 18.0f);
-    }
-
-    io.Fonts->Build();
 }
 
 void MuhlePlayer::load_library(const char* buffer) {

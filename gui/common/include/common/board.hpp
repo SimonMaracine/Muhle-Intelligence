@@ -11,7 +11,11 @@ class MuhleBoard {
 public:
     void update();
 private:
+    void draw_pieces(ImDrawList* draw_list);
+    void load_font();
     std::vector<Move> generate_moves();
+
+    ImFont* label_font = nullptr;
 
     unsigned int white_pieces_on_board = 0;
     unsigned int white_pieces_outside = 9;
