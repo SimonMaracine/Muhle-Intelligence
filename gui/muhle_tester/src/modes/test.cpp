@@ -16,13 +16,13 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
         const ImVec2 position = ImGui::GetMousePos();
         const Player player = piece == PieceWhite ? Player::White : Player::Black;
 
-        game_test.user_action(glm::vec2(position.x, position.y), GameTest::MouseButton::Left, player);
+        game_test.user_action(glm::vec2(position.x, position.y), true, player);
     }
 
     if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
         const ImVec2 position = ImGui::GetMousePos();
 
-        game_test.user_action(glm::vec2(position.x, position.y), GameTest::MouseButton::Right);
+        game_test.user_action(glm::vec2(position.x, position.y), false);
     }
 
     switch (test_state) {
@@ -32,9 +32,9 @@ void TesterModeTest::update(muhle::MuhleIntelligence* muhle, muhle::Result& muhl
             result_text = "[Computing...]";
             statistics_text = "";
 
-            const muhle::Position position = game_test.get_position();
+            const muhle::SearchInput input = game_test.get_input_for_search();
 
-            muhle->search(position, muhle_result);
+            muhle->search(input, muhle_result);
 
             test_state = TestState::ComputerThinking;
 

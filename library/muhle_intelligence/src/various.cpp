@@ -13,7 +13,7 @@ namespace muhle {
 
     bool all_pieces_in_mills(SearchCtx& ctx, Piece piece) {
         for (IterIdx i = 0; i < NODES; i++) {
-            if (ctx.position[i] != piece) {
+            if (ctx.board[i] != piece) {
                 continue;
             }
 
@@ -26,7 +26,7 @@ namespace muhle {
     }
 
 #define IS_FREE_CHECK(const_index) \
-    if (ctx.position[const_index] == Piece::None) { \
+    if (ctx.board[const_index] == Piece::None) { \
         result.push_back(const_index); \
     }
 
@@ -151,7 +151,7 @@ namespace muhle {
         return result;
     }
 
-#define IS_PC(const_index) (ctx.position[const_index] == piece)
+#define IS_PC(const_index) (ctx.board[const_index] == piece)
 
     bool is_mill(SearchCtx& ctx, Piece piece, Idx index) {
         assert(piece != Piece::None);

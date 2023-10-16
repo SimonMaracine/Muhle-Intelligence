@@ -36,7 +36,7 @@ int main() {
     static constexpr std::size_t ITERATIONS = 16;
 
     muhle::SearchCtx ctx;
-    ctx.position = {};
+    ctx.board = {};
     ctx.white_pieces_on_board = 0;
     ctx.black_pieces_on_board = 0;
     ctx.plies = 0;

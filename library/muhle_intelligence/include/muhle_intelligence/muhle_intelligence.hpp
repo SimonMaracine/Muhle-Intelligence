@@ -9,7 +9,7 @@ namespace muhle {
         virtual ~MuhleIntelligence() = default;
 
         virtual void initialize() = 0;
-        virtual void search(const Position& position, Result& result) = 0;
+        virtual void search(const SearchInput& input, Result& result) = 0;
         virtual void join_thread() = 0;
         virtual void set_parameter(std::string_view parameter, int value) = 0;
     };

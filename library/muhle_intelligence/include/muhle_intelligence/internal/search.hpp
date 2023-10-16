@@ -9,7 +9,8 @@
 
 /*
     FIXME
-    segmentation fault in the middle of a game
+    finish implementing threefold repetition (correctly pass and store previous positions, cut irrelevant positions)
+    implement 50 move rule
 */
 
 namespace muhle {
@@ -17,12 +18,12 @@ namespace muhle {
     class Search {
     public:
         void setup(std::unordered_map<std::string, int>& parameters);
-        void search(const Position& position, Result& result);
+        void search(const SearchInput& input, Result& result);
     private:
-        void figure_out_position(const Position& position);
+        void figure_out_position(const SearchInput& input);
 
-        Eval minimax_w(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
-        Eval minimax_b(unsigned int depth, unsigned int plies_from_root, Eval alpha, Eval beta);
+        Eval minimax(Player player, unsigned int depth, unsigned int plies_from_root,
+            Eval alpha, Eval beta, const repetition::Node* previous_node);
 
         SearchCtx ctx;
 

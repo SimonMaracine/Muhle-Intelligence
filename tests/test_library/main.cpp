@@ -9,7 +9,7 @@
 
 TEST(MovesTest, TotalMoveCountBeginning) {
     muhle::SearchCtx ctx;
-    ctx.position = {};
+    ctx.board = {};
     ctx.white_pieces_on_board = 0;
     ctx.black_pieces_on_board = 0;
     ctx.plies = 0;
@@ -23,7 +23,7 @@ TEST(MovesTest, TotalMoveCountBeginning) {
 
 TEST(MovesTest, MakeMove) {
     muhle::SearchCtx ctx;
-    ctx.position = {};
+    ctx.board = {};
     ctx.white_pieces_on_board = 0;
     ctx.black_pieces_on_board = 0;
     ctx.plies = 0;
@@ -36,7 +36,7 @@ TEST(MovesTest, MakeMove) {
         muhle::make_move(ctx, move, muhle::Piece::White);
     }
 
-    ASSERT_EQ(ctx.position, make_up_position({0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+    ASSERT_EQ(ctx.board, make_up_board({0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
 
     {
         muhle::Move move;
@@ -46,5 +46,37 @@ TEST(MovesTest, MakeMove) {
         muhle::make_move(ctx, move, muhle::Piece::Black);
     }
 
-    ASSERT_EQ(ctx.position, make_up_position({0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+    ASSERT_EQ(ctx.board, make_up_board({0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+}
+
+TEST(MovesTest, ThreefoldRepetition) {
+    {
+        muhle::Board board = make_up_board({0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        muhle::Player player = muhle::Player::Black;
+
+        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+
+        ASSERT_EQ(bitboard.part1, 9223372036854777344u);
+        ASSERT_EQ(bitboard.part2, 0);
+    }
+
+    {
+        muhle::Board board = make_up_board({1, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        muhle::Player player = muhle::Player::White;
+
+        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+
+        ASSERT_EQ(bitboard.part1, 37);
+        ASSERT_EQ(bitboard.part2, 0);
+    }
+
+    {
+        muhle::Board board = make_up_board({1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1});
+        muhle::Player player = muhle::Player::White;
+
+        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+
+        ASSERT_EQ(bitboard.part1, 17);
+        ASSERT_EQ(bitboard.part2, 33);
+    }
 }
