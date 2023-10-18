@@ -55,11 +55,13 @@ void MuhleBoard::update() {
         const float UNIT = canvas_size.x < canvas_size.y ? (canvas_p1.x - canvas_p0.x) / 10.0f : (canvas_p1.y - canvas_p0.y) / 10.0f;
         const ImVec2 OFFSET = ImVec2(canvas_p0.x, canvas_p0.y);
 
-        const ImColor COLOR = ImColor(210, 210, 210);
+        const ImColor COLOR = ImColor(200, 200, 200);
         const float THICKNESS = 2.0f;
 
         board_unit = UNIT;
         board_offset = OFFSET;
+
+        draw_list->AddRectFilled(canvas_p0, canvas_p1, ImColor(45, 45, 45));
 
         draw_list->AddRect(ImVec2(2.0f * UNIT + OFFSET.x, 8.0f * UNIT + OFFSET.y), ImVec2(8.0f * UNIT + OFFSET.x, 2.0f * UNIT + OFFSET.y), COLOR, 0.0f, 0, THICKNESS);
         draw_list->AddRect(ImVec2(3.0f * UNIT + OFFSET.x, 7.0f * UNIT + OFFSET.y), ImVec2(7.0f * UNIT + OFFSET.x, 3.0f * UNIT + OFFSET.y), COLOR, 0.0f, 0, THICKNESS);
@@ -168,10 +170,10 @@ void MuhleBoard::draw_pieces(ImDrawList* draw_list) {
             case Piece::None:
                 break;
             case Piece::White:
-                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(255, 255, 255, 255));
+                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(235, 235, 235, 255));
                 break;
             case Piece::Black:
-                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(0, 0, 0, 255));
+                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(15, 15, 15, 255));
                 break;
         }
     }
@@ -606,7 +608,8 @@ bool MuhleBoard::is_mill(Piece piece, Idx index) {
     }
 
 std::vector<Idx> MuhleBoard::neighbor_free_positions(Idx index) {
-    std::vector<Idx> result {4};
+    std::vector<Idx> result;
+    result.reserve(4);
 
     switch (index) {
         case 0:

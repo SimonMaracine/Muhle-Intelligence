@@ -16,7 +16,8 @@
 */
 
 void MuhlePlayer::start() {
-
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
 }
 
 void MuhlePlayer::update() {

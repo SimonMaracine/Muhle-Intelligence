@@ -49,10 +49,10 @@ private:
     unsigned int plies_without_mills = 0;
 
     Idx selected_piece_index = INVALID_INDEX;
-    bool must_take_piece = false;
-    std::array<bool, 2> can_jump = { false, false };
     unsigned int white_pieces_on_board = 0;
     unsigned int black_pieces_on_board = 0;
+    bool must_take_piece = false;
+    std::array<bool, 2> can_jump = { false, false };
 
     ThreefoldRepetition repetition;
     MoveLogging log;
