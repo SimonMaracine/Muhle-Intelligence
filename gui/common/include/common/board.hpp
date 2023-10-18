@@ -36,7 +36,7 @@ private:
     bool is_mill(Piece piece, Idx index);
     std::vector<Idx> neighbor_free_positions(Idx index);
     bool all_pieces_in_mills(Piece piece);
-    static bool point_in_node(ImVec2 position, const Node& node);
+    static bool point_in_node(ImVec2 position, const Node& node, float radius);
 
     ImFont* label_font = nullptr;
     float board_unit = 0.0f;
@@ -56,4 +56,6 @@ private:
 
     ThreefoldRepetition repetition;
     MoveLogging log;
+
+    static constexpr float NODE_RADIUS = 2.1f;
 };

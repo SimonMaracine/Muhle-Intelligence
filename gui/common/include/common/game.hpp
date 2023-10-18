@@ -9,7 +9,6 @@
 
 using Idx = int;
 
-inline constexpr float NODE_RADIUS = 22.0f;
 inline constexpr Idx INVALID_INDEX = -1;
 inline constexpr unsigned int MAX_PLIES_WITHOUT_MILLS = 50;
 

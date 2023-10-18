@@ -170,10 +170,10 @@ void MuhleBoard::draw_pieces(ImDrawList* draw_list) {
             case Piece::None:
                 break;
             case Piece::White:
-                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(235, 235, 235, 255));
+                draw_list->AddCircleFilled(node.position, board_unit / NODE_RADIUS, ImColor(235, 235, 235, 255));
                 break;
             case Piece::Black:
-                draw_list->AddCircleFilled(node.position, NODE_RADIUS, ImColor(15, 15, 15, 255));
+                draw_list->AddCircleFilled(node.position, board_unit / NODE_RADIUS, ImColor(15, 15, 15, 255));
                 break;
         }
     }
@@ -181,7 +181,7 @@ void MuhleBoard::draw_pieces(ImDrawList* draw_list) {
     if (selected_piece_index != INVALID_INDEX) {
         const Node& node = board[selected_piece_index];
 
-        draw_list->AddCircle(node.position, NODE_RADIUS + 1.0f, ImColor(255, 30, 30, 255), 0, 2.0f);
+        draw_list->AddCircle(node.position, board_unit / NODE_RADIUS + 1.0f, ImColor(255, 30, 30, 255), 0, 2.0f);
     }
 }
 
@@ -208,7 +208,7 @@ void MuhleBoard::load_font() {
 
 Idx MuhleBoard::get_index(ImVec2 position) {
     for (Idx i = 0; i < 24; i++) {
-        if (point_in_node(position, board[i])) {
+        if (point_in_node(position, board[i], board_unit / NODE_RADIUS)) {
             return board[i].index;
         }
     }
@@ -743,9 +743,9 @@ bool MuhleBoard::all_pieces_in_mills(Piece piece) {
     return true;
 }
 
-bool MuhleBoard::point_in_node(ImVec2 position, const Node& node) {
+bool MuhleBoard::point_in_node(ImVec2 position, const Node& node, float radius) {
     const ImVec2 subtracted = ImVec2(node.position.x - position.x, node.position.y - position.y);
     const float length = std::pow(subtracted.x * subtracted.x + subtracted.y * subtracted.y, 0.5f);
 
-    return length < NODE_RADIUS;
+    return length < radius;
 }
