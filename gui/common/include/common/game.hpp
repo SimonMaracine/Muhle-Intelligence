@@ -7,11 +7,11 @@
 #include <gui_base/gui_base.hpp>
 #include <muhle_intelligence/definitions.hpp>
 
-inline constexpr float NODE_RADIUS = 22.0f;
-inline constexpr int INVALID_INDEX = -1;
-inline constexpr unsigned int MAX_PLIES_WITHOUT_MILLS = 50;
-
 using Idx = int;
+
+inline constexpr float NODE_RADIUS = 22.0f;
+inline constexpr Idx INVALID_INDEX = -1;
+inline constexpr unsigned int MAX_PLIES_WITHOUT_MILLS = 50;
 
 enum class Player {
     White,
@@ -33,30 +33,30 @@ enum class Piece {
 
 struct Node {
     ImVec2 position;
-    int index = INVALID_INDEX;
+    Idx index = INVALID_INDEX;
     Piece piece {};
 };
 
 struct Move {
     union {
         struct {
-            Idx node_index;
+            Idx place_index;
         } place;
 
         struct {
-            Idx node_source_index;
-            Idx node_destination_index;
+            Idx source_index;
+            Idx destination_index;
         } move;
 
         struct {
-            Idx node_index;
-            Idx node_take_index;
+            Idx place_index;
+            Idx take_index;
         } place_take;
 
         struct {
-            Idx node_source_index;
-            Idx node_destination_index;
-            Idx node_take_index;
+            Idx source_index;
+            Idx destination_index;
+            Idx take_index;
         } move_take;
     };
 

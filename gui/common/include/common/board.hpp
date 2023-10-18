@@ -16,7 +16,8 @@ private:
     void update_input();
     void load_font();
     Idx get_index(ImVec2 position);
-    void try_place_piece(const Move& move, Idx index);
+    void try_place(const Move& move, Idx place_index);
+    void try_place_take(const Move& move, Idx index);
     std::vector<Move> generate_moves();
     void get_moves_phase1(Piece piece, std::vector<Move>& moves);
     void get_moves_phase2(Piece piece, std::vector<Move>& moves);
@@ -24,14 +25,14 @@ private:
     unsigned int pieces_on_board(Piece piece);
     Player opponent(Player player);
     Piece opponent_piece(Piece type);
-    void make_place_move(Piece piece, Idx node_index);
-    void unmake_place_move(Idx node_index);
-    void make_move_move(Piece piece, Idx node_source_index, Idx node_destination_index);
-    void unmake_move_move(Piece piece, Idx node_source_index, Idx node_destination_index);
-    Move create_place(Idx node_index);
-    Move create_move(Idx node_source_index, Idx node_destination_index);
-    Move create_place_take(Idx node_index, Idx node_take_index);
-    Move create_move_take(Idx node_source_index, Idx node_destination_index, Idx node_take_index);
+    void make_place_move(Piece piece, Idx place_index);
+    void unmake_place_move(Idx place_index);
+    void make_move_move(Piece piece, Idx source_index, Idx destination_index);
+    void unmake_move_move(Piece piece, Idx source_index, Idx destination_index);
+    Move create_place(Idx place_index);
+    Move create_move(Idx source_index, Idx destination_index);
+    Move create_place_take(Idx place_index, Idx take_index);
+    Move create_move_take(Idx source_index, Idx destination_index, Idx take_index);
     bool is_mill(Piece piece, Idx index);
     std::vector<Idx> neighbor_free_positions(Idx index);
     bool all_pieces_in_mills(Piece piece);
@@ -40,19 +41,18 @@ private:
     ImFont* label_font = nullptr;
     float board_unit = 0.0f;
     ImVec2 board_offset;
+    std::vector<Move> legal_moves;
 
     std::array<Node, 24> board {};
     Player turn = Player::White;
     unsigned int plies = 0;
-    unsigned int white_pieces_on_board = 0;
-    unsigned int white_pieces_outside = 9;
-    unsigned int black_pieces_on_board = 0;
-    unsigned int black_pieces_outside = 9;
-
-    int selected_piece_index = INVALID_INDEX;
-    std::array<bool, 2> can_jump = { false, false };
-    bool must_take_piece = false;
     unsigned int plies_without_mills = 0;
+
+    Idx selected_piece_index = INVALID_INDEX;
+    bool must_take_piece = false;
+    std::array<bool, 2> can_jump = { false, false };
+    unsigned int white_pieces_on_board = 0;
+    unsigned int black_pieces_on_board = 0;
 
     ThreefoldRepetition repetition;
     MoveLogging log;

@@ -139,16 +139,21 @@ void MuhleBoard::update_input() {
             return;
         }
 
-        const auto legal_moves = generate_moves();
+        if (!must_take_piece) {
+            // Don't generate new moves, if there is a piece to take
+            // Try performing the second half of the previous move instead
+            legal_moves = generate_moves();
+        }
 
         for (const Move& move : legal_moves) {
             switch (move.type) {
                 case MoveType::Place:
-                    try_place_piece(move, index);
+                    try_place(move, index);
                     break;
                 case MoveType::Move:
                     break;
                 case MoveType::PlaceTake:
+                    try_place_take(move, index);
                     break;
                 case MoveType::MoveTake:
                     break;
@@ -209,23 +214,61 @@ Idx MuhleBoard::get_index(ImVec2 position) {
     return INVALID_INDEX;
 }
 
-void MuhleBoard::try_place_piece(const Move& move, Idx index) {
-    if (move.place.node_index != index) {
+void MuhleBoard::try_place(const Move& move, Idx place_index) {
+    if (must_take_piece) {
+        // A move is already in process
+        return;
+    }
+
+    if (move.place.place_index != place_index) {
         return;
     }
 
     if (turn == Player::White) {
-        board[index].piece = Piece::White;
+        board[place_index].piece = Piece::White;
         white_pieces_on_board++;
-        white_pieces_outside--;
     } else {
-        board[index].piece = Piece::Black;
+        board[place_index].piece = Piece::Black;
         black_pieces_on_board++;
-        black_pieces_outside--;
     }
 
     plies++;
     turn = opponent(turn);
+}
+
+void MuhleBoard::try_place_take(const Move& move, Idx index) {
+    if (must_take_piece) {
+        if (move.place_take.take_index != index) {
+            return;
+        }
+
+        board[index].piece = Piece::None;
+
+        if (turn == Player::White) {
+            black_pieces_on_board--;
+        } else {
+            white_pieces_on_board--;
+        }
+
+        plies++;
+        turn = opponent(turn);
+
+        must_take_piece = false;
+    } else {
+        if (move.place_take.place_index != index) {
+            return;
+        }
+
+        if (turn == Player::White) {
+            board[index].piece = Piece::White;
+            white_pieces_on_board++;
+        } else {
+            board[index].piece = Piece::Black;
+            black_pieces_on_board++;
+        }
+
+        must_take_piece = true;
+    }
 }
 
 std::vector<Move> MuhleBoard::generate_moves() {
@@ -396,55 +439,55 @@ Piece MuhleBoard::opponent_piece(Piece type) {
     return {};
 }
 
-void MuhleBoard::make_place_move(Piece piece, Idx node_index) {
-    board[node_index].piece = piece;
+void MuhleBoard::make_place_move(Piece piece, Idx place_index) {
+    board[place_index].piece = piece;
 }
 
-void MuhleBoard::unmake_place_move(Idx node_index) {
-    board[node_index].piece = Piece::None;
+void MuhleBoard::unmake_place_move(Idx place_index) {
+    board[place_index].piece = Piece::None;
 }
 
-void MuhleBoard::make_move_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
-    board[node_source_index].piece = Piece::None;
-    board[node_destination_index].piece = piece;
+void MuhleBoard::make_move_move(Piece piece, Idx source_index, Idx destination_index) {
+    board[source_index].piece = Piece::None;
+    board[destination_index].piece = piece;
 }
 
-void MuhleBoard::unmake_move_move(Piece piece, Idx node_source_index, Idx node_destination_index) {
-    board[node_source_index].piece = piece;
-    board[node_destination_index].piece = Piece::None;
+void MuhleBoard::unmake_move_move(Piece piece, Idx source_index, Idx destination_index) {
+    board[source_index].piece = piece;
+    board[destination_index].piece = Piece::None;
 }
 
-Move MuhleBoard::create_place(Idx node_index) {
+Move MuhleBoard::create_place(Idx place_index) {
     Move move;
-    move.place.node_index = node_index;
+    move.place.place_index = place_index;
     move.type = MoveType::Place;
 
     return move;
 }
 
-Move MuhleBoard::create_move(Idx node_source_index, Idx node_destination_index) {
+Move MuhleBoard::create_move(Idx source_index, Idx destination_index) {
     Move move;
-    move.move.node_source_index = node_source_index;
-    move.move.node_destination_index = node_destination_index;
+    move.move.source_index = source_index;
+    move.move.destination_index = destination_index;
     move.type = MoveType::Move;
 
     return move;
 }
 
-Move MuhleBoard::create_place_take(Idx node_index, Idx node_take_index) {
+Move MuhleBoard::create_place_take(Idx place_index, Idx take_index) {
     Move move;
-    move.place_take.node_index = node_index;
-    move.place_take.node_take_index = node_take_index;
+    move.place_take.place_index = place_index;
+    move.place_take.take_index = take_index;
     move.type = MoveType::PlaceTake;
 
     return move;
 }
 
-Move MuhleBoard::create_move_take(Idx node_source_index, Idx node_destination_index, Idx node_take_index) {
+Move MuhleBoard::create_move_take(Idx source_index, Idx destination_index, Idx take_index) {
     Move move;
-    move.move_take.node_source_index = node_source_index;
-    move.move_take.node_destination_index = node_destination_index;
-    move.move_take.node_take_index = node_take_index;
+    move.move_take.source_index = source_index;
+    move.move_take.destination_index = destination_index;
+    move.move_take.take_index = take_index;
     move.type = MoveType::MoveTake;
 
     return move;
