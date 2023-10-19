@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <filesystem>
 
 #include <gui_base/gui_base.hpp>
 #include <ImGuiFileDialog.h>
@@ -24,10 +23,11 @@ void MuhlePlayer::update() {
     main_menu_bar();
     board();
     controls();
+    load_library_dialog();
 
     ImGui::ShowDemoWindow();
 
-    if (muhle == nullptr || !board_has_focus) {
+    if (muhle == nullptr) {  // TODO
         return;
     }
 }
@@ -36,9 +36,8 @@ void MuhlePlayer::dispose() {
     unload_library();
 }
 
-void MuhlePlayer::load_library(const char* buffer) {
-    if (*buffer == '\0') {
-        std::cout << "No input\n";
+void MuhlePlayer::load_library(const std::string& file_path) {
+    if (file_path.empty()) {
         return;
     }
 
@@ -46,7 +45,7 @@ void MuhlePlayer::load_library(const char* buffer) {
 
     just_dl::Error err;
 
-    library_handle = just_dl::open_library(buffer, 0, err);
+    library_handle = just_dl::open_library(file_path, 0, err);
 
     if (err) {
         std::cout << "Could not open library: " << err.message() << '\n';
@@ -79,7 +78,7 @@ void MuhlePlayer::load_library(const char* buffer) {
 
     library_name = muhle_intelligence_version();
 
-    std::cout << "Successfully loaded library `" << buffer << "`, named `" << library_name << "`\n";
+    std::cout << "Successfully loaded library `" << file_path << "`, named `" << library_name << "`\n";
 }
 
 void MuhlePlayer::unload_library() {
@@ -106,16 +105,17 @@ void MuhlePlayer::unload_library() {
 
 void MuhlePlayer::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::BeginMenu("Load AI")) {
+        if (ImGui::BeginMenu("Game")) {
+            if (ImGui::MenuItem("Load AI")) {
                 load_library();
-
-                ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Import")) {
+            if (ImGui::MenuItem("Reset Board")) {
+                muhle_board.reset();
+            }
+            if (ImGui::MenuItem("Import Position")) {
 
             }
-            if (ImGui::MenuItem("Export")) {
+            if (ImGui::MenuItem("Export Position")) {
 
             }
             if (ImGui::MenuItem("Exit")) {
@@ -147,32 +147,17 @@ void MuhlePlayer::main_menu_bar() {
 }
 
 void MuhlePlayer::load_library() {
-    static char buffer[128] {};
-    ImGui::InputText("File Path", buffer, 128);
+    ImGuiFileDialog::Instance()->OpenDialog(
+        "FileDialog", "Choose File", ".so,.dll", ".", 1, nullptr, ImGuiFileDialogFlags_Modal
+    );
+}
 
-    ImGui::Spacing();
-
-    if (ImGui::Button("Load")) {
-        load_library(buffer);
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button("Open File Dialog")) {
-        ImGuiFileDialog::Instance()->OpenDialog(
-            "FileDialog", "Choose File", ".so,.dll", ".", 1, nullptr, ImGuiFileDialogFlags_Modal
-        );
-
-        board_has_focus = false;
-    }
-
+void MuhlePlayer::load_library_dialog() {
     if (ImGuiFileDialog::Instance()->Display("FileDialog", 32, ImVec2(768, 432))) {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             const std::string file_path = ImGuiFileDialog::Instance()->GetFilePathName();
 
-            load_library(file_path.c_str());
-
-            board_has_focus = true;
+            load_library(file_path);
         }
 
         ImGuiFileDialog::Instance()->Close();

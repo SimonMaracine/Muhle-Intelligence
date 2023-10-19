@@ -10,14 +10,18 @@
 class MuhleBoard {
 public:
     void update();
+    void reset();
 private:
     void update_nodes();
     void draw_pieces(ImDrawList* draw_list);
     void update_input();
     void load_font();
     Idx get_index(ImVec2 position);
+    bool select_piece(Idx index);
     void try_place(const Move& move, Idx place_index);
-    void try_place_take(const Move& move, Idx index);
+    void try_place_take(const Move& move, Idx place_index, Idx take_index);
+    void try_move(const Move& move, Idx source_index, Idx destination_index);
+    void try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index);
     std::vector<Move> generate_moves();
     void get_moves_phase1(Piece piece, std::vector<Move>& moves);
     void get_moves_phase2(Piece piece, std::vector<Move>& moves);
@@ -52,7 +56,6 @@ private:
     unsigned int white_pieces_on_board = 0;
     unsigned int black_pieces_on_board = 0;
     bool must_take_piece = false;
-    std::array<bool, 2> can_jump = { false, false };
 
     ThreefoldRepetition repetition;
     MoveLogging log;

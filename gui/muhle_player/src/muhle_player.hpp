@@ -15,11 +15,12 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     virtual void update() override;
     virtual void dispose() override;
 
-    void load_library(const char* buffer);
+    void load_library(const std::string& file_path);
     void unload_library();
 
     void main_menu_bar();
     void load_library();
+    void load_library_dialog();
     void about();
     void notation();
     void board();
@@ -39,6 +40,4 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     muhle::MuhleIntelligence* muhle = nullptr;
     muhle::Result muhle_result;
     std::string library_name = "";
-
-    bool board_has_focus = true;
 };

@@ -118,6 +118,18 @@ void MuhleBoard::update() {
     ImGui::PopStyleVar(2);
 }
 
+void MuhleBoard::reset() {
+    board = {};
+    turn = Player::White;
+    plies = 0;
+    plies_without_mills = 0;
+    selected_piece_index = INVALID_INDEX;
+    white_pieces_on_board = 0;
+    black_pieces_on_board = 0;
+    must_take_piece = false;
+    legal_moves.clear();
+}
+
 void MuhleBoard::update_nodes() {
     for (Idx i = 0; i < 24; i++) {
         board[i].index = i;
@@ -141,6 +153,12 @@ void MuhleBoard::update_input() {
             return;
         }
 
+        if (plies >= 18) {
+            if (select_piece(index)) {
+                return;
+            }
+        }
+
         if (!must_take_piece) {
             // Don't generate new moves, if there is a piece to take
             // Try performing the second half of the previous move instead
@@ -153,9 +171,10 @@ void MuhleBoard::update_input() {
                     try_place(move, index);
                     break;
                 case MoveType::Move:
+                    try_move(move, selected_piece_index, index);
                     break;
                 case MoveType::PlaceTake:
-                    try_place_take(move, index);
+                    try_place_take(move, index, index);  // Parameters are contextual, but it's fine
                     break;
                 case MoveType::MoveTake:
                     break;
@@ -181,7 +200,7 @@ void MuhleBoard::draw_pieces(ImDrawList* draw_list) {
     if (selected_piece_index != INVALID_INDEX) {
         const Node& node = board[selected_piece_index];
 
-        draw_list->AddCircle(node.position, board_unit / NODE_RADIUS + 1.0f, ImColor(255, 30, 30, 255), 0, 2.0f);
+        draw_list->AddCircle(node.position, board_unit / NODE_RADIUS + 1.0f, ImColor(240, 30, 30, 255), 0, 2.0f);
     }
 }
 
@@ -216,6 +235,22 @@ Idx MuhleBoard::get_index(ImVec2 position) {
     return INVALID_INDEX;
 }
 
+bool MuhleBoard::select_piece(Idx index) {
+    static const Piece color[2] = { Piece::White, Piece::Black };
+
+    if (selected_piece_index != index) {
+        if (board[index].piece == color[static_cast<int>(turn)]) {
+            selected_piece_index = index;
+            return true;
+        }
+    } else {
+        selected_piece_index = INVALID_INDEX;
+        return true;
+    }
+
+    return false;
+}
+
 void MuhleBoard::try_place(const Move& move, Idx place_index) {
     if (must_take_piece) {
         // A move is already in process
@@ -238,13 +273,13 @@ void MuhleBoard::try_place(const Move& move, Idx place_index) {
     turn = opponent(turn);
 }
 
-void MuhleBoard::try_place_take(const Move& move, Idx index) {
+void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_index) {
     if (must_take_piece) {
-        if (move.place_take.take_index != index) {
+        if (move.place_take.take_index != take_index) {
             return;
         }
 
-        board[index].piece = Piece::None;
+        board[take_index].piece = Piece::None;
 
         if (turn == Player::White) {
             black_pieces_on_board--;
@@ -257,20 +292,37 @@ void MuhleBoard::try_place_take(const Move& move, Idx index) {
 
         must_take_piece = false;
     } else {
-        if (move.place_take.place_index != index) {
+        if (move.place_take.place_index != place_index) {
             return;
         }
 
         if (turn == Player::White) {
-            board[index].piece = Piece::White;
+            board[place_index].piece = Piece::White;
             white_pieces_on_board++;
         } else {
-            board[index].piece = Piece::Black;
+            board[place_index].piece = Piece::Black;
             black_pieces_on_board++;
         }
 
         must_take_piece = true;
     }
+}
+
+void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_index) {
+    if (move.move.source_index != source_index || move.move.destination_index != destination_index) {
+        return;
+    }
+
+    std::swap(board[source_index].piece, board[destination_index].piece);
+
+    plies++;
+    turn = opponent(turn);
+
+    selected_piece_index = INVALID_INDEX;
+}
+
+void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index) {
+
 }
 
 std::vector<Move> MuhleBoard::generate_moves() {

@@ -13,8 +13,8 @@ inline constexpr Idx INVALID_INDEX = -1;
 inline constexpr unsigned int MAX_PLIES_WITHOUT_MILLS = 50;
 
 enum class Player {
-    White,
-    Black
+    White = 0,
+    Black = 1
 };
 
 enum class MoveType {
