@@ -153,6 +153,11 @@ void MuhleBoard::update_input() {
             return;
         }
 
+        if (white_pieces_on_board < 3 || black_pieces_on_board < 3) {
+            // Do nothing, if it's game over
+            return;
+        }
+
         if (plies >= 18) {
             if (select_piece(index)) {
                 return;
@@ -177,6 +182,7 @@ void MuhleBoard::update_input() {
                     try_place_take(move, index, index);  // Parameters are contextual, but it's fine
                     break;
                 case MoveType::MoveTake:
+                    try_move_take(move, selected_piece_index, index, index);  // Parameters are contextual
                     break;
             }
         }
@@ -236,6 +242,11 @@ Idx MuhleBoard::get_index(ImVec2 position) {
 }
 
 bool MuhleBoard::select_piece(Idx index) {
+    if (must_take_piece) {
+        // A move is already in process
+        return false;
+    }
+
     static const Piece color[2] = { Piece::White, Piece::Black };
 
     if (selected_piece_index != index) {
@@ -309,6 +320,11 @@ void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_inde
 }
 
 void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_index) {
+    if (must_take_piece) {
+        // A move is already in process
+        return;
+    }
+
     if (move.move.source_index != source_index || move.move.destination_index != destination_index) {
         return;
     }
@@ -322,7 +338,34 @@ void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_in
 }
 
 void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index) {
+    if (must_take_piece) {
+        if (move.move_take.take_index != take_index) {
+            return;
+        }
 
+        board[take_index].piece = Piece::None;
+
+        if (turn == Player::White) {
+            black_pieces_on_board--;
+        } else {
+            white_pieces_on_board--;
+        }
+
+        plies++;
+        turn = opponent(turn);
+
+        must_take_piece = false;
+    } else {
+        if (move.move_take.source_index != source_index || move.move_take.destination_index != destination_index) {
+            return;
+        }
+
+        std::swap(board[source_index].piece, board[destination_index].piece);
+
+        selected_piece_index = INVALID_INDEX;
+
+        must_take_piece = true;
+    }
 }
 
 std::vector<Move> MuhleBoard::generate_moves() {
