@@ -116,6 +116,8 @@ void MuhleBoard::update() {
     ImGui::End();
 
     ImGui::PopStyleVar(2);
+
+    second_window();
 }
 
 void MuhleBoard::reset() {
@@ -127,7 +129,42 @@ void MuhleBoard::reset() {
     white_pieces_on_board = 0;
     black_pieces_on_board = 0;
     must_take_piece = false;
-    legal_moves.clear();
+
+    game_over = GameOver::None;
+    legal_moves = generate_moves();
+}
+
+void MuhleBoard::second_window() {
+    if (ImGui::Begin("Board Stuff")) {
+        const char* game_over_string = nullptr;
+
+        switch (game_over) {
+            case GameOver::None:
+                game_over_string = "None";
+                break;
+            case GameOver::WinnerWhite:
+                game_over_string = "WinnerWhite";
+                break;
+            case GameOver::WinnerBlack:
+                game_over_string = "WinnerBlack";
+                break;
+            case GameOver::TieBetweenBothPlayers:
+                game_over_string = "TieBetweenBothPlayers";
+                break;
+        }
+
+        ImGui::Text("Number of possible moves: %lu", legal_moves.size());
+        ImGui::Text("Game over: %s", game_over_string);
+        ImGui::Text("Turn: %s", turn == Player::White ? "white" : "black");
+        ImGui::Text("Plies: %u", plies);
+        ImGui::Text("Plies without mills: %u", plies_without_mills);
+        ImGui::Text("Selected piece: %d", selected_piece_index);
+        ImGui::Text("White pieces: %u", white_pieces_on_board);
+        ImGui::Text("Black pieces: %u", black_pieces_on_board);
+        ImGui::Text("Must take piece: %s", must_take_piece ? "true" : "false");
+    }
+
+    ImGui::End();
 }
 
 void MuhleBoard::update_nodes() {
@@ -149,12 +186,7 @@ void MuhleBoard::update_input() {
         const ImVec2 position = ImGui::GetMousePos();
         const Idx index = get_index(position);
 
-        if (index == INVALID_INDEX) {
-            return;
-        }
-
-        if (white_pieces_on_board < 3 || black_pieces_on_board < 3) {
-            // Do nothing, if it's game over
+        if (index == INVALID_INDEX || game_over != GameOver::None) {
             return;
         }
 
@@ -162,12 +194,6 @@ void MuhleBoard::update_input() {
             if (select_piece(index)) {
                 return;
             }
-        }
-
-        if (!must_take_piece) {
-            // Don't generate new moves, if there is a piece to take
-            // Try performing the second half of the previous move instead
-            legal_moves = generate_moves();
         }
 
         for (const Move& move : legal_moves) {
@@ -262,6 +288,54 @@ bool MuhleBoard::select_piece(Idx index) {
     return false;
 }
 
+void MuhleBoard::change_turn() {
+    plies++;
+    plies_without_mills++;
+    turn = opponent(turn);
+
+    if (plies_without_mills == MAX_PLIES_WITHOUT_MILLS) {
+        game_over = GameOver::TieBetweenBothPlayers;
+    }
+}
+
+void MuhleBoard::change_turn_after_take() {
+    plies++;
+    plies_without_mills = 0;
+    turn = opponent(turn);
+}
+
+void MuhleBoard::check_winner_material() {
+    if (plies < 18) {
+        return;
+    }
+
+    if (white_pieces_on_board < 3) {
+        game_over = GameOver::WinnerBlack;
+    }
+
+    if (black_pieces_on_board < 3) {
+        game_over = GameOver::WinnerWhite;
+    }
+}
+
+void MuhleBoard::check_winner_blocked() {
+    if (legal_moves.empty()) {
+        if (turn == Player::White) {
+            game_over = GameOver::WinnerBlack;
+        } else {
+            game_over = GameOver::WinnerWhite;
+        }
+    }
+}
+
+void MuhleBoard::maybe_generate_moves() {
+    if (!must_take_piece) {
+        // Don't generate new moves, if there is a piece to take
+        // Try performing the second half of the previous move instead
+        legal_moves = generate_moves();
+    }
+}
+
 void MuhleBoard::try_place(const Move& move, Idx place_index) {
     if (must_take_piece) {
         // A move is already in process
@@ -280,8 +354,9 @@ void MuhleBoard::try_place(const Move& move, Idx place_index) {
         black_pieces_on_board++;
     }
 
-    plies++;
-    turn = opponent(turn);
+    change_turn();
+    maybe_generate_moves();
+    check_winner_blocked();
 }
 
 void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_index) {
@@ -298,10 +373,12 @@ void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_inde
             white_pieces_on_board--;
         }
 
-        plies++;
-        turn = opponent(turn);
-
         must_take_piece = false;
+
+        check_winner_material();
+        change_turn_after_take();
+        maybe_generate_moves();
+        check_winner_blocked();
     } else {
         if (move.place_take.place_index != place_index) {
             return;
@@ -331,8 +408,9 @@ void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_in
 
     std::swap(board[source_index].piece, board[destination_index].piece);
 
-    plies++;
-    turn = opponent(turn);
+    change_turn();
+    maybe_generate_moves();
+    check_winner_blocked();
 
     selected_piece_index = INVALID_INDEX;
 }
@@ -351,10 +429,12 @@ void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destinati
             white_pieces_on_board--;
         }
 
-        plies++;
-        turn = opponent(turn);
-
         must_take_piece = false;
+
+        check_winner_material();
+        change_turn_after_take();
+        maybe_generate_moves();
+        check_winner_blocked();
     } else {
         if (move.move_take.source_index != source_index || move.move_take.destination_index != destination_index) {
             return;

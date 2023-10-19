@@ -30,6 +30,13 @@ enum class Piece {
     Black
 };
 
+enum class GameOver {
+    None,
+    WinnerWhite,
+    WinnerBlack,
+    TieBetweenBothPlayers
+};
+
 struct Node {
     ImVec2 position;
     Idx index = INVALID_INDEX;

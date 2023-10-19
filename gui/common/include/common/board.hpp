@@ -9,15 +9,25 @@
 
 class MuhleBoard {
 public:
+    MuhleBoard() {
+        reset();
+    }
+
     void update();
     void reset();
 private:
+    void second_window();
     void update_nodes();
     void draw_pieces(ImDrawList* draw_list);
     void update_input();
     void load_font();
     Idx get_index(ImVec2 position);
     bool select_piece(Idx index);
+    void change_turn();
+    void change_turn_after_take();
+    void check_winner_material();
+    void check_winner_blocked();
+    void maybe_generate_moves();
     void try_place(const Move& move, Idx place_index);
     void try_place_take(const Move& move, Idx place_index, Idx take_index);
     void try_move(const Move& move, Idx source_index, Idx destination_index);
@@ -46,18 +56,19 @@ private:
     float board_unit = 0.0f;
     ImVec2 board_offset;
     std::vector<Move> legal_moves;
+    GameOver game_over = GameOver::None;
 
     std::array<Node, 24> board {};
     Player turn = Player::White;
     unsigned int plies = 0;
     unsigned int plies_without_mills = 0;
+    ThreefoldRepetition repetition;  // TODO
 
     Idx selected_piece_index = INVALID_INDEX;
     unsigned int white_pieces_on_board = 0;
     unsigned int black_pieces_on_board = 0;
     bool must_take_piece = false;
 
-    ThreefoldRepetition repetition;
     MoveLogging log;
 
     static constexpr float NODE_RADIUS = 2.1f;
