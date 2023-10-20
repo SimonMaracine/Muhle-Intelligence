@@ -78,19 +78,17 @@ public:
     };
 
     struct Position {
-        std::array<Node, 24> nodes {};
+        std::array<Node, 24> board {};
         Player turn {};
 
         bool operator==(const Position& other) const {
-            return nodes == other.nodes && turn == other.turn;
+            return board == other.board && turn == other.turn;
         }
     };
 
     // Check position only after changed turn
-    bool check_position(const std::array<::Node, 24>& nodes, Player turn);
-
+    bool check_position(const std::array<::Node, 24>& board, Player turn);
     void clear_repetition();
-
     const std::vector<Position>& get_positions() const { return positions; }
 private:
     std::vector<Position> positions;

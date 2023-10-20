@@ -1,3 +1,12 @@
+#include <array>
+#include <vector>
+#include <functional>
+
+#include <gui_base/gui_base.hpp>
+#include <muhle_intelligence/definitions.hpp>
+
+#include "common/game.hpp"
+
 // static const int NODE_POSITIONS[24][2] = {
 //     { 2, 2 },
 //     { 5, 2 },
@@ -93,45 +102,45 @@
 //     return result;
 // }
 
-// bool ThreefoldRepetition::check_position(const std::array<::Node, 24>& nodes, Player turn) {
-//     Position current_position;
+bool ThreefoldRepetition::check_position(const std::array<::Node, 24>& board, Player turn) {
+    Position current_position;
 
-//     current_position.turn = turn;
+    current_position.turn = turn;
 
-//     for (std::size_t i = 0; i < nodes.size(); i++) {
-//         if (nodes[i].piece.has_value()) {
-//             current_position.nodes[i] = (
-//                 nodes[i].piece->player == Player::White
-//                 ?
-//                 ThreefoldRepetition::Node::White
-//                 :
-//                 ThreefoldRepetition::Node::Black
-//             );
-//         } else {
-//             current_position.nodes[i] = ThreefoldRepetition::Node::Empty;
-//         }
-//     }
+    for (std::size_t i = 0; i < board.size(); i++) {
+        switch (board[i].piece) {
+            case Piece::None:
+                current_position.board[i] = Node::Empty;
+                break;
+            case Piece::White:
+                current_position.board[i] = Node::White;
+                break;
+            case Piece::Black:
+                current_position.board[i] = Node::Black;
+                break;
+        }
+    }
 
-//     unsigned int repetition = 1;
+    unsigned int repetition = 1;
 
-//     for (const Position& position : positions) {
-//         if (position == current_position) {
-//             repetition++;
+    for (const Position& position : positions) {
+        if (position == current_position) {
+            repetition++;
 
-//             if (repetition == 3) {
-//                 return true;
-//             }
-//         }
-//     }
+            if (repetition == 3) {
+                return true;
+            }
+        }
+    }
 
-//     positions.push_back(current_position);
+    positions.push_back(current_position);
 
-//     return false;
-// }
+    return false;
+}
 
-// void ThreefoldRepetition::clear_repetition() {
-//     positions.clear();
-// }
+void ThreefoldRepetition::clear_repetition() {
+    positions.clear();
+}
 
 // void GamePlay::setup(MoveLogging::ChangeTurnCallback callback) {
 //     for (std::size_t i = 0; i < nodes.size(); i++) {

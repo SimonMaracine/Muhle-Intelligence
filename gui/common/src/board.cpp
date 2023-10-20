@@ -135,7 +135,7 @@ void MuhleBoard::reset() {
 }
 
 void MuhleBoard::second_window() {
-    if (ImGui::Begin("Board Stuff")) {
+    if (ImGui::Begin("Board Internal")) {
         const char* game_over_string = nullptr;
 
         switch (game_over) {
@@ -153,11 +153,12 @@ void MuhleBoard::second_window() {
                 break;
         }
 
-        ImGui::Text("Number of possible moves: %lu", legal_moves.size());
+        ImGui::Text("Possible moves: %lu", legal_moves.size());
         ImGui::Text("Game over: %s", game_over_string);
         ImGui::Text("Turn: %s", turn == Player::White ? "white" : "black");
         ImGui::Text("Plies: %u", plies);
         ImGui::Text("Plies without mills: %u", plies_without_mills);
+        ImGui::Text("Repetition positions: %lu", repetition.get_positions().size());
         ImGui::Text("Selected piece: %d", selected_piece_index);
         ImGui::Text("White pieces: %u", white_pieces_on_board);
         ImGui::Text("Black pieces: %u", black_pieces_on_board);
@@ -296,12 +297,20 @@ void MuhleBoard::change_turn() {
     if (plies_without_mills == MAX_PLIES_WITHOUT_MILLS) {
         game_over = GameOver::TieBetweenBothPlayers;
     }
+
+    if (repetition.check_position(board, turn)) {
+        game_over = GameOver::TieBetweenBothPlayers;
+    }
 }
 
 void MuhleBoard::change_turn_after_take() {
     plies++;
     plies_without_mills = 0;
     turn = opponent(turn);
+
+    if (repetition.check_position(board, turn)) {
+        game_over = GameOver::TieBetweenBothPlayers;
+    }
 }
 
 void MuhleBoard::check_winner_material() {
@@ -375,6 +384,9 @@ void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_inde
 
         must_take_piece = false;
 
+        // Previous positions can occur no more
+        repetition.clear_repetition();
+
         check_winner_material();
         change_turn_after_take();
         maybe_generate_moves();
@@ -430,6 +442,9 @@ void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destinati
         }
 
         must_take_piece = false;
+
+        // Previous positions can occur no more
+        repetition.clear_repetition();
 
         check_winner_material();
         change_turn_after_take();

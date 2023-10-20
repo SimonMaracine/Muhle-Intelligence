@@ -62,7 +62,7 @@ private:
     Player turn = Player::White;
     unsigned int plies = 0;
     unsigned int plies_without_mills = 0;
-    ThreefoldRepetition repetition;  // TODO
+    ThreefoldRepetition repetition;
 
     Idx selected_piece_index = INVALID_INDEX;
     unsigned int white_pieces_on_board = 0;
