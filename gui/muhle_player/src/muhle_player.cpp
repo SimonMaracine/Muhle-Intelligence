@@ -25,7 +25,7 @@ void MuhlePlayer::update() {
     controls();
     load_library_dialog();
 
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     if (muhle == nullptr) {  // TODO
         return;
@@ -105,15 +105,17 @@ void MuhlePlayer::unload_library() {
 
 void MuhlePlayer::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Game")) {
+        if (ImGui::BeginMenu("Player")) {
             if (ImGui::MenuItem("Load AI")) {
                 load_library();
             }
             if (ImGui::MenuItem("Reset Board")) {
                 muhle_board.reset();
             }
-            if (ImGui::MenuItem("Import Position")) {
+            if (ImGui::BeginMenu("Import Position")) {
+                import_position();
 
+                ImGui::EndMenu();
             }
             if (ImGui::MenuItem("Export Position")) {
 
@@ -164,6 +166,14 @@ void MuhlePlayer::load_library_dialog() {
     }
 }
 
+void MuhlePlayer::import_position() {
+    char buffer[32] {};
+
+    if (ImGui::InputText("SMN string", buffer, 32, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        muhle_board.set_position(buffer);
+    }
+}
+
 void MuhlePlayer::about() {
     ImGui::Text(
         "%s",
@@ -188,6 +198,22 @@ void MuhlePlayer::controls() {
     if (ImGui::Begin("Controls")) {
         ImGui::Text("AI library name: %s", library_name.c_str());
         ImGui::Separator();
+
+        ImGui::Spacing();
+
+        if (ImGui::Button("Stop AI")) {
+
+        }
+
+        ImGui::Spacing();
+
+        ImGui::Text("White"); ImGui::SameLine();
+        ImGui::RadioButton("Human##w", &white, PlayerHuman); ImGui::SameLine();
+        ImGui::RadioButton("Computer##w", &white, PlayerComputer);
+
+        ImGui::Text("Black"); ImGui::SameLine();
+        ImGui::RadioButton("Human##b", &black, PlayerHuman); ImGui::SameLine();
+        ImGui::RadioButton("Computer##b", &black, PlayerComputer);
     }
 
     ImGui::End();

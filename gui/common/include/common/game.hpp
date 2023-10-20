@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 #include <functional>
+#include <string_view>
 
 #include <gui_base/gui_base.hpp>
 #include <muhle_intelligence/definitions.hpp>
@@ -104,6 +105,8 @@ struct MoveLogging {
         muhle::Player player;
     } current_move;
 };
+
+bool is_valid_smn(std::string_view string);
 
 // class GamePlay {
 // public:

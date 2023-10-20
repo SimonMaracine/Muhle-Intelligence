@@ -1,5 +1,6 @@
 #include <array>
 #include <vector>
+#include <string_view>
 #include <filesystem>
 #include <algorithm>
 #include <cassert>
@@ -132,6 +133,14 @@ void MuhleBoard::reset() {
 
     game_over = GameOver::None;
     legal_moves = generate_moves();
+}
+
+void MuhleBoard::set_position(std::string_view smn_string) {
+    if (!is_valid_smn(smn_string)) {
+        return;
+    }
+
+    // TODO
 }
 
 void MuhleBoard::second_window() {

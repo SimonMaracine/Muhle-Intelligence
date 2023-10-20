@@ -1,6 +1,8 @@
 #include <array>
 #include <vector>
 #include <functional>
+#include <string_view>
+#include <regex>
 
 #include <gui_base/gui_base.hpp>
 #include <muhle_intelligence/definitions.hpp>
@@ -140,6 +142,12 @@ bool ThreefoldRepetition::check_position(const std::array<::Node, 24>& board, Pl
 
 void ThreefoldRepetition::clear_repetition() {
     positions.clear();
+}
+
+bool is_valid_smn(std::string_view string) {
+    const std::regex pattern {"[0wb]{24} (w|b) [0-9]+ [0-9]+"};
+
+    return std::regex_match(string.cbegin(), string.cend(), pattern);
 }
 
 // void GamePlay::setup(MoveLogging::ChangeTurnCallback callback) {

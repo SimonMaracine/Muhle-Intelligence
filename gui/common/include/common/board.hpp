@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <string_view>
 
 #include <gui_base/gui_base.hpp>
 
@@ -15,6 +16,7 @@ public:
 
     void update();
     void reset();
+    void set_position(std::string_view smn_string);
 private:
     void second_window();
     void update_nodes();

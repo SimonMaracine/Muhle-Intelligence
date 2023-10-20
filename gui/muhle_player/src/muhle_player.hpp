@@ -7,6 +7,9 @@
 #include <muhle_intelligence/muhle_intelligence.hpp>
 #include <common/board.hpp>
 
+inline constexpr int PlayerHuman = 0;
+inline constexpr int PlayerComputer = 1;
+
 struct MuhlePlayer : public gui_base::GuiApplication {
     MuhlePlayer()
         : gui_base::GuiApplication(1024, 576, reinterpret_cast<const char*>(u8"Mühle Player")) {}
@@ -21,12 +24,15 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     void main_menu_bar();
     void load_library();
     void load_library_dialog();
+    void import_position();
     void about();
     void notation();
     void board();
     void controls();
 
     MuhleBoard muhle_board;
+    int white = PlayerHuman;
+    int black = PlayerComputer;
 
     using LibraryCreate = muhle::MuhleIntelligence*(*)();
     using LibraryDestroy = void(*)(muhle::MuhleIntelligence*);
