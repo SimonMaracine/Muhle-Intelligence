@@ -3,6 +3,9 @@
 #include <array>
 #include <vector>
 #include <string_view>
+#include <string>
+#include <cstddef>
+#include <utility>
 
 #include <gui_base/gui_base.hpp>
 
@@ -16,7 +19,7 @@ public:
 
     void update();
     void reset();
-    void set_position(std::string_view smn_string);
+    bool set_position(std::string_view smn_string);
 private:
     void second_window();
     void update_nodes();
@@ -53,6 +56,7 @@ private:
     std::vector<Idx> neighbor_free_positions(Idx index);
     bool all_pieces_in_mills(Piece piece);
     static bool point_in_node(ImVec2 position, const Node& node, float radius);
+    static std::pair<unsigned int, std::size_t> parse_integer(std::string_view string, std::size_t position);
 
     ImFont* label_font = nullptr;
     float board_unit = 0.0f;
@@ -71,7 +75,7 @@ private:
     unsigned int black_pieces_on_board = 0;
     bool must_take_piece = false;
 
-    MoveLogging log;
+    MoveLogging log;  // TODO
 
     static constexpr float NODE_RADIUS = 2.1f;
 };

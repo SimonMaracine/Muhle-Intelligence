@@ -170,15 +170,14 @@ void MuhlePlayer::import_position() {
     char buffer[32] {};
 
     if (ImGui::InputText("SMN string", buffer, 32, ImGuiInputTextFlags_EnterReturnsTrue)) {
-        muhle_board.set_position(buffer);
+        if (!muhle_board.set_position(buffer)) {
+            std::cout << "Invalid SMN string\n";
+        }
     }
 }
 
 void MuhlePlayer::about() {
-    ImGui::Text(
-        "%s",
-        reinterpret_cast<const char*>(u8"Mühle Player - for testing and developing Mühle Intelligence")
-    );
+    ImGui::Text("%s", reinterpret_cast<const char*>(u8"Mühle Player - for testing and developing Mühle Intelligence"));
 }
 
 void MuhlePlayer::notation() {

@@ -145,7 +145,7 @@ void ThreefoldRepetition::clear_repetition() {
 }
 
 bool is_valid_smn(std::string_view string) {
-    const std::regex pattern {"[0wb]{24} (w|b) [0-9]+ [0-9]+"};
+    const std::regex pattern {"[0wb]{24} (w|b) [0-9]{1,10} [0-9]{1,10}"};
 
     return std::regex_match(string.cbegin(), string.cend(), pattern);
 }

@@ -1,10 +1,15 @@
 #include <array>
 #include <vector>
 #include <string_view>
+#include <string>
+#include <cstddef>
+#include <utility>
 #include <filesystem>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
+#include <limits>
 
 #include <gui_base/gui_base.hpp>
 
@@ -126,6 +131,7 @@ void MuhleBoard::reset() {
     turn = Player::White;
     plies = 0;
     plies_without_mills = 0;
+    repetition.clear_repetition();
     selected_piece_index = INVALID_INDEX;
     white_pieces_on_board = 0;
     black_pieces_on_board = 0;
@@ -135,12 +141,47 @@ void MuhleBoard::reset() {
     legal_moves = generate_moves();
 }
 
-void MuhleBoard::set_position(std::string_view smn_string) {
+bool MuhleBoard::set_position(std::string_view smn_string) {
     if (!is_valid_smn(smn_string)) {
-        return;
+        return false;
     }
 
-    // TODO
+    reset();
+
+    for (Idx i = 0; i < 24; i++) {
+        switch (smn_string[i]) {
+            case '0':
+                board[i].piece = Piece::None;
+                break;
+            case 'w':
+                board[i].piece = Piece::White;
+                break;
+            case 'b':
+                board[i].piece = Piece::Black;
+                break;
+            default:
+                break;
+        }
+    }
+
+    switch (smn_string[25]) {
+        case 'w':
+            turn = Player::White;
+            break;
+        case 'b':
+            turn = Player::Black;
+            break;
+        default:
+            break;
+    }
+
+    const auto [plies_without_mills, end] = parse_integer(smn_string, 27);
+    const auto [plies, _] = parse_integer(smn_string, end + 1);
+
+    this->plies_without_mills = plies_without_mills;
+    this->plies = plies;
+
+    return true;
 }
 
 void MuhleBoard::second_window() {
@@ -303,7 +344,7 @@ void MuhleBoard::change_turn() {
     plies_without_mills++;
     turn = opponent(turn);
 
-    if (plies_without_mills == MAX_PLIES_WITHOUT_MILLS) {
+    if (plies_without_mills == 50) {
         game_over = GameOver::TieBetweenBothPlayers;
     }
 
@@ -947,4 +988,41 @@ bool MuhleBoard::point_in_node(ImVec2 position, const Node& node, float radius) 
     const float length = std::pow(subtracted.x * subtracted.x + subtracted.y * subtracted.y, 0.5f);
 
     return length < radius;
+}
+
+std::pair<unsigned int, std::size_t> MuhleBoard::parse_integer(std::string_view string, std::size_t position) {
+    std::string result_string;
+    std::size_t index = 0;
+
+    while (true) {
+        const char character = string[position + index];
+
+        if (character >= 48 && character <= 57) {
+            result_string.push_back(character);
+        } else {
+            break;
+        }
+
+        index++;
+    }
+
+    assert(!result_string.empty());
+
+    unsigned long result = 0;
+
+    try {
+        result = std::stoul(result_string);
+    } catch (const std::invalid_argument&) {
+        return std::make_pair(0, position);
+    } catch (const std::out_of_range&) {
+        return std::make_pair(0, position);
+    }
+
+    if constexpr (sizeof(unsigned int) < sizeof(unsigned long)) {
+        if (result > std::numeric_limits<unsigned int>::max()) {
+            return std::make_pair(0, position);
+        }
+    }
+
+    return std::make_pair(static_cast<unsigned int>(result), position + index);
 }
