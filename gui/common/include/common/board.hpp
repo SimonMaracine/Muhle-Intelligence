@@ -20,6 +20,10 @@ public:
     void update();
     void reset();
     bool set_position(std::string_view smn_string);
+
+    bool place_piece(Idx place_index);
+    bool move_piece(Idx source_index, Idx destination_index);
+    void take_piece(Idx take_index);
 private:
     void second_window();
     void update_nodes();
@@ -31,12 +35,15 @@ private:
     void change_turn();
     void change_turn_after_take();
     void check_winner_material();
-    void check_winner_blocked();
+    void check_winner_blocking();
     void maybe_generate_moves();
     void try_place(const Move& move, Idx place_index);
     void try_place_take(const Move& move, Idx place_index, Idx take_index);
     void try_move(const Move& move, Idx source_index, Idx destination_index);
     void try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index);
+    void do_place(Idx place_index);
+    void do_move(Idx source_index, Idx destination_index);
+    void do_take(Idx take_index);
     std::vector<Move> generate_moves();
     void get_moves_phase1(Piece piece, std::vector<Move>& moves);
     void get_moves_phase2(Piece piece, std::vector<Move>& moves);
