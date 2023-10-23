@@ -86,5 +86,5 @@ private:
 
     MoveLogging log;  // TODO
 
-    static constexpr float NODE_RADIUS = 2.1f;
+    static constexpr float NODE_RADIUS = 2.2f;
 };

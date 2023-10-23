@@ -298,8 +298,9 @@ void MuhleBoard::draw_pieces(ImDrawList* draw_list) {
 
     if (selected_piece_index != INVALID_INDEX) {
         const Node& node = board[selected_piece_index];
+        const float WIDTH = board_unit < 55.0f ? 2.0f : 3.0f;
 
-        draw_list->AddCircle(node.position, board_unit / NODE_RADIUS + 1.0f, ImColor(240, 30, 30, 255), 0, 2.0f);
+        draw_list->AddCircle(node.position, board_unit / NODE_RADIUS + 1.0f, ImColor(240, 30, 30, 255), 0, WIDTH);
     }
 }
 
