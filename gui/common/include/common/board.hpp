@@ -6,13 +6,17 @@
 #include <string>
 #include <cstddef>
 #include <utility>
+#include <functional>
 
 #include <gui_base/gui_base.hpp>
+#include <muhle_intelligence/definitions.hpp>
 
 #include "game.hpp"
 
 class MuhleBoard {
 public:
+    using MoveCallback = std::function<void(const Move&)>;
+
     MuhleBoard() {
         reset();
     }
@@ -25,6 +29,14 @@ public:
     void place_take_piece(Idx place_index, Idx take_index);
     void move_piece(Idx source_index, Idx destination_index);
     void move_take_piece(Idx source_index, Idx destination_index, Idx take_index);
+
+    muhle::SearchInput input_for_search();
+
+    Player get_turn() const { return turn; }
+    bool is_game_over() const { return game_over != GameOver::None; }
+    void set_move_callback(const MoveCallback& move_callback) { this->move_callback = move_callback; }
+
+    bool user_input = true;
 private:
     void internals_window();
     void moves_window();
@@ -74,6 +86,7 @@ private:
     std::vector<Move> legal_moves;
     MoveLogging log;
     GameOver game_over = GameOver::None;
+    MoveCallback move_callback;
 
     std::array<Node, 24> board {};
     Player turn = Player::White;

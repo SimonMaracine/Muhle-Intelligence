@@ -3,6 +3,7 @@
 #include <functional>
 #include <string_view>
 #include <regex>
+#include <cstddef>
 
 #include <gui_base/gui_base.hpp>
 #include <muhle_intelligence/definitions.hpp>

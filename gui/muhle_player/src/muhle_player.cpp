@@ -17,6 +17,11 @@
 void MuhlePlayer::start() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+    muhle_board.set_move_callback([this](const Move&) {
+        state = State::NextTurn;
+        muhle_board.user_input = false;
+    });
 }
 
 void MuhlePlayer::update() {
@@ -25,10 +30,85 @@ void MuhlePlayer::update() {
     controls();
     load_library_dialog();
 
-    // ImGui::ShowDemoWindow();
-
-    if (muhle == nullptr) {  // TODO
+    if (muhle == nullptr || muhle_board.is_game_over()) {
         return;
+    }
+
+    // FIXME bugs with state
+
+    switch (state) {
+        case State::NextTurn:
+            switch (muhle_board.get_turn()) {
+                case Player::White:
+                    switch (white) {
+                        case PlayerHuman:
+                            state = State::HumanThinking;
+                            break;
+                        case PlayerComputer:
+                            state = State::ComputerBegin;
+                            break;
+                    }
+
+                    break;
+                case Player::Black:
+                    switch (black) {
+                        case PlayerHuman:
+                            state = State::HumanThinking;
+                            break;
+                        case PlayerComputer:
+                            state = State::ComputerBegin;
+                            break;
+                    }
+
+                    break;
+            }
+
+            break;
+        case State::HumanThinking:
+            muhle_board.user_input = true;
+
+            break;
+        case State::ComputerBegin: {
+            const muhle::SearchInput input = muhle_board.input_for_search();
+            muhle->search(input, muhle_result);
+
+            state = State::ComputerThinking;
+
+            break;
+        }
+        case State::ComputerThinking:
+            if (muhle_result.done) {
+                muhle::print_result_statistics(muhle_result, std::cout);
+
+                switch (muhle_result.result.type) {
+                    case muhle::MoveType::Place:
+                        muhle_board.place_piece(muhle_result.result.place.node_index);
+                        break;
+                    case muhle::MoveType::Move:
+                        muhle_board.move_piece(
+                            muhle_result.result.move.node_source_index,
+                            muhle_result.result.move.node_destination_index
+                        );
+                        break;
+                    case muhle::MoveType::PlaceTake:
+                        muhle_board.place_take_piece(
+                            muhle_result.result.place_take.node_index,
+                            muhle_result.result.place_take.node_take_index
+                        );
+                        break;
+                    case muhle::MoveType::MoveTake:
+                        muhle_board.move_take_piece(
+                            muhle_result.result.move_take.node_source_index,
+                            muhle_result.result.move_take.node_destination_index,
+                            muhle_result.result.move_take.node_take_index
+                        );
+                        break;
+                }
+
+                state = State::NextTurn;
+            }
+
+            break;
     }
 }
 

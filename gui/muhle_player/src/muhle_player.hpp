@@ -31,8 +31,16 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     void controls();
 
     MuhleBoard muhle_board;
+
     int white = PlayerHuman;
     int black = PlayerComputer;
+
+    enum class State {
+        NextTurn,
+        HumanThinking,
+        ComputerBegin,
+        ComputerThinking,
+    } state = State::NextTurn;
 
     using LibraryCreate = muhle::MuhleIntelligence*(*)();
     using LibraryDestroy = void(*)(muhle::MuhleIntelligence*);

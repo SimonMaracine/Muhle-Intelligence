@@ -4,6 +4,7 @@
 #include <string>
 #include <cstddef>
 #include <utility>
+#include <functional>
 #include <filesystem>
 #include <algorithm>
 #include <cassert>
@@ -12,6 +13,7 @@
 #include <limits>
 
 #include <gui_base/gui_base.hpp>
+#include <muhle_intelligence/definitions.hpp>
 #include <muhle_intelligence/miscellaneous.hpp>
 
 #include "common/game.hpp"
@@ -43,6 +45,46 @@ static const int NODE_POSITIONS[24][2] = {
     { 5, 8 },
     { 8, 8 }
 };
+
+static muhle::Board to_muhle_board(const std::array<Node, 24>& board) {
+    muhle::Board result;
+
+    for (std::size_t i = 0; i < board.size(); i++) {
+        switch (board[i].piece) {
+            case Piece::None:
+                result[i] = muhle::Piece::None;
+                break;
+            case Piece::White:
+                result[i] = muhle::Piece::White;
+                break;
+            case Piece::Black:
+                result[i] = muhle::Piece::Black;
+                break;
+        }
+    }
+
+    return result;
+}
+
+static muhle::Board to_muhle_board(const std::array<ThreefoldRepetition::Node, 24>& board) {
+    muhle::Board result;
+
+    for (std::size_t i = 0; i < board.size(); i++) {
+        switch (board[i]) {
+            case ThreefoldRepetition::Node::Empty:
+                result[i] = muhle::Piece::None;
+                break;
+            case ThreefoldRepetition::Node::White:
+                result[i] = muhle::Piece::White;
+                break;
+            case ThreefoldRepetition::Node::Black:
+                result[i] = muhle::Piece::Black;
+                break;
+        }
+    }
+
+    return result;
+}
 
 void MuhleBoard::update() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -117,7 +159,10 @@ void MuhleBoard::update() {
 
         update_nodes();
         draw_pieces(draw_list);
-        update_input();
+
+        if (user_input) {
+            update_input();
+        }
     }
 
     ImGui::End();
@@ -188,21 +233,58 @@ bool MuhleBoard::set_position(std::string_view smn_string) {
 }
 
 void MuhleBoard::place_piece(Idx place_index) {
+    const auto move = create_place(place_index);
+    log.log_move(move, turn);
+
     do_place(place_index);
+
+    move_callback(move);
 }
 
 void MuhleBoard::place_take_piece(Idx place_index, Idx take_index) {
+    const auto move = create_place_take(place_index, take_index);
+    log.log_move(move, turn);
+
     do_place_take(place_index, take_index);
     do_place_take(place_index, take_index);
+
+    move_callback(move);
 }
 
 void MuhleBoard::move_piece(Idx source_index, Idx destination_index) {
+    const auto move = create_move(source_index, destination_index);
+    log.log_move(move, turn);
+
     do_move(source_index, destination_index);
+
+    move_callback(move);
 }
 
 void MuhleBoard::move_take_piece(Idx source_index, Idx destination_index, Idx take_index) {
+    const auto move = create_move_take(source_index, destination_index, take_index);
+    log.log_move(move, turn);
+
     do_move_take(source_index, destination_index, take_index);
     do_move_take(source_index, destination_index, take_index);
+
+    move_callback(move);
+}
+
+muhle::SearchInput MuhleBoard::input_for_search() {
+    muhle::SearchInput result;
+    result.current_position.board = to_muhle_board(board);
+    result.current_position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
+    result.plies = plies;
+
+    for (const ThreefoldRepetition::Position& previous_position : repetition.get_positions()) {
+        muhle::Position position;
+        position.board = to_muhle_board(previous_position.board);
+        position.player = previous_position.turn == Player::White ? muhle::Player::White : muhle::Player::Black;
+
+        result.previous_positions.push_front(position);
+    }
+
+    return result;
 }
 
 void MuhleBoard::internals_window() {
@@ -441,6 +523,8 @@ void MuhleBoard::try_place(const Move& move, Idx place_index) {
     log.log_move(move, turn);
 
     do_place(place_index);
+
+    move_callback(move);
 }
 
 void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_index) {
@@ -457,6 +541,8 @@ void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_inde
     }
 
     do_place_take(place_index, take_index);
+
+    move_callback(move);
 }
 
 void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_index) {
@@ -472,6 +558,8 @@ void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_in
     log.log_move(move, turn);
 
     do_move(source_index, destination_index);
+
+    move_callback(move);
 }
 
 void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index) {
@@ -488,6 +576,8 @@ void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destinati
     }
 
     do_move_take(source_index, destination_index, take_index);
+
+    move_callback(move);
 }
 
 void MuhleBoard::do_place(Idx place_index) {
