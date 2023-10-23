@@ -94,71 +94,13 @@ private:
     std::vector<Position> positions;
 };
 
-struct MoveLogging {
-    using ChangeTurnCallback = std::function<void(muhle::Move, muhle::Player)>;
-
-    ChangeTurnCallback callback;
-
-    struct {
-        muhle::Move move;
-        muhle::Player player;
-    } current_move;
+class MoveLogging {
+public:
+    void log_move(const Move& move, Player player);
+    void clear_history();
+    const std::vector<std::pair<muhle::Move, muhle::Player>>& get_history() const { return move_history; }
+private:
+    std::vector<std::pair<muhle::Move, muhle::Player>> move_history;
 };
 
 bool is_valid_smn(std::string_view string);
-
-// class GamePlay {
-// public:
-//     void setup(MoveLogging::ChangeTurnCallback callback);
-//     void update_nodes_positions(float board_unit, ImVec2 board_offset);
-//     void user_action(ImVec2 position);
-//     muhle::SearchInput get_input_for_search();
-
-//     const char* player_to_string();
-//     const char* phase_to_string();
-//     const char* ending_to_string();
-
-//     void place_piece(int node_index);
-//     void move_piece(int node_source_index, int node_destination_index);
-//     void take_piece(int node_index);
-
-//     unsigned int white_pieces_on_board = 0;
-//     unsigned int white_pieces_outside = 9;
-//     unsigned int black_pieces_on_board = 0;
-//     unsigned int black_pieces_outside = 9;
-
-//     Player turn = Player::White;
-//     GamePhase phase = GamePhase::PlacePieces;
-//     Ending ending = Ending::None;
-
-//     unsigned int plies = 0;
-//     std::array<Node, 24> nodes {};
-//     int selected_piece_index = INVALID_INDEX;
-//     std::array<bool, 2> can_jump = { false, false };
-//     bool must_take_piece = false;
-//     unsigned int plies_without_mills = 0;
-// private:
-//     void check_select_piece(ImVec2 position);
-//     void check_place_piece(ImVec2 position);
-//     void check_move_piece(ImVec2 position);
-//     void check_take_piece(ImVec2 position);
-
-//     unsigned int change_turn();
-//     Player opponent(Player player);
-//     bool can_potentially_move(Node& node_src, Node& node_dest);
-//     bool piece_in_mill(const Node& node, Player player);
-//     unsigned int pieces_in_mills(Player player);
-//     bool player_has_two_pieces(Player player);
-//     bool player_has_three_pieces(Player player);
-//     bool player_has_no_legal_moves(Player player);
-//     bool is_phase_two();
-//     void game_over(Ending ending);
-//     void phase_two();
-
-//     void record_place_move(int node_index);
-//     void record_move_move(int node_source_index, int node_destination_index);
-//     void record_take_move(int node_index);
-
-//     ThreefoldRepetition repetition;
-//     MoveLogging log;
-// };

@@ -26,7 +26,8 @@ public:
     void move_piece(Idx source_index, Idx destination_index);
     void move_take_piece(Idx source_index, Idx destination_index, Idx take_index);
 private:
-    void second_window();
+    void internals_window();
+    void moves_window();
     void update_nodes();
     void draw_pieces(ImDrawList* draw_list);
     void update_input();
@@ -71,6 +72,7 @@ private:
     float board_unit = 0.0f;
     ImVec2 board_offset;
     std::vector<Move> legal_moves;
+    MoveLogging log;
     GameOver game_over = GameOver::None;
 
     std::array<Node, 24> board {};
@@ -83,8 +85,6 @@ private:
     unsigned int white_pieces_on_board = 0;
     unsigned int black_pieces_on_board = 0;
     bool must_take_piece = false;
-
-    MoveLogging log;  // TODO
 
     static constexpr float NODE_RADIUS = 2.2f;
 };

@@ -12,6 +12,7 @@
 #include <limits>
 
 #include <gui_base/gui_base.hpp>
+#include <muhle_intelligence/miscellaneous.hpp>
 
 #include "common/game.hpp"
 #include "common/board.hpp"
@@ -123,7 +124,8 @@ void MuhleBoard::update() {
 
     ImGui::PopStyleVar(2);
 
-    second_window();
+    internals_window();
+    moves_window();
 }
 
 void MuhleBoard::reset() {
@@ -139,6 +141,7 @@ void MuhleBoard::reset() {
 
     game_over = GameOver::None;
     legal_moves = generate_moves();
+    log.clear_history();
 }
 
 bool MuhleBoard::set_position(std::string_view smn_string) {
@@ -190,6 +193,7 @@ void MuhleBoard::place_piece(Idx place_index) {
 
 void MuhleBoard::place_take_piece(Idx place_index, Idx take_index) {
     do_place_take(place_index, take_index);
+    do_place_take(place_index, take_index);
 }
 
 void MuhleBoard::move_piece(Idx source_index, Idx destination_index) {
@@ -198,9 +202,10 @@ void MuhleBoard::move_piece(Idx source_index, Idx destination_index) {
 
 void MuhleBoard::move_take_piece(Idx source_index, Idx destination_index, Idx take_index) {
     do_move_take(source_index, destination_index, take_index);
+    do_move_take(source_index, destination_index, take_index);
 }
 
-void MuhleBoard::second_window() {
+void MuhleBoard::internals_window() {
     if (ImGui::Begin("Board Internal")) {
         const char* game_over_string = nullptr;
 
@@ -229,6 +234,17 @@ void MuhleBoard::second_window() {
         ImGui::Text("White pieces: %u", white_pieces_on_board);
         ImGui::Text("Black pieces: %u", black_pieces_on_board);
         ImGui::Text("Must take piece: %s", must_take_piece ? "true" : "false");
+    }
+
+    ImGui::End();
+}
+
+void MuhleBoard::moves_window() {
+    if (ImGui::Begin("Board Moves")) {
+        for (std::size_t i = 1; const auto& [move, player] : log.get_history()) {
+            ImGui::Text("%lu. %s", i++, muhle::move_to_string(move, player).c_str());
+            ImGui::Spacing();
+        }
     }
 
     ImGui::End();
@@ -422,6 +438,8 @@ void MuhleBoard::try_place(const Move& move, Idx place_index) {
         return;
     }
 
+    log.log_move(move, turn);
+
     do_place(place_index);
 }
 
@@ -430,6 +448,8 @@ void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_inde
         if (move.place_take.take_index != take_index) {
             return;
         }
+
+        log.log_move(move, turn);
     } else {
         if (move.place_take.place_index != place_index) {
             return;
@@ -449,6 +469,8 @@ void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_in
         return;
     }
 
+    log.log_move(move, turn);
+
     do_move(source_index, destination_index);
 }
 
@@ -457,6 +479,8 @@ void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destinati
         if (move.move_take.take_index != take_index) {
             return;
         }
+
+        log.log_move(move, turn);
     } else {
         if (move.move_take.source_index != source_index || move.move_take.destination_index != destination_index) {
             return;

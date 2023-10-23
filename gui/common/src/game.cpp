@@ -144,6 +144,41 @@ void ThreefoldRepetition::clear_repetition() {
     positions.clear();
 }
 
+void MoveLogging::log_move(const Move& move, Player player) {
+    muhle::Move muhle_move;
+
+    switch (move.type) {
+        case MoveType::Place:
+            muhle_move.type = muhle::MoveType::Place;
+            muhle_move.place.node_index = move.place.place_index;
+            break;
+        case MoveType::PlaceTake:
+            muhle_move.type = muhle::MoveType::PlaceTake;
+            muhle_move.place_take.node_index = move.place_take.place_index;
+            muhle_move.place_take.node_take_index = move.place_take.take_index;
+            break;
+        case MoveType::Move:
+            muhle_move.type = muhle::MoveType::Move;
+            muhle_move.move.node_source_index = move.move.source_index;
+            muhle_move.move.node_destination_index = move.move.destination_index;
+            break;
+        case MoveType::MoveTake:
+            muhle_move.type = muhle::MoveType::MoveTake;
+            muhle_move.move_take.node_source_index = move.move_take.source_index;
+            muhle_move.move_take.node_destination_index = move.move_take.destination_index;
+            muhle_move.move_take.node_take_index = move.move_take.take_index;
+            break;
+    }
+
+    muhle::Player muhle_player = player == Player::White ? muhle::Player::White : muhle::Player::Black;
+
+    move_history.push_back(std::make_pair(muhle_move, muhle_player));
+}
+
+void MoveLogging::clear_history() {
+    move_history.clear();
+}
+
 bool is_valid_smn(std::string_view string) {
     const std::regex pattern {"[0wb]{24} (w|b) [0-9]{1,10} [0-9]{1,10}"};
 
