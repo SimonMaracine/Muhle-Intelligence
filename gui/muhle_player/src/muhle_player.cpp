@@ -11,7 +11,7 @@
 
 /*
     TODO
-    cache and load last library path location
+    cache last library path location
 */
 
 void MuhlePlayer::start() {
@@ -33,8 +33,6 @@ void MuhlePlayer::update() {
     if (muhle == nullptr || muhle_board.is_game_over()) {
         return;
     }
-
-    // FIXME bugs with state
 
     switch (state) {
         case State::NextTurn:
@@ -189,8 +187,8 @@ void MuhlePlayer::main_menu_bar() {
             if (ImGui::MenuItem("Load AI")) {
                 load_library();
             }
-            if (ImGui::MenuItem("Reset Board")) {
-                muhle_board.reset();
+            if (ImGui::MenuItem("Reset Board", nullptr, nullptr, state != State::ComputerThinking)) {
+                reset();
             }
             if (ImGui::BeginMenu("Import Position")) {
                 import_position();
@@ -256,6 +254,11 @@ void MuhlePlayer::import_position() {
     }
 }
 
+void MuhlePlayer::reset() {
+    muhle_board.reset();
+    state = State::NextTurn;
+}
+
 void MuhlePlayer::about() {
     ImGui::Text("%s", reinterpret_cast<const char*>(u8"Mühle Player - for testing and developing Mühle Intelligence"));
 }
@@ -284,15 +287,52 @@ void MuhlePlayer::controls() {
 
         }
 
+        if (state == State::ComputerThinking) {
+            ImGui::SameLine();
+            ImGui::Text("Thinking...");
+        }
+
         ImGui::Spacing();
 
-        ImGui::Text("White"); ImGui::SameLine();
-        ImGui::RadioButton("Human##w", &white, PlayerHuman); ImGui::SameLine();
-        ImGui::RadioButton("Computer##w", &white, PlayerComputer);
+        ImGui::Text("White");
+        ImGui::SameLine();
 
-        ImGui::Text("Black"); ImGui::SameLine();
-        ImGui::RadioButton("Human##b", &black, PlayerHuman); ImGui::SameLine();
-        ImGui::RadioButton("Computer##b", &black, PlayerComputer);
+        // FIXME don't change state when user made half move
+
+        if (state != State::ComputerThinking) {
+            if (ImGui::RadioButton("Human##w", &white, PlayerHuman)) {
+                state = State::NextTurn;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::RadioButton("Computer##w", &white, PlayerComputer)) {
+                state = State::NextTurn;
+            }
+        } else {
+            ImGui::RadioButton("Human##w", false);
+            ImGui::SameLine();
+            ImGui::RadioButton("Computer##w", false);
+        }
+
+        ImGui::Text("Black");
+        ImGui::SameLine();
+
+        if (state != State::ComputerThinking) {
+            if (ImGui::RadioButton("Human##b", &black, PlayerHuman)) {
+                state = State::NextTurn;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::RadioButton("Computer##b", &black, PlayerComputer)) {
+                state = State::NextTurn;
+            }
+        } else {
+            ImGui::RadioButton("Human##b", false);
+            ImGui::SameLine();
+            ImGui::RadioButton("Computer##b", false);
+        }
     }
 
     ImGui::End();

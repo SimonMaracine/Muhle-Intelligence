@@ -25,6 +25,7 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     void load_library();
     void load_library_dialog();
     void import_position();
+    void reset();
     void about();
     void notation();
     void board();
