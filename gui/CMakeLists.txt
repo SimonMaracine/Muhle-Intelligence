@@ -7,4 +7,4 @@ add_subdirectory(extern/tiny-gui-base)
 
 add_subdirectory(common)
 add_subdirectory(muhle_player)
-# add_subdirectory(muhle_tester)
+add_subdirectory(muhle_tester)

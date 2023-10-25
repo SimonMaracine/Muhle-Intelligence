@@ -1,30 +1,20 @@
 cmake_minimum_required(VERSION 3.20)
 
 add_executable(muhle_tester
-    "src/modes/common.hpp"
-    "src/modes/common.cpp"
-    "src/modes/play.hpp"
-    "src/modes/play.cpp"
-    "src/modes/test.hpp"
-    "src/modes/test.cpp"
     "src/main.cpp"
     "src/muhle_tester.hpp"
     "src/muhle_tester.cpp"
-    "src/game.hpp"
-    "src/game.cpp"
 )
 
 target_link_libraries(muhle_tester PRIVATE
     gui_base
-    glm::glm
     just_dl
     muhle_intelligence_api
     muhle_intelligence_miscellaneous
+    common
 )
 
-target_include_directories(muhle_tester PRIVATE "src")
-
-target_compile_features(muhle_tester PRIVATE cxx_std_20)  # This is the only component which uses C++20 for now
+target_compile_features(muhle_tester PRIVATE cxx_std_17)
 set_target_properties(muhle_tester PROPERTIES CXX_EXTENSIONS OFF)
 
 enable_warnings(muhle_tester)
