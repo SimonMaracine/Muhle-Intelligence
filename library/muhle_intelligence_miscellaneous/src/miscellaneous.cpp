@@ -90,27 +90,27 @@ namespace muhle {
 
         switch (move.type) {
             case MoveType::Place:
-                result.append(node_index_to_name(move.place.node_index));
+                result.append(node_index_to_name(move.place.place_index));
 
                 break;
             case MoveType::Move:
-                result.append(node_index_to_name(move.move.node_source_index));
+                result.append(node_index_to_name(move.move.source_index));
                 result.push_back('-');
-                result.append(node_index_to_name(move.move.node_destination_index));
+                result.append(node_index_to_name(move.move.destination_index));
 
                 break;
             case MoveType::PlaceTake:
-                result.append(node_index_to_name(move.place_take.node_index));
+                result.append(node_index_to_name(move.place_take.place_index));
                 result.push_back('T');
-                result.append(node_index_to_name(move.place_take.node_take_index));
+                result.append(node_index_to_name(move.place_take.take_index));
 
                 break;
             case MoveType::MoveTake:
-                result.append(node_index_to_name(move.move_take.node_source_index));
+                result.append(node_index_to_name(move.move_take.source_index));
                 result.push_back('-');
-                result.append(node_index_to_name(move.move_take.node_destination_index));
+                result.append(node_index_to_name(move.move_take.destination_index));
                 result.push_back('T');
-                result.append(node_index_to_name(move.move_take.node_take_index));
+                result.append(node_index_to_name(move.move_take.take_index));
 
                 break;
         }

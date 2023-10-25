@@ -80,25 +80,25 @@ void MuhlePlayer::update() {
 
                 switch (muhle_result.result.type) {
                     case muhle::MoveType::Place:
-                        muhle_board.place_piece(muhle_result.result.place.node_index);
+                        muhle_board.place_piece(muhle_result.result.place.place_index);
                         break;
                     case muhle::MoveType::Move:
                         muhle_board.move_piece(
-                            muhle_result.result.move.node_source_index,
-                            muhle_result.result.move.node_destination_index
+                            muhle_result.result.move.source_index,
+                            muhle_result.result.move.destination_index
                         );
                         break;
                     case muhle::MoveType::PlaceTake:
                         muhle_board.place_take_piece(
-                            muhle_result.result.place_take.node_index,
-                            muhle_result.result.place_take.node_take_index
+                            muhle_result.result.place_take.place_index,
+                            muhle_result.result.place_take.take_index
                         );
                         break;
                     case muhle::MoveType::MoveTake:
                         muhle_board.move_take_piece(
-                            muhle_result.result.move_take.node_source_index,
-                            muhle_result.result.move_take.node_destination_index,
-                            muhle_result.result.move_take.node_take_index
+                            muhle_result.result.move_take.source_index,
+                            muhle_result.result.move_take.destination_index,
+                            muhle_result.result.move_take.take_index
                         );
                         break;
                 }

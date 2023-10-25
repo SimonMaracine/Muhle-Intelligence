@@ -42,7 +42,7 @@ namespace muhle {
     // the game and the previous positions
     // Technically, not all previous positions are needed for the AI to know
     struct SearchInput {
-        Position current_position;
+        Position position;
         unsigned int plies {};
         std::forward_list<Position> previous_positions;  // Push them in order from oldest to newest
     };
@@ -50,23 +50,23 @@ namespace muhle {
     struct Move {
         union {
             struct {
-                Idx node_index;
+                Idx place_index;
             } place;
 
             struct {
-                Idx node_source_index;
-                Idx node_destination_index;
+                Idx source_index;
+                Idx destination_index;
             } move;
 
             struct {
-                Idx node_index;
-                Idx node_take_index;
+                Idx place_index;
+                Idx take_index;
             } place_take;
 
             struct {
-                Idx node_source_index;
-                Idx node_destination_index;
-                Idx node_take_index;
+                Idx source_index;
+                Idx destination_index;
+                Idx take_index;
             } move_take;
         };
 

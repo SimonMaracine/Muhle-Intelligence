@@ -9,10 +9,8 @@
 namespace muhle {
     struct SearchCtx {
         Board board {};
-
         unsigned int white_pieces_on_board {};
         unsigned int black_pieces_on_board {};
-
         unsigned int plies {};
 
         struct {

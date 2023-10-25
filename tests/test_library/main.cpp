@@ -31,7 +31,7 @@ TEST(MovesTest, MakeMove) {
     {
         muhle::Move move;
         move.type = muhle::MoveType::Place;
-        move.place.node_index = 5;
+        move.place.place_index = 5;
 
         muhle::make_move(ctx, move, muhle::Piece::White);
     }
@@ -41,7 +41,7 @@ TEST(MovesTest, MakeMove) {
     {
         muhle::Move move;
         move.type = muhle::MoveType::Place;
-        move.place.node_index = 4;
+        move.place.place_index = 4;
 
         muhle::make_move(ctx, move, muhle::Piece::Black);
     }
@@ -56,8 +56,7 @@ TEST(MovesTest, ThreefoldRepetition) {
 
         auto bitboard = muhle::repetition::make_position_bitboard(board, player);
 
-        ASSERT_EQ(bitboard.part1, 9223372036854777344u);
-        ASSERT_EQ(bitboard.part2, 0);
+        ASSERT_EQ(bitboard.bitboard, 4398046512640u);
     }
 
     {
@@ -66,8 +65,7 @@ TEST(MovesTest, ThreefoldRepetition) {
 
         auto bitboard = muhle::repetition::make_position_bitboard(board, player);
 
-        ASSERT_EQ(bitboard.part1, 37);
-        ASSERT_EQ(bitboard.part2, 0);
+        ASSERT_EQ(bitboard.bitboard, 37u);
     }
 
     {
@@ -76,7 +74,15 @@ TEST(MovesTest, ThreefoldRepetition) {
 
         auto bitboard = muhle::repetition::make_position_bitboard(board, player);
 
-        ASSERT_EQ(bitboard.part1, 17);
-        ASSERT_EQ(bitboard.part2, 33);
+        ASSERT_EQ(bitboard.bitboard, 145135534866449u);
+    }
+
+    {
+        muhle::Board board = make_up_board({1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, -1, -1, 1, -1, 0, 1, 0, 0});
+        muhle::Player player = muhle::Player::White;
+
+        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+
+        ASSERT_EQ(bitboard.bitboard, 5059892549913u);
     }
 }

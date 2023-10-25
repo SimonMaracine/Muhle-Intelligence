@@ -44,7 +44,7 @@ namespace muhle {
         const auto start = std::chrono::high_resolution_clock::now();
 
         const Eval evaluation = minimax(
-            input.current_position.player,
+            input.position.player,
             static_cast<unsigned int>(parameters.DEPTH),
             0u,
             MIN_EVALUATION,
@@ -55,7 +55,7 @@ namespace muhle {
         const auto end = std::chrono::high_resolution_clock::now();
 
         result.result = best_move.move;
-        result.player = input.current_position.player;
+        result.player = input.position.player;
         result.time = std::chrono::duration<double>(end - start).count();
         result.evaluation = evaluation;
         result.positions_evaluated = positions_evaluated;
@@ -64,11 +64,11 @@ namespace muhle {
     }
 
     void Search::figure_out_position(const SearchInput& input) {
-        ctx.board = input.current_position.board;
+        ctx.board = input.position.board;
         ctx.plies = input.plies;
 
         for (IterIdx i = 0; i < NODES; i++) {
-            switch (input.current_position.board[i]) {
+            switch (input.position.board[i]) {
                 case Piece::White:
                     ctx.white_pieces_on_board++;
                     break;

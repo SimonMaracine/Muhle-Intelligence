@@ -27,11 +27,10 @@ namespace muhle {
         };
 
         struct Position {
-            std::uint64_t part1 = 0;
-            std::uint16_t part2 = 0;
+            std::uint64_t bitboard = 0;
 
             bool operator==(const Position& other) const {
-                return part1 == other.part1 && part2 == other.part2;
+                return bitboard == other.bitboard;
             }
         };
 

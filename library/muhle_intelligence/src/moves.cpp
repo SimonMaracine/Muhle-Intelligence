@@ -34,7 +34,7 @@ namespace muhle {
 
     static Move create_place(Idx node_index) {
         Move move;
-        move.place.node_index = node_index;
+        move.place.place_index = node_index;
         move.type = MoveType::Place;
 
         return move;
@@ -42,8 +42,8 @@ namespace muhle {
 
     static Move create_move(Idx node_source_index, Idx node_destination_index) {
         Move move;
-        move.move.node_source_index = node_source_index;
-        move.move.node_destination_index = node_destination_index;
+        move.move.source_index = node_source_index;
+        move.move.destination_index = node_destination_index;
         move.type = MoveType::Move;
 
         return move;
@@ -51,8 +51,8 @@ namespace muhle {
 
     static Move create_place_take(Idx node_index, Idx node_take_index) {
         Move move;
-        move.place_take.node_index = node_index;
-        move.place_take.node_take_index = node_take_index;
+        move.place_take.place_index = node_index;
+        move.place_take.take_index = node_take_index;
         move.type = MoveType::PlaceTake;
 
         return move;
@@ -60,9 +60,9 @@ namespace muhle {
 
     static Move create_move_take(Idx node_source_index, Idx node_destination_index, Idx node_take_index) {
         Move move;
-        move.move_take.node_source_index = node_source_index;
-        move.move_take.node_destination_index = node_destination_index;
-        move.move_take.node_take_index = node_take_index;
+        move.move_take.source_index = node_source_index;
+        move.move_take.destination_index = node_destination_index;
+        move.move_take.take_index = node_take_index;
         move.type = MoveType::MoveTake;
 
         return move;
@@ -180,7 +180,7 @@ namespace muhle {
     void make_move(SearchCtx& ctx, const Move& move, Piece piece) {
         switch (move.type) {
             case MoveType::Place:
-                ctx.board[move.place.node_index] = piece;
+                ctx.board[move.place.place_index] = piece;
 
                 switch (piece) {
                     case Piece::White:
@@ -195,13 +195,13 @@ namespace muhle {
 
                 break;
             case MoveType::Move:
-                ctx.board[move.move.node_source_index] = Piece::None;
-                ctx.board[move.move.node_destination_index] = piece;
+                ctx.board[move.move.source_index] = Piece::None;
+                ctx.board[move.move.destination_index] = piece;
 
                 break;
             case MoveType::PlaceTake:
-                ctx.board[move.place_take.node_index] = piece;
-                ctx.board[move.place_take.node_take_index] = Piece::None;
+                ctx.board[move.place_take.place_index] = piece;
+                ctx.board[move.place_take.take_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
@@ -216,9 +216,9 @@ namespace muhle {
 
                 break;
             case MoveType::MoveTake:
-                ctx.board[move.move_take.node_source_index] = Piece::None;
-                ctx.board[move.move_take.node_destination_index] = piece;
-                ctx.board[move.move_take.node_take_index] = Piece::None;
+                ctx.board[move.move_take.source_index] = Piece::None;
+                ctx.board[move.move_take.destination_index] = piece;
+                ctx.board[move.move_take.take_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
@@ -240,7 +240,7 @@ namespace muhle {
     void unmake_move(SearchCtx& ctx, const Move& move, Piece piece) {
         switch (move.type) {
             case MoveType::Place:
-                ctx.board[move.place.node_index] = Piece::None;
+                ctx.board[move.place.place_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
@@ -255,13 +255,13 @@ namespace muhle {
 
                 break;
             case MoveType::Move:
-                ctx.board[move.move.node_source_index] = piece;
-                ctx.board[move.move.node_destination_index] = Piece::None;
+                ctx.board[move.move.source_index] = piece;
+                ctx.board[move.move.destination_index] = Piece::None;
 
                 break;
             case MoveType::PlaceTake:
-                ctx.board[move.place_take.node_index] = Piece::None;
-                ctx.board[move.place_take.node_take_index] = opponent_piece(piece);
+                ctx.board[move.place_take.place_index] = Piece::None;
+                ctx.board[move.place_take.take_index] = opponent_piece(piece);
 
                 switch (piece) {
                     case Piece::White:
@@ -276,9 +276,9 @@ namespace muhle {
 
                 break;
             case MoveType::MoveTake:
-                ctx.board[move.move_take.node_source_index] = piece;
-                ctx.board[move.move_take.node_destination_index] = Piece::None;
-                ctx.board[move.move_take.node_take_index] = opponent_piece(piece);
+                ctx.board[move.move_take.source_index] = piece;
+                ctx.board[move.move_take.destination_index] = Piece::None;
+                ctx.board[move.move_take.take_index] = opponent_piece(piece);
 
                 switch (piece) {
                     case Piece::White:
@@ -352,38 +352,23 @@ namespace muhle {
         Position make_position_bitboard(const Board& board, Player turn) {
             Position position;
 
-            // Iterate 21 times for the first part
-            for (IterIdx i = 0; i < NODES - 3; i++) {
+            // First 42 bits are for the board
+            for (IterIdx i = 0; i < NODES; i++) {
                 switch (board[i]) {
                     case Piece::None:
                         // Nothing
                         break;
                     case Piece::White:
-                        position.part1 |= White << i * 2;
+                        position.bitboard |= White << i * 2;
                         break;
                     case Piece::Black:
-                        position.part1 |= Black << i * 2;
+                        position.bitboard |= Black << i * 2;
                         break;
                 }
             }
 
             // Last bit means the player
-            position.part1 |= static_cast<std::uint64_t>(turn) << 63;
-
-            // Iterate 3 times for the second part
-            for (IterIdx i = 0; i < 3; i++) {
-                switch (board[i + 21]) {
-                    case Piece::None:
-                        // Nothing
-                        break;
-                    case Piece::White:
-                        position.part2 |= White << i * 2;
-                        break;
-                    case Piece::Black:
-                        position.part2 |= Black << i * 2;
-                        break;
-                }
-            }
+            position.bitboard |= static_cast<std::uint64_t>(turn) << 42;
 
             return position;
         }

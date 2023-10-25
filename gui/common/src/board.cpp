@@ -272,8 +272,8 @@ void MuhleBoard::move_take_piece(Idx source_index, Idx destination_index, Idx ta
 
 muhle::SearchInput MuhleBoard::input_for_search() {
     muhle::SearchInput result;
-    result.current_position.board = to_muhle_board(board);
-    result.current_position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
+    result.position.board = to_muhle_board(board);
+    result.position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
     result.plies = plies;
 
     for (const ThreefoldRepetition::Position& previous_position : repetition.get_positions()) {
