@@ -272,16 +272,16 @@ void MuhleBoard::move_take_piece(Idx source_index, Idx destination_index, Idx ta
 
 muhle::SearchInput MuhleBoard::input_for_search() {
     muhle::SearchInput result;
-    result.position.board = to_muhle_board(board);
-    result.position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
-    result.plies = plies;
+    result.position.position.board = to_muhle_board(board);
+    result.position.position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
+    result.position.plies = plies;
 
     for (const ThreefoldRepetition::Position& previous_position : repetition.get_positions()) {
         muhle::Position position;
         position.board = to_muhle_board(previous_position.board);
         position.player = previous_position.turn == Player::White ? muhle::Player::White : muhle::Player::Black;
 
-        result.previous_positions.push_front(position);
+        // result.previous_positions.push_front(position);  // FIXME
     }
 
     return result;

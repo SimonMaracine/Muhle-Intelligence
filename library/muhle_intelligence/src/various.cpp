@@ -1,3 +1,4 @@
+#include <vector>
 #include <cassert>
 
 #include <muhle_intelligence/definitions.hpp>

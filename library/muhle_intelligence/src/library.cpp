@@ -23,12 +23,17 @@ namespace muhle {
                     break;
                 }
 
-                search_function();
+                const Move move = search_function();
+                game_positions.push_back({});  // FIXME play move and push position
 
                 // After the search, reset the function
                 search_function = {};
             }
         });
+    }
+
+    void MuhleImpl::new_game() {
+        game_positions.clear();
     }
 
     void MuhleImpl::search(const SearchInput& input, Result& result) {
@@ -40,7 +45,7 @@ namespace muhle {
         search_function = [this, input, &result]() {
             Search instance;
             instance.setup(parameters);
-            instance.search(input, result);
+            return instance.search(input, game_positions, result);
         };
 
         cv.notify_one();
@@ -50,7 +55,7 @@ namespace muhle {
         assert(running);
 
         // Set dummy work and set exit condition for stopping the thread
-        search_function = []() {};
+        search_function = []() -> Move { return {}; };
         running = false;
 
         cv.notify_one();

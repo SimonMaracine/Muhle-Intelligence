@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <muhle_intelligence/definitions.hpp>
 
 #include "muhle_intelligence/internal/search_context.hpp"

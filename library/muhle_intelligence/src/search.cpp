@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <string>
+#include <vector>
 #include <limits>
 #include <chrono>
 #include <cassert>
@@ -38,13 +39,13 @@ namespace muhle {
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
-    void Search::search(const SearchInput& input, Result& result) {
-        figure_out_position(input);
+    Move Search::search(const SearchInput& input, const std::vector<Position>& previous, Result& result) {
+        figure_out_position(input, previous);
 
         const auto start = std::chrono::high_resolution_clock::now();
 
         const Eval evaluation = minimax(
-            input.position.player,
+            input.position.position.player,
             static_cast<unsigned int>(parameters.DEPTH),
             0u,
             MIN_EVALUATION,
@@ -55,20 +56,22 @@ namespace muhle {
         const auto end = std::chrono::high_resolution_clock::now();
 
         result.result = best_move.move;
-        result.player = input.position.player;
+        result.player = input.position.position.player;
         result.time = std::chrono::duration<double>(end - start).count();
         result.evaluation = evaluation;
         result.positions_evaluated = positions_evaluated;
 
         result.done = true;
+
+        return result.result;
     }
 
-    void Search::figure_out_position(const SearchInput& input) {
-        ctx.board = input.position.board;
-        ctx.plies = input.plies;
+    void Search::figure_out_position(const SearchInput& input, const std::vector<Position>& previous) {
+        ctx.board = input.position.position.board;
+        ctx.plies = input.position.plies;
 
         for (IterIdx i = 0; i < NODES; i++) {
-            switch (input.position.board[i]) {
+            switch (input.position.position.board[i]) {
                 case Piece::White:
                     ctx.white_pieces_on_board++;
                     break;
@@ -80,8 +83,8 @@ namespace muhle {
             }
         }
 
-        if (!input.previous_positions.empty()) {
-            for (const Position& position : input.previous_positions) {
+        if (!previous.empty()) {
+            for (const Position& position : previous) {
                 repetition::Node node;
                 node.position = repetition::make_position_bitboard(position.board, position.player);
                 // Setup their pointers after
