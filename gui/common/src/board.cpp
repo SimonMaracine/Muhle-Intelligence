@@ -270,8 +270,8 @@ void MuhleBoard::move_take_piece(Idx source_index, Idx destination_index, Idx ta
     move_callback(move);
 }
 
-muhle::SearchInput MuhleBoard::input_for_search() {
-    muhle::SearchInput result;
+MuhleBoard::InputSearch MuhleBoard::input_for_search() {
+    InputSearch result;
     result.position.position.board = to_muhle_board(board);
     result.position.position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
     result.position.plies = plies;
@@ -817,10 +817,10 @@ Player MuhleBoard::opponent(Player player) {
     return {};
 }
 
-Piece MuhleBoard::opponent_piece(Piece type) {
-    assert(type != Piece::None);
+Piece MuhleBoard::opponent_piece(Piece piece) {
+    assert(piece != Piece::None);
 
-    switch (type) {
+    switch (piece) {
         case Piece::White:
             return Piece::Black;
         case Piece::Black:

@@ -12,8 +12,6 @@
 #include "muhle_intelligence/internal/various.hpp"
 
 namespace muhle {
-    static std::mt19937 random = std::mt19937(std::random_device()());
-
     static void make_place_move(SearchCtx& ctx, Piece piece, Idx node_index) {
         ctx.board[node_index] = piece;
     }
@@ -71,7 +69,7 @@ namespace muhle {
     static void get_moves_phase1(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
-        for (IterIdx i = 0; i < NODES; i++) {
+        for (IterIdx i {0}; i < NODES; i++) {
             if (ctx.board[i] != Piece::None) {
                 continue;
             }
@@ -79,10 +77,10 @@ namespace muhle {
             make_place_move(ctx, piece, i);
 
             if (is_mill(ctx, piece, i)) {
-                const Piece opponent = opponent_piece(piece);
-                const bool all_in_mills = all_pieces_in_mills(ctx, opponent);
+                const Piece opponent {opponent_piece(piece)};
+                const bool all_in_mills {all_pieces_in_mills(ctx, opponent)};
 
-                for (IterIdx j = 0; j < NODES; j++) {
+                for (IterIdx j {0}; j < NODES; j++) {
                     if (ctx.board[j] != opponent) {
                         continue;
                     }
@@ -104,21 +102,21 @@ namespace muhle {
     static void get_moves_phase2(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
-        for (IterIdx i = 0; i < NODES; i++) {
+        for (IterIdx i {0}; i < NODES; i++) {
             if (ctx.board[i] != piece) {
                 continue;
             }
 
-            const auto free_positions = neighbor_free_positions(ctx, i);
+            const auto free_positions {neighbor_free_positions(ctx, i)};
 
-            for (IterIdx j = 0; j < free_positions.size(); j++) {
+            for (IterIdx j {0}; j < free_positions.size(); j++) {
                 make_move_move(ctx, piece, i, free_positions[j]);
 
                 if (is_mill(ctx, piece, free_positions[j])) {
-                    const auto opponent = opponent_piece(piece);
-                    const bool all_in_mills = all_pieces_in_mills(ctx, opponent);
+                    const auto opponent {opponent_piece(piece)};
+                    const bool all_in_mills {all_pieces_in_mills(ctx, opponent)};
 
-                    for (IterIdx k = 0; k < NODES; k++) {
+                    for (IterIdx k {0}; k < NODES; k++) {
                         if (ctx.board[k] != opponent) {
                             continue;
                         }
@@ -141,12 +139,12 @@ namespace muhle {
     static void get_moves_phase3(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
-        for (IterIdx i = 0; i < NODES; i++) {
+        for (IterIdx i {0}; i < NODES; i++) {
             if (ctx.board[i] != piece) {
                 continue;
             }
 
-            for (IterIdx j = 0; j < NODES; j++) {
+            for (IterIdx j {0}; j < NODES; j++) {
                 if (ctx.board[j] != Piece::None) {
                     continue;
                 }
@@ -154,10 +152,10 @@ namespace muhle {
                 make_move_move(ctx, piece, i, j);
 
                 if (is_mill(ctx, piece, j)) {
-                    const auto opponent = opponent_piece(piece);
-                    const bool all_in_mills = all_pieces_in_mills(ctx, opponent);
+                    const auto opponent {opponent_piece(piece)};
+                    const bool all_in_mills {all_pieces_in_mills(ctx, opponent)};
 
-                    for (IterIdx k = 0; k < NODES; k++) {
+                    for (IterIdx k {0}; k < NODES; k++) {
                         if (ctx.board[k] != opponent) {
                             continue;
                         }
@@ -297,6 +295,34 @@ namespace muhle {
         ctx.plies--;
     }
 
+    void play_move(SmnPosition& position, const Move& move) {
+        static const Piece pieces[2] {Piece::White, Piece::Black};
+
+        const Piece piece {pieces[static_cast<int>(position.position.player)]};
+
+        switch (move.type) {
+            case MoveType::Place:
+                position.position.board[move.place.place_index] = piece;
+                break;
+            case MoveType::Move:
+                position.position.board[move.move.source_index] = Piece::None;
+                position.position.board[move.move.destination_index] = piece;
+                break;
+            case MoveType::PlaceTake:
+                position.position.board[move.place_take.place_index] = piece;
+                position.position.board[move.place_take.take_index] = Piece::None;
+                break;
+            case MoveType::MoveTake:
+                position.position.board[move.move_take.source_index] = Piece::None;
+                position.position.board[move.move_take.destination_index] = piece;
+                position.position.board[move.move_take.take_index] = Piece::None;
+                break;
+        }
+
+        position.position.player = opponent(position.position.player);
+        position.plies++;
+    }
+
     void generate_moves(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
         if (ctx.plies < 18) {
             get_moves_phase1(ctx, piece, moves);
@@ -310,6 +336,9 @@ namespace muhle {
     }
 
     Move random_move(SearchCtx& ctx, Piece piece) {
+        std::random_device device;
+        static std::mt19937 random {std::mt19937(device())};
+
         Array<Move, MAX_MOVES> moves;
         generate_moves(ctx, piece, moves);
 
@@ -319,20 +348,20 @@ namespace muhle {
 
         std::uniform_int_distribution<std::mt19937::result_type> distribution {0, moves.size() - 1};
 
-        const auto random_index = distribution(random);
+        const auto random_index {distribution(random)};
 
         return moves[random_index];
     }
 
     namespace repetition {
         bool check_current_node(const Board& board, Player turn, Node& current, const Node* previous) {
-            const Position current_position = make_position_bitboard(board, turn);
+            const Position current_position {make_position_bitboard(board, turn)};
 
             current.previous = previous;  // TODO cut previous nodes, if a take move occurs
             current.position = current_position;
 
-            const Node* node = previous;
-            unsigned int repetition = 1;
+            const Node* node {previous};
+            unsigned int repetition {1};
 
             while (node != nullptr) {
                 if (node->position == current_position) {
@@ -353,7 +382,7 @@ namespace muhle {
             Position position;
 
             // First 42 bits are for the board
-            for (IterIdx i = 0; i < NODES; i++) {
+            for (IterIdx i {0}; i < NODES; i++) {
                 switch (board[i]) {
                     case Piece::None:
                         // Nothing

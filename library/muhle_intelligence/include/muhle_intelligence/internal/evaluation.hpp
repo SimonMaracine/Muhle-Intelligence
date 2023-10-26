@@ -6,7 +6,7 @@
 
 namespace muhle {
     // At three pieces, a player will have this freedom value, it simplifies things a bit
-    inline constexpr Eval THREE_PIECES_FREEDOM = 36;
+    inline constexpr Eval THREE_PIECES_FREEDOM {36};
 
     Eval evaluate_position(SearchCtx& ctx, const Parameters& parameters, Eval evaluation_game_over,
         unsigned int plies_from_root, unsigned int& positions_evaluated);

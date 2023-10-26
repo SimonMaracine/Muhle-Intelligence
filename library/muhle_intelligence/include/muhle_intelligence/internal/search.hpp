@@ -19,9 +19,9 @@ namespace muhle {
     class Search {
     public:
         void setup(std::unordered_map<std::string, int>& parameters);
-        Move search(const SearchInput& input, const std::vector<Position>& previous, Result& result);
+        void search(const SmnPosition& position, const std::vector<Position>& previous_positions, Result& result);
     private:
-        void figure_out_position(const SearchInput& input, const std::vector<Position>& previous);
+        void setup_position(const SmnPosition& position, const std::vector<Position>& previous_positions);
 
         Eval minimax(Player player, unsigned int depth, unsigned int plies_from_root,
             Eval alpha, Eval beta, const repetition::Node* previous_node);
@@ -32,7 +32,7 @@ namespace muhle {
             Move move {};
             Piece piece {};
         } best_move;
-        unsigned int positions_evaluated = 0;
+        unsigned int positions_evaluated {0};
 
         Parameters parameters;
     };

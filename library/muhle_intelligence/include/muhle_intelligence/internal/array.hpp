@@ -54,7 +54,7 @@ namespace muhle {
             }
 
             const_iterator operator++(int) noexcept {
-                const_iterator temporary = *this;
+                const_iterator temporary {*this};
 
                 ++(*this);
 
@@ -89,6 +89,6 @@ namespace muhle {
         }
     private:
         T data[Size];
-        std::size_t data_size = 0;
+        std::size_t data_size {0};
     };
 }

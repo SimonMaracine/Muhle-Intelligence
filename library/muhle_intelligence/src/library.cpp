@@ -2,8 +2,12 @@
 #include <unordered_map>
 #include <string>
 #include <string_view>
-#include <cassert>
+#include <functional>
 #include <mutex>
+#include <condition_variable>
+#include <vector>
+#include <cassert>
+#include <random>
 
 #include "muhle_intelligence/muhle_intelligence.hpp"
 #include "muhle_intelligence/internal/library.hpp"
@@ -23,29 +27,39 @@ namespace muhle {
                     break;
                 }
 
-                const Move move = search_function();
-                game_positions.push_back({});  // FIXME play move and push position
+                search_function();
 
-                // After the search, reset the function
+                // After search reset the function as a signal
                 search_function = {};
             }
         });
     }
 
     void MuhleImpl::new_game() {
-        game_positions.clear();
+        game.position = {};
+        game.previous_positions.clear();
     }
 
-    void MuhleImpl::search(const SearchInput& input, Result& result) {
+    void MuhleImpl::position(const SmnPosition& position, const std::vector<Move>& moves) {
+        game.position = position;
+        game.previous_positions.push_back(game.position.position);
+
+        for (const Move& move : moves) {
+            play_move(game.position, move);
+            game.previous_positions.push_back(game.position.position);
+        }
+    }
+
+    void MuhleImpl::search(Result& result) {
         assert(running);
         assert(!search_function);
 
         result = {};
 
-        search_function = [this, input, &result]() {
+        search_function = [this, &result]() {
             Search instance;
             instance.setup(parameters);
-            return instance.search(input, game_positions, result);
+            instance.search(game.position, game.previous_positions, result);
         };
 
         cv.notify_one();
@@ -55,7 +69,7 @@ namespace muhle {
         assert(running);
 
         // Set dummy work and set exit condition for stopping the thread
-        search_function = []() -> Move { return {}; };
+        search_function = []() {};
         running = false;
 
         cv.notify_one();

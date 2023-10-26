@@ -67,8 +67,11 @@ void MuhlePlayer::update() {
 
             break;
         case State::ComputerBegin: {
-            const muhle::SearchInput input = muhle_board.input_for_search();
-            muhle->search(input, muhle_result);
+            const MuhleBoard::InputSearch input = muhle_board.input_for_search();
+
+            // FIXME set position
+
+            muhle->search(muhle_result);
 
             state = State::ComputerThinking;
 

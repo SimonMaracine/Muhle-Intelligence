@@ -9,11 +9,11 @@
 #include "muhle_intelligence/internal/evaluation.hpp"
 
 namespace muhle {
-    static constexpr Eval BLACK_ADVANTAGE = -1;
-    static constexpr Eval WHITE_ADVANTAGE = 1;
+    static constexpr Eval BLACK_ADVANTAGE {-1};
+    static constexpr Eval WHITE_ADVANTAGE {1};
 
     bool all_pieces_in_mills(SearchCtx& ctx, Piece piece) {
-        for (IterIdx i = 0; i < NODES; i++) {
+        for (IterIdx i {0}; i < NODES; i++) {
             if (ctx.board[i] != piece) {
                 continue;
             }
@@ -274,8 +274,8 @@ namespace muhle {
             return true;
         }
 
-        unsigned int white_free_positions = 0;
-        unsigned int black_free_positions = 0;
+        unsigned int white_free_positions {0};
+        unsigned int black_free_positions {0};
         get_players_freedom(ctx, white_free_positions, black_free_positions);
 
         if (white_free_positions == 0) {
@@ -306,10 +306,21 @@ namespace muhle {
         return 0;
     }
 
-    Piece opponent_piece(Piece type) {
-        assert(type != Piece::None);
+    Player opponent(Player player) {
+        switch (player) {
+            case Player::White:
+                return Player::Black;
+            case Player::Black:
+                return Player::White;
+        }
 
-        switch (type) {
+        return {};
+    }
+
+    Piece opponent_piece(Piece piece) {
+        assert(piece != Piece::None);
+
+        switch (piece) {
             case Piece::White:
                 return Piece::Black;
             case Piece::Black:

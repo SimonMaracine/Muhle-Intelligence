@@ -12,10 +12,11 @@ namespace muhle {
     struct SearchCtx;
 
     // Some thinking concludes that there cannot be more than 83 moves in a ply
-    inline constexpr std::size_t MAX_MOVES = 83;
+    inline constexpr std::size_t MAX_MOVES {83};
 
     void make_move(SearchCtx& ctx, const Move& move, Piece piece);
     void unmake_move(SearchCtx& ctx, const Move& move, Piece piece);
+    void play_move(SmnPosition& position, const Move& move);
     void generate_moves(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves);
     Move random_move(SearchCtx& ctx, Piece piece);
 
@@ -27,7 +28,7 @@ namespace muhle {
         };
 
         struct Position {
-            std::uint64_t bitboard = 0;
+            std::uint64_t bitboard {0};
 
             bool operator==(const Position& other) const {
                 return bitboard == other.bitboard;
@@ -36,7 +37,7 @@ namespace muhle {
 
         struct Node {
             Position position;
-            const Node* previous = nullptr;
+            const Node* previous {nullptr};
         };
 
         bool check_current_node(const Board& board, Player turn, Node& current, const Node* previous);

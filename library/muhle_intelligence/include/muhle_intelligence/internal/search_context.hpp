@@ -9,12 +9,12 @@
 namespace muhle {
     struct SearchCtx {
         Board board {};
+        unsigned int plies {};
         unsigned int white_pieces_on_board {};
         unsigned int black_pieces_on_board {};
-        unsigned int plies {};
 
         struct {
-            const repetition::Node* previous = nullptr;
+            const repetition::Node* previous {nullptr};
             std::vector<repetition::Node> nodes;
         } previous;
     };

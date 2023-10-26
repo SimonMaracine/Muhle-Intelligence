@@ -13,5 +13,6 @@ namespace muhle {
     bool is_mill(SearchCtx& ctx, Piece piece, Idx index);
     bool is_game_over(SearchCtx& ctx, Eval& evaluation_game_over);
     unsigned int pieces_on_board(SearchCtx& ctx, Piece piece);
-    Piece opponent_piece(Piece type);
+    Player opponent(Player player);
+    Piece opponent_piece(Piece piece);
 }

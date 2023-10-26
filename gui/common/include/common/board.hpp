@@ -30,7 +30,12 @@ public:
     void move_piece(Idx source_index, Idx destination_index);
     void move_take_piece(Idx source_index, Idx destination_index, Idx take_index);
 
-    muhle::SearchInput input_for_search();
+    struct InputSearch {
+        muhle::SmnPosition position {};
+        std::vector<muhle::Move> moves;
+    };
+
+    InputSearch input_for_search();
 
     Player get_turn() const { return turn; }
     bool is_game_over() const { return game_over != GameOver::None; }
@@ -65,7 +70,7 @@ private:
     void get_moves_phase3(Piece piece, std::vector<Move>& moves);
     unsigned int pieces_on_board(Piece piece);
     Player opponent(Player player);
-    Piece opponent_piece(Piece type);
+    Piece opponent_piece(Piece piece);
     void make_place_move(Piece piece, Idx place_index);
     void unmake_place_move(Idx place_index);
     void make_move_move(Piece piece, Idx source_index, Idx destination_index);

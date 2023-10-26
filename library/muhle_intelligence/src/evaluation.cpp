@@ -10,7 +10,7 @@ namespace muhle {
             unsigned int plies_from_root, unsigned int& positions_evaluated) {
         positions_evaluated++;
 
-        Eval evaluation = 0;
+        Eval evaluation {0};
 
         if (evaluation_game_over != 0) {
             // Teach what is end game
@@ -22,12 +22,12 @@ namespace muhle {
             return evaluation;
         }
 
-        const Eval evaluation_material = calculate_material_both(ctx);
+        const Eval evaluation_material {calculate_material_both(ctx)};
 
         // Calculate number of pieces
         evaluation += evaluation_material * static_cast<Eval>(parameters.PIECE);
 
-        const Eval evaluation_freedom = calculate_freedom_both(ctx);
+        const Eval evaluation_freedom {calculate_freedom_both(ctx)};
 
         // Calculate pieces' freedom
         evaluation += evaluation_freedom * static_cast<Eval>(parameters.FREEDOM);
@@ -36,9 +36,9 @@ namespace muhle {
     }
 
     Eval calculate_material_both(SearchCtx& ctx) {
-        Eval evaluation_material = 0;
+        Eval evaluation_material {0};
 
-        for (IterIdx i = 0; i < NODES; i++) {
+        for (IterIdx i {0}; i < NODES; i++) {
             evaluation_material += static_cast<Eval>(ctx.board[i]);
         }
 
@@ -46,18 +46,18 @@ namespace muhle {
     }
 
     Eval calculate_freedom_both(SearchCtx& ctx) {
-        Eval evaluation_freedom = 0;
+        Eval evaluation_freedom {0};
 
-        const bool phase_two = ctx.plies >= 18;
-        const bool three_piece_white = ctx.white_pieces_on_board == 3;
-        const bool three_piece_black = ctx.black_pieces_on_board == 3;
+        const bool phase_two {ctx.plies >= 18};
+        const bool three_piece_white {ctx.white_pieces_on_board == 3};
+        const bool three_piece_black {ctx.black_pieces_on_board == 3};
 
         if (three_piece_white && three_piece_black && phase_two) {  // Both have three pieces
             evaluation_freedom = 0;
         } else if (three_piece_white && phase_two) {  // Only white has three pieces
             evaluation_freedom += THREE_PIECES_FREEDOM;
 
-            for (IterIdx i = 0; i < NODES; i++) {
+            for (IterIdx i {0}; i < NODES; i++) {
                 if (ctx.board[i] != Piece::Black) {
                     continue;
                 }
@@ -69,7 +69,7 @@ namespace muhle {
         } else if (three_piece_black && phase_two) {  // Only black has three pieces
             evaluation_freedom -= THREE_PIECES_FREEDOM;
 
-            for (IterIdx i = 0; i < NODES; i++) {
+            for (IterIdx i {0}; i < NODES; i++) {
                 if (ctx.board[i] != Piece::White) {
                     continue;
                 }
@@ -79,7 +79,7 @@ namespace muhle {
                 );
             }
         } else {  // No one has three pieces
-            for (IterIdx i = 0; i < NODES; i++) {
+            for (IterIdx i {0}; i < NODES; i++) {
                 if (ctx.board[i] == Piece::None) {
                     continue;
                 }
@@ -96,9 +96,9 @@ namespace muhle {
     unsigned int get_material(SearchCtx& ctx, Piece piece) {
         assert(piece != Piece::None);
 
-        unsigned int piece_count = 0;
+        unsigned int piece_count {0};
 
-        for (IterIdx i = 0; i < NODES; i++) {
+        for (IterIdx i {0}; i < NODES; i++) {
             piece_count += ctx.board[i] == piece;
         }
 
@@ -106,12 +106,12 @@ namespace muhle {
     }
 
     void get_players_freedom(SearchCtx& ctx, unsigned int& white, unsigned int& black) {
-        unsigned int white_free_positions = 0;
-        unsigned int black_free_positions = 0;
+        unsigned int white_free_positions {0};
+        unsigned int black_free_positions {0};
 
-        const bool phase_two = ctx.plies >= 18;
-        const bool three_piece_white = ctx.white_pieces_on_board == 3;
-        const bool three_piece_black = ctx.black_pieces_on_board == 3;
+        const bool phase_two {ctx.plies >= 18};
+        const bool three_piece_white {ctx.white_pieces_on_board == 3};
+        const bool three_piece_black {ctx.black_pieces_on_board == 3};
 
         if (three_piece_white && three_piece_black && phase_two) {  // Both have three pieces
             white_free_positions = THREE_PIECES_FREEDOM;
@@ -119,7 +119,7 @@ namespace muhle {
         } else if (three_piece_white && phase_two) {  // White has three pieces
             white_free_positions = THREE_PIECES_FREEDOM;
 
-            for (IterIdx i = 0; i < NODES; i++) {
+            for (IterIdx i {0}; i < NODES; i++) {
                 if (ctx.board[i] != Piece::Black) {
                     continue;
                 }
@@ -129,7 +129,7 @@ namespace muhle {
         } else if (three_piece_black && phase_two) {  // Black has three pieces
             black_free_positions = THREE_PIECES_FREEDOM;
 
-            for (IterIdx i = 0; i < NODES; i++) {
+            for (IterIdx i {0}; i < NODES; i++) {
                 if (ctx.board[i] != Piece::White) {
                     continue;
                 }
@@ -137,7 +137,7 @@ namespace muhle {
                 white_free_positions += get_piece_freedom(ctx, i);
             }
         } else {  // No one has three pieces
-            for (IterIdx i = 0; i < NODES; i++) {
+            for (IterIdx i {0}; i < NODES; i++) {
                 switch (ctx.board[i]) {
                     case Piece::White:
                         white_free_positions += get_piece_freedom(ctx, i);
@@ -158,7 +158,7 @@ namespace muhle {
     unsigned int get_piece_freedom(SearchCtx& ctx, Idx index) {
         assert(ctx.board[index] != Piece::None);
 
-        unsigned int freedom = 0;
+        unsigned int freedom {0};
 
         switch (index) {
             case 0:

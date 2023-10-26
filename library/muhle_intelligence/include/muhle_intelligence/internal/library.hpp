@@ -7,6 +7,7 @@
 #include <functional>
 #include <mutex>
 #include <condition_variable>
+#include <vector>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -18,22 +19,25 @@ namespace muhle {
     public:
         virtual void initialize() override;
         virtual void new_game() override;
-        virtual void search(const SearchInput& input, Result& result) override;
+        virtual void position(const SmnPosition& position, const std::vector<Move>& moves) override;
+        virtual void search(Result& result) override;
         virtual void join_thread() override;
         virtual void set_parameter(std::string_view parameter, int value) override;
     private:
         void wait_for_work();
 
         std::thread thread;
-        std::function<Move()> search_function;
-        bool running = false;
+        std::function<void()> search_function;
+        bool running {false};
 
         std::condition_variable cv;
         std::mutex mutex;
 
         std::unordered_map<std::string, int> parameters;
 
-        // Storage for threefold repetition rule
-        std::vector<Position> game_positions;
+        struct {
+            SmnPosition position;
+            std::vector<Position> previous_positions;
+        } game;
     };
 }
