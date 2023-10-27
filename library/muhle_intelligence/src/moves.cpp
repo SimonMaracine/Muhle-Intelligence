@@ -381,7 +381,7 @@ namespace muhle {
         Position make_position_bitboard(const Board& board, Player turn) {
             Position position;
 
-            // First 42 bits are for the board
+            // First 48 bits (24 * 2) are for the board
             for (IterIdx i {0}; i < NODES; i++) {
                 switch (board[i]) {
                     case Piece::None:
@@ -397,7 +397,7 @@ namespace muhle {
             }
 
             // Last bit means the player
-            position.bitboard |= static_cast<std::uint64_t>(turn) << 42;
+            position.bitboard |= static_cast<std::uint64_t>(turn) << 48;
 
             return position;
         }

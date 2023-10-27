@@ -56,7 +56,7 @@ TEST(MovesTest, ThreefoldRepetition) {
 
         auto bitboard = muhle::repetition::make_position_bitboard(board, player);
 
-        ASSERT_EQ(bitboard.bitboard, 4398046512640u);
+        ASSERT_EQ(bitboard.bitboard, 281474976712192u);
     }
 
     {
@@ -78,11 +78,11 @@ TEST(MovesTest, ThreefoldRepetition) {
     }
 
     {
-        muhle::Board board = make_up_board({1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, -1, -1, 1, -1, 0, 1, 0, 0});
+        muhle::Board board = make_up_board({1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, -1, -1, 1, 1, 0, -1, 0, 0});
         muhle::Player player = muhle::Player::White;
 
         auto bitboard = muhle::repetition::make_position_bitboard(board, player);
 
-        ASSERT_EQ(bitboard.bitboard, 5059892549913u);
+        ASSERT_EQ(bitboard.bitboard, 9183061154073u);
     }
 }
