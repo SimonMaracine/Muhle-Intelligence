@@ -19,6 +19,11 @@
 #include "common/game.hpp"
 #include "common/board.hpp"
 
+/*
+    FIXME
+    computer didn't make move move
+*/
+
 static const int NODE_POSITIONS[24][2] = {
     { 2, 2 },
     { 5, 2 },
@@ -58,26 +63,6 @@ static muhle::Board to_muhle_board(const std::array<Node, 24>& board) {
                 result[i] = muhle::Piece::White;
                 break;
             case Piece::Black:
-                result[i] = muhle::Piece::Black;
-                break;
-        }
-    }
-
-    return result;
-}
-
-static muhle::Board to_muhle_board(const std::array<ThreefoldRepetition::Node, 24>& board) {
-    muhle::Board result;
-
-    for (std::size_t i = 0; i < board.size(); i++) {
-        switch (board[i]) {
-            case ThreefoldRepetition::Node::Empty:
-                result[i] = muhle::Piece::None;
-                break;
-            case ThreefoldRepetition::Node::White:
-                result[i] = muhle::Piece::White;
-                break;
-            case ThreefoldRepetition::Node::Black:
                 result[i] = muhle::Piece::Black;
                 break;
         }
@@ -276,13 +261,7 @@ MuhleBoard::InputSearch MuhleBoard::input_for_search() {
     result.position.position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
     result.position.plies = plies;
 
-    for (const ThreefoldRepetition::Position& previous_position : repetition.get_positions()) {
-        muhle::Position position;
-        position.board = to_muhle_board(previous_position.board);
-        position.player = previous_position.turn == Player::White ? muhle::Player::White : muhle::Player::Black;
-
-        // result.previous_positions.push_front(position);  // FIXME
-    }
+    // FIXME moves
 
     return result;
 }
