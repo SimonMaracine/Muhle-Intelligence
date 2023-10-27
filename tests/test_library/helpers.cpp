@@ -12,7 +12,7 @@ unsigned int get_total_move_count(muhle::SearchCtx& ctx, muhle::Player player, u
         return 1;
     }
 
-    unsigned int move_count = 0;
+    unsigned int move_count {0};
 
     if (player == muhle::Player::White) {
         muhle::Array<muhle::Move, muhle::MAX_MOVES> moves;
@@ -40,7 +40,7 @@ unsigned int get_total_move_count(muhle::SearchCtx& ctx, muhle::Player player, u
 std::array<muhle::Piece, muhle::NODES> make_up_board(const std::array<int, muhle::NODES>& numbers) {
     std::array<muhle::Piece, muhle::NODES> result;
 
-    for (muhle::IterIdx i = 0; i < muhle::NODES; i++) {
+    for (muhle::IterIdx i {0}; i < muhle::NODES; i++) {
         switch (numbers[i]) {
             case -1:
                 result[i] = muhle::Piece::Black;

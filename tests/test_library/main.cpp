@@ -51,37 +51,37 @@ TEST(MovesTest, MakeMove) {
 
 TEST(MovesTest, ThreefoldRepetition) {
     {
-        muhle::Board board = make_up_board({0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        muhle::Player player = muhle::Player::Black;
+        muhle::Board board {make_up_board({0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})};
+        muhle::Player player {muhle::Player::Black};
 
-        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+        auto bitboard {muhle::repetition::make_position_bitboard(board, player)};
 
         ASSERT_EQ(bitboard.bitboard, 281474976712192u);
     }
 
     {
-        muhle::Board board = make_up_board({1, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        muhle::Player player = muhle::Player::White;
+        muhle::Board board {make_up_board({1, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})};
+        muhle::Player player {muhle::Player::White};
 
-        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+        auto bitboard {muhle::repetition::make_position_bitboard(board, player)};
 
         ASSERT_EQ(bitboard.bitboard, 37u);
     }
 
     {
-        muhle::Board board = make_up_board({1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1});
-        muhle::Player player = muhle::Player::White;
+        muhle::Board board {make_up_board({1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1})};
+        muhle::Player player {muhle::Player::White};
 
-        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+        auto bitboard {muhle::repetition::make_position_bitboard(board, player)};
 
         ASSERT_EQ(bitboard.bitboard, 145135534866449u);
     }
 
     {
-        muhle::Board board = make_up_board({1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, -1, -1, 1, 1, 0, -1, 0, 0});
-        muhle::Player player = muhle::Player::White;
+        muhle::Board board {make_up_board({1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, 1, -1, 1, 0, -1, -1, 1, 1, 0, -1, 0, 0})};
+        muhle::Player player {muhle::Player::White};
 
-        auto bitboard = muhle::repetition::make_position_bitboard(board, player);
+        auto bitboard {muhle::repetition::make_position_bitboard(board, player)};
 
         ASSERT_EQ(bitboard.bitboard, 9183061154073u);
     }
