@@ -19,6 +19,7 @@ namespace muhle {
     void play_move(SmnPosition& position, const Move& move);
     void generate_moves(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves);
     Move random_move(SearchCtx& ctx, Piece piece);
+    bool is_take_move(const Move& move);
 
     namespace repetition {
         enum : std::uint64_t {
@@ -40,6 +41,7 @@ namespace muhle {
             const Node* previous {nullptr};
         };
 
+        // Pointer previous can be null
         bool check_current_node(const Board& board, Player turn, Node& current, const Node* previous);
         Position make_position_bitboard(const Board& board, Player turn);
     }

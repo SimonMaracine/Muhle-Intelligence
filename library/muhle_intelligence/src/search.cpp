@@ -39,7 +39,7 @@ namespace muhle {
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
-    void Search::search(const SmnPosition& position, const std::vector<Position>& previous_positions, Result& result) {
+    Move Search::search(const SmnPosition& position, const std::vector<Position>& previous_positions, Result& result) {
         setup_position(position, previous_positions);
 
         const auto start {std::chrono::high_resolution_clock::now()};
@@ -62,6 +62,8 @@ namespace muhle {
         result.positions_evaluated = positions_evaluated;
 
         result.done = true;
+
+        return best_move.move;
     }
 
     void Search::setup_position(const SmnPosition& position, const std::vector<Position>& previous_positions) {
@@ -90,7 +92,7 @@ namespace muhle {
             }
 
             // Setup pointers now
-            for (std::size_t i {0}; i < ctx.previous.nodes.size() - 1; i++) {
+            for (std::size_t i {0}; i < ctx.previous.nodes.size() - 1; i++) {  // TODO cut nodes, when take move occurs
                 ctx.previous.nodes[i].previous = &ctx.previous.nodes[i + 1];
             }
 
@@ -121,8 +123,10 @@ namespace muhle {
             assert(moves.size() > 0);
 
             for (const Move& move : moves) {
+                const repetition::Node* node {is_take_move(move) ? nullptr : &current_node};
+
                 make_move(ctx, move, Piece::White);
-                const Eval evaluation {minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, &current_node)};
+                const Eval evaluation {minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, node)};
                 unmake_move(ctx, move, Piece::White);
 
                 if (evaluation > max_evaluation) {
@@ -145,8 +149,10 @@ namespace muhle {
             assert(moves.size() > 0);
 
             for (const Move& move : moves) {
+                const repetition::Node* node {is_take_move(move) ? nullptr : &current_node};
+
                 make_move(ctx, move, Piece::Black);
-                const Eval evaluation {minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, &current_node)};
+                const Eval evaluation {minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, node)};
                 unmake_move(ctx, move, Piece::Black);
 
                 if (evaluation < min_evaluation) {

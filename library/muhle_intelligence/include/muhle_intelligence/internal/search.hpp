@@ -19,10 +19,11 @@ namespace muhle {
     class Search {
     public:
         void setup(std::unordered_map<std::string, int>& parameters);
-        void search(const SmnPosition& position, const std::vector<Position>& previous_positions, Result& result);
+        Move search(const SmnPosition& position, const std::vector<Position>& previous_positions, Result& result);
     private:
         void setup_position(const SmnPosition& position, const std::vector<Position>& previous_positions);
 
+        // Pass null to previous_node, if there should be no history
         Eval minimax(Player player, unsigned int depth, unsigned int plies_from_root,
             Eval alpha, Eval beta, const repetition::Node* previous_node);
 

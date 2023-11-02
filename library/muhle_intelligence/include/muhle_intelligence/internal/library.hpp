@@ -27,7 +27,7 @@ namespace muhle {
         void wait_for_work();
 
         std::thread thread;
-        std::function<void()> search_function;
+        std::function<Move()> search_function;
         bool running {false};
 
         std::condition_variable cv;

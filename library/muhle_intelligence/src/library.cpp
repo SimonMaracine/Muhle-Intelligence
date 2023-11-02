@@ -27,7 +27,11 @@ namespace muhle {
                     break;
                 }
 
-                search_function();
+                const Move best_move {search_function()};
+
+                // Now save this position
+                play_move(game.position, best_move);
+                game.previous_positions.push_back(game.position.position);
 
                 // After search reset the function as a signal
                 search_function = {};
@@ -41,6 +45,7 @@ namespace muhle {
     }
 
     void MuhleImpl::position(const SmnPosition& position, const std::vector<Move>& moves) {
+        // Set the position with the opponent move played
         game.position = position;
         game.previous_positions.push_back(game.position.position);
 
@@ -59,7 +64,7 @@ namespace muhle {
         search_function = [this, &result]() {
             Search instance;
             instance.setup(parameters);
-            instance.search(game.position, game.previous_positions, result);
+            return instance.search(game.position, game.previous_positions, result);
         };
 
         cv.notify_one();
@@ -69,7 +74,7 @@ namespace muhle {
         assert(running);
 
         // Set dummy work and set exit condition for stopping the thread
-        search_function = []() {};
+        search_function = []() -> Move {};
         running = false;
 
         cv.notify_one();

@@ -353,11 +353,15 @@ namespace muhle {
         return moves[random_index];
     }
 
+    bool is_take_move(const Move& move) {
+        return static_cast<signed char>(move.type) > 1;
+    }
+
     namespace repetition {
         bool check_current_node(const Board& board, Player turn, Node& current, const Node* previous) {
             const Position current_position {make_position_bitboard(board, turn)};
 
-            current.previous = previous;  // TODO cut previous nodes, if a take move occurs
+            current.previous = previous;
             current.position = current_position;
 
             const Node* node {previous};

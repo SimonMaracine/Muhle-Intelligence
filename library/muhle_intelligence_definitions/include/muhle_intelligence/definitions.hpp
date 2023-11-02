@@ -23,10 +23,10 @@ namespace muhle {
     };
 
     enum class MoveType : signed char {
-        Place,
-        Move,
-        PlaceTake,
-        MoveTake
+        Place = 0,
+        Move = 1,
+        PlaceTake = 2,
+        MoveTake = 3
     };
 
     using Board = std::array<Piece, NODES>;

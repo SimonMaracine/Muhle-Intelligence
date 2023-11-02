@@ -259,7 +259,10 @@ void MuhlePlayer::import_position() {
 void MuhlePlayer::reset() {
     muhle_board.reset();
     state = State::NextTurn;
-    muhle->new_game();
+
+    if (muhle != nullptr) {
+        muhle->new_game();
+    }
 }
 
 void MuhlePlayer::about() {
