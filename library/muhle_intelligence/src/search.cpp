@@ -39,8 +39,8 @@ namespace muhle {
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
-    Move Search::search(const SmnPosition& position, const std::vector<Position>& previous_positions, Result& result) {
-        setup_position(position, previous_positions);
+    Move Search::search(const SmnPosition& position, Iter prev_positions_begin, Iter prev_positions_end, Result& result) {
+        setup_position(position, prev_positions_begin, prev_positions_end);
 
         const auto start {std::chrono::high_resolution_clock::now()};
 
@@ -66,7 +66,7 @@ namespace muhle {
         return best_move.move;
     }
 
-    void Search::setup_position(const SmnPosition& position, const std::vector<Position>& previous_positions) {
+    void Search::setup_position(const SmnPosition& position, Iter prev_positions_begin, Iter prev_positions_end) {
         ctx.board = position.position.board;
         ctx.plies = position.plies;
 
@@ -83,20 +83,25 @@ namespace muhle {
             }
         }
 
-        if (!previous_positions.empty()) {
-            for (const Position& position : previous_positions) {
+        if (prev_positions_begin != prev_positions_end) {
+            // Create the nodes first
+            for (auto iter = prev_positions_begin; iter != prev_positions_end; iter++) {
+                const Position& position {*iter};
+
                 repetition::Node node;
                 node.position = repetition::make_position_bitboard(position.board, position.player);
 
                 ctx.previous.nodes.push_back(node);
             }
 
-            // Setup pointers now
-            for (std::size_t i {0}; i < ctx.previous.nodes.size() - 1; i++) {  // TODO cut nodes, when take move occurs
-                ctx.previous.nodes[i].previous = &ctx.previous.nodes[i + 1];
+            // Setup pointers only now
+            const std::size_t newest_index {ctx.previous.nodes.size() - 1};
+
+            for (std::size_t i {newest_index}; i > 0; i--) {  // TODO cut nodes, when take move occurs
+                ctx.previous.nodes[i].previous = &ctx.previous.nodes[i - 1];
             }
 
-            ctx.previous.previous = &ctx.previous.nodes[0];
+            ctx.previous.previous = &ctx.previous.nodes[newest_index];
         }
 
         // Pointer ctx.previous.previous remains null otherwise

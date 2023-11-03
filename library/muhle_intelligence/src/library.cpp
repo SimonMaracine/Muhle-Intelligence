@@ -8,6 +8,7 @@
 #include <vector>
 #include <cassert>
 #include <random>
+#include <iterator>
 
 #include "muhle_intelligence/muhle_intelligence.hpp"
 #include "muhle_intelligence/internal/library.hpp"
@@ -45,7 +46,7 @@ namespace muhle {
     }
 
     void MuhleImpl::position(const SmnPosition& position, const std::vector<Move>& moves) {
-        // Set the position with the opponent move played
+        // Set the position with the opponent move played; save the current position too
         game.position = position;
         game.previous_positions.push_back(game.position.position);
 
@@ -64,7 +65,15 @@ namespace muhle {
         search_function = [this, &result]() {
             Search instance;
             instance.setup(parameters);
-            return instance.search(game.position, game.previous_positions, result);
+
+            assert(!game.previous_positions.empty());
+
+            return instance.search(
+                game.position,
+                game.previous_positions.cbegin(),
+                std::prev(game.previous_positions.cend()),  // Don't pass the last position (current)
+                result
+            );
         };
 
         cv.notify_one();
@@ -74,7 +83,7 @@ namespace muhle {
         assert(running);
 
         // Set dummy work and set exit condition for stopping the thread
-        search_function = []() -> Move {};
+        search_function = []() -> Move { return {}; };
         running = false;
 
         cv.notify_one();

@@ -14,9 +14,7 @@ target_link_libraries(muhle_tester PRIVATE
     common
 )
 
-target_compile_features(muhle_tester PRIVATE cxx_std_17)
-set_target_properties(muhle_tester PROPERTIES CXX_EXTENSIONS OFF)
-
+set_cpp_standard(muhle_tester)
 enable_warnings(muhle_tester)
 
 if(UNIX)

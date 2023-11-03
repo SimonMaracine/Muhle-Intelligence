@@ -32,13 +32,11 @@ if(MUHLE_SHARED_LIBRARY)
     target_include_directories(muhle_intelligence_api INTERFACE "include")
 endif()
 
-target_compile_features(muhle_intelligence PRIVATE cxx_std_17)
-set_target_properties(muhle_intelligence PROPERTIES CXX_EXTENSIONS OFF)
-
 if(UNIX)
     target_compile_options(muhle_intelligence PRIVATE "-Wno-parentheses")
 endif()
 
+set_cpp_standard(muhle_intelligence)
 enable_warnings(muhle_intelligence)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")

@@ -18,6 +18,11 @@ function(enable_warnings target)
     endif()
 endfunction()
 
+function(set_cpp_standard target)
+    target_compile_features(${target} PRIVATE cxx_std_20)
+    set_target_properties(${target} PROPERTIES CXX_EXTENSIONS OFF)
+endfunction()
+
 add_subdirectory(library)
 
 if(MUHLE_BUILD_GUI)

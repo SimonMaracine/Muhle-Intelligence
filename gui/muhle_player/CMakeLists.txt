@@ -14,9 +14,7 @@ target_link_libraries(muhle_player PRIVATE
     common
 )
 
-target_compile_features(muhle_player PRIVATE cxx_std_17)
-set_target_properties(muhle_player PROPERTIES CXX_EXTENSIONS OFF)
-
+set_cpp_standard(muhle_player)
 enable_warnings(muhle_player)
 
 if(UNIX)

@@ -15,9 +15,7 @@ target_link_libraries(common PRIVATE
 
 target_include_directories(common PUBLIC "include")
 
-target_compile_features(common PRIVATE cxx_std_20)
-set_target_properties(common PROPERTIES CXX_EXTENSIONS OFF)
-
+set_cpp_standard(common)
 enable_warnings(common)
 
 if(UNIX)

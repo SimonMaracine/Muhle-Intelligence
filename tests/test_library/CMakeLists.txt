@@ -8,5 +8,5 @@ add_executable(test_library
 
 target_link_libraries(test_library PRIVATE muhle_intelligence GTest::gtest_main)
 
-target_compile_features(test_library PRIVATE cxx_std_17)
-set_target_properties(test_library PROPERTIES CXX_EXTENSIONS OFF)
+set_cpp_standard(test_library)
+enable_warnings(test_library)
