@@ -4,7 +4,7 @@
 
 namespace muhle {
     using Idx = signed char;
-    using IterIdx = unsigned int;
+    using IterIdx = signed char;
 
     inline constexpr IterIdx NODES {24};
     inline constexpr Idx INVALID_INDEX {-1};

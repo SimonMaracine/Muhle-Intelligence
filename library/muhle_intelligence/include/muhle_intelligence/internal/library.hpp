@@ -3,11 +3,11 @@
 #include <thread>
 #include <unordered_map>
 #include <string>
-#include <string_view>
 #include <functional>
 #include <mutex>
 #include <condition_variable>
 #include <vector>
+#include <optional>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -18,16 +18,19 @@ namespace muhle {
     class MuhleImpl : public MuhleIntelligence {
     public:
         virtual void initialize() override;
-        virtual void new_game() override;
-        virtual void position(const SmnPosition& position, const std::vector<Move>& moves) override;
-        virtual void search(Result& result) override;
+        virtual void new_game(const SmnPosition& position = {}, const std::vector<Move>& moves = {}) override;
+        virtual void go(Result& result, bool play_move = true) override;
+        virtual void move(const Move& move) override;
         virtual void join_thread() override;
-        virtual void set_parameter(std::string_view parameter, int value) override;
+        virtual void set_parameter(const std::string& parameter, int value) override;
     private:
         void wait_for_work();
+        void reset_game();
+        void set_position(const SmnPosition& position, const std::vector<Move>& moves);
+        void play_move_and_save_position(const Move& move);
 
         std::thread thread;
-        std::function<Move()> search_function;
+        std::function<std::optional<Move>()> search_function;
         bool running {false};
 
         std::condition_variable cv;
@@ -37,7 +40,8 @@ namespace muhle {
 
         struct {
             SmnPosition position;
-            std::vector<Position> previous_positions;
+            std::vector<Position> previous_positions;  // Always contains the current position too
+            std::vector<Move> moves_played;
         } game;
     };
 }

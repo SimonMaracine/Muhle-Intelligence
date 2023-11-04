@@ -30,6 +30,7 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     void notation();
     void board();
     void controls();
+    muhle::Move move_to_muhle_move(const Move& move);
 
     MuhleBoard muhle_board;
 

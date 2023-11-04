@@ -18,7 +18,9 @@ void MuhlePlayer::start() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigWindowsMoveFromTitleBarOnly = true;
 
-    muhle_board.set_move_callback([this](const Move&) {
+    muhle_board.set_move_callback([this](const Move& move) {
+        muhle->move(move_to_muhle_move(move));
+
         state = State::NextTurn;
         muhle_board.user_input = false;
     });
@@ -67,10 +69,7 @@ void MuhlePlayer::update() {
 
             break;
         case State::ComputerBegin: {
-            const MuhleBoard::InputSearch input = muhle_board.input_for_search();
-
-            muhle->position(input.position, input.moves);
-            muhle->search(muhle_result);
+            muhle->go(muhle_result);
 
             state = State::ComputerThinking;
 
@@ -155,6 +154,7 @@ void MuhlePlayer::load_library(const std::string& file_path) {
 
     muhle = muhle_intelligence_create();
     muhle->initialize();
+    muhle->new_game();
 
     library_name = muhle_intelligence_version();
 
@@ -342,4 +342,33 @@ void MuhlePlayer::controls() {
     }
 
     ImGui::End();
+}
+
+muhle::Move MuhlePlayer::move_to_muhle_move(const Move& move) {
+    muhle::Move result;
+
+    switch (move.type) {
+        case MoveType::Place:
+            result.type = muhle::MoveType::Place;
+            result.place.place_index = static_cast<muhle::Idx>(move.place.place_index);
+            break;
+        case MoveType::Move:
+            result.type = muhle::MoveType::Move;
+            result.move.source_index = static_cast<muhle::Idx>(move.move.source_index);
+            result.move.destination_index = static_cast<muhle::Idx>(move.move.destination_index);
+            break;
+        case MoveType::PlaceTake:
+            result.type = muhle::MoveType::PlaceTake;
+            result.place_take.place_index = static_cast<muhle::Idx>(move.place_take.place_index);
+            result.place_take.take_index = static_cast<muhle::Idx>(move.place_take.take_index);
+            break;
+        case MoveType::MoveTake:
+            result.type = muhle::MoveType::MoveTake;
+            result.move_take.source_index = static_cast<muhle::Idx>(move.move_take.source_index);
+            result.move_take.destination_index = static_cast<muhle::Idx>(move.move_take.destination_index);
+            result.move_take.take_index = static_cast<muhle::Idx>(move.move_take.take_index);
+            break;
+    }
+
+    return result;
 }

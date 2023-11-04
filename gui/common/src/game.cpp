@@ -56,23 +56,23 @@ void MoveLogging::log_move(const Move& move, Player player) {
     switch (move.type) {
         case MoveType::Place:
             muhle_move.type = muhle::MoveType::Place;
-            muhle_move.place.place_index = move.place.place_index;
+            muhle_move.place.place_index = static_cast<muhle::Idx>(move.place.place_index);
             break;
         case MoveType::PlaceTake:
             muhle_move.type = muhle::MoveType::PlaceTake;
-            muhle_move.place_take.place_index = move.place_take.place_index;
-            muhle_move.place_take.take_index = move.place_take.take_index;
+            muhle_move.place_take.place_index = static_cast<muhle::Idx>(move.place_take.place_index);
+            muhle_move.place_take.take_index = static_cast<muhle::Idx>(move.place_take.take_index);
             break;
         case MoveType::Move:
             muhle_move.type = muhle::MoveType::Move;
-            muhle_move.move.source_index = move.move.source_index;
-            muhle_move.move.destination_index = move.move.destination_index;
+            muhle_move.move.source_index = static_cast<muhle::Idx>(move.move.source_index);
+            muhle_move.move.destination_index = static_cast<muhle::Idx>(move.move.destination_index);
             break;
         case MoveType::MoveTake:
             muhle_move.type = muhle::MoveType::MoveTake;
-            muhle_move.move_take.source_index = move.move_take.source_index;
-            muhle_move.move_take.destination_index = move.move_take.destination_index;
-            muhle_move.move_take.take_index = move.move_take.take_index;
+            muhle_move.move_take.source_index = static_cast<muhle::Idx>(move.move_take.source_index);
+            muhle_move.move_take.destination_index = static_cast<muhle::Idx>(move.move_take.destination_index);
+            muhle_move.move_take.take_index = static_cast<muhle::Idx>(move.move_take.take_index);
             break;
     }
 

@@ -1,13 +1,12 @@
 #include <thread>
 #include <unordered_map>
 #include <string>
-#include <string_view>
 #include <functional>
 #include <mutex>
 #include <condition_variable>
 #include <vector>
+#include <optional>
 #include <cassert>
-#include <random>
 #include <iterator>
 
 #include "muhle_intelligence/muhle_intelligence.hpp"
@@ -28,62 +27,62 @@ namespace muhle {
                     break;
                 }
 
-                const Move best_move {search_function()};
+                const std::optional<Move> best_move {search_function()};
 
-                // Now save this position
-                play_move(game.position, best_move);
-                game.previous_positions.push_back(game.position.position);
+                // Play the move only if it was said so before the search
+                if (best_move) {
+                    play_move_and_save_position(*best_move);
+                }
 
-                // After search reset the function as a signal
+                // After search, reset the function as a signal
                 search_function = {};
             }
         });
     }
 
-    void MuhleImpl::new_game() {
-        game.position = {};
-        game.previous_positions.clear();
+    void MuhleImpl::new_game(const SmnPosition& position, const std::vector<Move>& moves) {
+        reset_game();
+        set_position(position, moves);
     }
 
-    void MuhleImpl::position(const SmnPosition& position, const std::vector<Move>& moves) {
-        // Set the position with the opponent move played; save the current position too
-        game.position = position;
-        game.previous_positions.push_back(game.position.position);
-
-        for (const Move& move : moves) {
-            play_move(game.position, move);
-            game.previous_positions.push_back(game.position.position);
-        }
-    }
-
-    void MuhleImpl::search(Result& result) {
+    void MuhleImpl::go(Result& result, bool play_move) {
         assert(running);
         assert(!search_function);
 
         result = {};
 
-        search_function = [this, &result]() {
+        search_function = [this, &result, play_move]() {
             Search instance;
-            instance.setup(parameters);
+            instance.setup(parameters);  // TODO refactor
 
             assert(!game.previous_positions.empty());
+            assert(game.previous_positions.size() - 1 == game.moves_played.size());
 
-            return instance.search(
-                game.position,
-                game.previous_positions.cbegin(),
-                std::prev(game.previous_positions.cend()),  // Don't pass the last position (current)
-                result
-            );
+            const auto best_move {
+                instance.search(
+                    game.position,
+                    game.previous_positions.cbegin(),
+                    std::prev(game.previous_positions.cend()),  // Don't pass the last position (current)
+                    game.moves_played,
+                    result
+                )
+            };
+
+            return play_move ? std::make_optional(best_move) : std::nullopt;
         };
 
         cv.notify_one();
+    }
+
+    void MuhleImpl::move(const Move& move) {
+        play_move_and_save_position(move);
     }
 
     void MuhleImpl::join_thread() {
         assert(running);
 
         // Set dummy work and set exit condition for stopping the thread
-        search_function = []() -> Move { return {}; };
+        search_function = []() { return std::nullopt; };
         running = false;
 
         cv.notify_one();
@@ -91,12 +90,34 @@ namespace muhle {
         thread.join();
     }
 
-    void MuhleImpl::set_parameter(std::string_view parameter, int value) {
-        parameters[std::string(parameter)] = value;
+    void MuhleImpl::set_parameter(const std::string& parameter, int value) {
+        parameters[parameter] = value;
     }
 
     void MuhleImpl::wait_for_work() {
         std::unique_lock<std::mutex> lock {mutex};
         cv.wait(lock, [this]() { return search_function; });
+    }
+
+    void MuhleImpl::reset_game() {
+        game.position = {};
+        game.previous_positions.clear();
+        game.moves_played.clear();
+    }
+
+    void MuhleImpl::set_position(const SmnPosition& position, const std::vector<Move>& moves) {
+        // Save this initial position too
+        game.position = position;
+        game.previous_positions.push_back(game.position.position);
+
+        for (const Move& move : moves) {
+            play_move_and_save_position(move);
+        }
+    }
+
+    void MuhleImpl::play_move_and_save_position(const Move& move) {
+        play_move(game.position, move);
+        game.previous_positions.push_back(game.position.position);
+        game.moves_played.push_back(move);
     }
 }

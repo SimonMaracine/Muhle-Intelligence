@@ -15,7 +15,7 @@
 
 class MuhleBoard {
 public:
-    using MoveCallback = std::function<void(const Move&)>;
+    using MoveCallback = std::function<void(const Move&)>;  // Called when user makes a move
 
     MuhleBoard() {
         reset();
@@ -29,13 +29,6 @@ public:
     void place_take_piece(Idx place_index, Idx take_index);
     void move_piece(Idx source_index, Idx destination_index);
     void move_take_piece(Idx source_index, Idx destination_index, Idx take_index);
-
-    struct InputSearch {
-        muhle::SmnPosition position {};
-        std::vector<muhle::Move> moves;
-    };
-
-    InputSearch input_for_search();
 
     Player get_turn() const { return turn; }
     bool is_game_over() const { return game_over != GameOver::None; }
@@ -91,7 +84,7 @@ private:
     std::vector<Move> legal_moves;
     MoveLogging log;
     GameOver game_over = GameOver::None;
-    MoveCallback move_callback;
+    MoveCallback move_callback;  // Called before board state is changed
 
     std::array<Node, 24> board {};
     Player turn = Player::White;

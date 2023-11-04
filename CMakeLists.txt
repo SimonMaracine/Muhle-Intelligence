@@ -10,7 +10,7 @@ project("Muhle-Intelligence" LANGUAGES CXX)
 
 function(enable_warnings target)
     if(UNIX)
-        target_compile_options(${target} PRIVATE "-Wall" "-Wextra" "-Wpedantic")
+        target_compile_options(${target} PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-Wconversion")
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(${target} PRIVATE "/W3")
     else()

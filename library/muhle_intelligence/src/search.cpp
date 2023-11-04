@@ -39,8 +39,14 @@ namespace muhle {
         this->parameters.DEPTH = parameters.at("DEPTH");
     }
 
-    Move Search::search(const SmnPosition& position, Iter prev_positions_begin, Iter prev_positions_end, Result& result) {
-        setup_position(position, prev_positions_begin, prev_positions_end);
+    Move Search::search(
+        const SmnPosition& position,
+        Iter prev_positions_begin,
+        Iter prev_positions_end,
+        const std::vector<Move>& prev_moves,
+        Result& result
+    ) {
+        setup_position(position, prev_positions_begin, prev_positions_end, prev_moves);
 
         const auto start {std::chrono::high_resolution_clock::now()};
 
@@ -66,7 +72,12 @@ namespace muhle {
         return best_move.move;
     }
 
-    void Search::setup_position(const SmnPosition& position, Iter prev_positions_begin, Iter prev_positions_end) {
+    void Search::setup_position(
+        const SmnPosition& position,
+        Iter prev_positions_begin,
+        Iter prev_positions_end,
+        const std::vector<Move>& prev_moves
+    ) {
         ctx.board = position.position.board;
         ctx.plies = position.plies;
 
@@ -83,32 +94,54 @@ namespace muhle {
             }
         }
 
-        if (prev_positions_begin != prev_positions_end) {
-            // Create the nodes first
-            for (auto iter = prev_positions_begin; iter != prev_positions_end; iter++) {
-                const Position& position {*iter};
+        if (prev_positions_begin == prev_positions_end) {
+            // Pointer ctx.previous.previous will remain null
+            return;
+        }
 
+        auto iter1 = prev_positions_begin;
+        auto iter2 = prev_moves.cbegin();
+
+        while (iter1 != prev_positions_end && iter2 != prev_moves.cend()) {
+            const Position& position {*iter1};
+            const Move& move {*iter2};
+
+            if (is_take_move(move)) {
+                // Simply cut all previous nodes
+                ctx.previous.nodes.clear();
+            } else {
                 repetition::Node node;
                 node.position = repetition::make_position_bitboard(position.board, position.player);
 
                 ctx.previous.nodes.push_back(node);
             }
 
-            // Setup pointers only now
-            const std::size_t newest_index {ctx.previous.nodes.size() - 1};
-
-            for (std::size_t i {newest_index}; i > 0; i--) {  // TODO cut nodes, when take move occurs
-                ctx.previous.nodes[i].previous = &ctx.previous.nodes[i - 1];
-            }
-
-            ctx.previous.previous = &ctx.previous.nodes[newest_index];
+            iter1++;
+            iter2++;
         }
 
-        // Pointer ctx.previous.previous remains null otherwise
+        // Setup pointers only now
+        for (std::size_t i {ctx.previous.nodes.size()}; i > 0; i--) {
+            const std::size_t I {i - 1};
+
+            if (I > 0) {
+                ctx.previous.nodes[I].previous = &ctx.previous.nodes[I - 1];
+            }
+        }
+
+        if (!ctx.previous.nodes.empty()) {
+            ctx.previous.previous = &ctx.previous.nodes[ctx.previous.nodes.size() - 1];
+        }
     }
 
-    Eval Search::minimax(Player player, unsigned int depth, unsigned int plies_from_root,
-            Eval alpha, Eval beta, const repetition::Node* previous_node) {
+    Eval Search::minimax(
+        Player player,
+        unsigned int depth,
+        unsigned int plies_from_root,
+        Eval alpha,
+        Eval beta,
+        const repetition::Node* previous_node
+    ) {
         if (Eval evaluation_game_over {0}; depth == 0 || is_game_over(ctx, evaluation_game_over)) {
             return evaluate_position(ctx, parameters, evaluation_game_over, plies_from_root, positions_evaluated);
         }

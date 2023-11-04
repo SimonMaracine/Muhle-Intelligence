@@ -109,7 +109,7 @@ namespace muhle {
 
             const auto free_positions {neighbor_free_positions(ctx, i)};
 
-            for (IterIdx j {0}; j < free_positions.size(); j++) {
+            for (IterIdx j {0}; j < static_cast<IterIdx>(free_positions.size()); j++) {
                 make_move_move(ctx, piece, i, free_positions[j]);
 
                 if (is_mill(ctx, piece, free_positions[j])) {

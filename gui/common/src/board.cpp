@@ -51,26 +51,6 @@ static const int NODE_POSITIONS[24][2] = {
     { 8, 8 }
 };
 
-static muhle::Board to_muhle_board(const std::array<Node, 24>& board) {
-    muhle::Board result;
-
-    for (std::size_t i = 0; i < board.size(); i++) {
-        switch (board[i].piece) {
-            case Piece::None:
-                result[i] = muhle::Piece::None;
-                break;
-            case Piece::White:
-                result[i] = muhle::Piece::White;
-                break;
-            case Piece::Black:
-                result[i] = muhle::Piece::Black;
-                break;
-        }
-    }
-
-    return result;
-}
-
 void MuhleBoard::update() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(350.0f, 350.0f));
@@ -222,8 +202,6 @@ void MuhleBoard::place_piece(Idx place_index) {
     log.log_move(move, turn);
 
     do_place(place_index);
-
-    move_callback(move);
 }
 
 void MuhleBoard::place_take_piece(Idx place_index, Idx take_index) {
@@ -232,8 +210,6 @@ void MuhleBoard::place_take_piece(Idx place_index, Idx take_index) {
 
     do_place_take(place_index, take_index);
     do_place_take(place_index, take_index);
-
-    move_callback(move);
 }
 
 void MuhleBoard::move_piece(Idx source_index, Idx destination_index) {
@@ -241,8 +217,6 @@ void MuhleBoard::move_piece(Idx source_index, Idx destination_index) {
     log.log_move(move, turn);
 
     do_move(source_index, destination_index);
-
-    move_callback(move);
 }
 
 void MuhleBoard::move_take_piece(Idx source_index, Idx destination_index, Idx take_index) {
@@ -251,19 +225,6 @@ void MuhleBoard::move_take_piece(Idx source_index, Idx destination_index, Idx ta
 
     do_move_take(source_index, destination_index, take_index);
     do_move_take(source_index, destination_index, take_index);
-
-    move_callback(move);
-}
-
-MuhleBoard::InputSearch MuhleBoard::input_for_search() {
-    InputSearch result;
-    result.position.position.board = to_muhle_board(board);
-    result.position.position.player = turn == Player::White ? muhle::Player::White : muhle::Player::Black;
-    result.position.plies = plies;
-
-    // FIXME moves
-
-    return result;
 }
 
 void MuhleBoard::internals_window() {
@@ -315,8 +276,8 @@ void MuhleBoard::update_nodes() {
     for (Idx i = 0; i < 24; i++) {
         board[i].index = i;
         board[i].position = ImVec2(
-            NODE_POSITIONS[i][0] * board_unit + board_offset.x,
-            NODE_POSITIONS[i][1] * board_unit + board_offset.y
+            static_cast<float>(NODE_POSITIONS[i][0]) * board_unit + board_offset.x,
+            static_cast<float>(NODE_POSITIONS[i][1]) * board_unit + board_offset.y
         );
     }
 }
@@ -500,10 +461,9 @@ void MuhleBoard::try_place(const Move& move, Idx place_index) {
     }
 
     log.log_move(move, turn);
+    move_callback(move);
 
     do_place(place_index);
-
-    move_callback(move);
 }
 
 void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_index) {
@@ -513,6 +473,7 @@ void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_inde
         }
 
         log.log_move(move, turn);
+        move_callback(move);
     } else {
         if (move.place_take.place_index != place_index) {
             return;
@@ -520,8 +481,6 @@ void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_inde
     }
 
     do_place_take(place_index, take_index);
-
-    move_callback(move);
 }
 
 void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_index) {
@@ -535,10 +494,9 @@ void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_in
     }
 
     log.log_move(move, turn);
+    move_callback(move);
 
     do_move(source_index, destination_index);
-
-    move_callback(move);
 }
 
 void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index) {
@@ -548,6 +506,7 @@ void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destinati
         }
 
         log.log_move(move, turn);
+        move_callback(move);
     } else {
         if (move.move_take.source_index != source_index || move.move_take.destination_index != destination_index) {
             return;
@@ -555,8 +514,6 @@ void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destinati
     }
 
     do_move_take(source_index, destination_index, take_index);
-
-    move_callback(move);
 }
 
 void MuhleBoard::do_place(Idx place_index) {

@@ -10,8 +10,6 @@
 
 /*
     FIXME
-    finish implementing threefold repetition (correctly pass and store previous positions, cut irrelevant positions)
-    change library API
     implement 50 move rule
 */
 
@@ -22,13 +20,30 @@ namespace muhle {
         using Iter = std::vector<Position>::const_iterator;
 
         void setup(std::unordered_map<std::string, int>& parameters);
-        Move search(const SmnPosition& position, Iter prev_positions_begin, Iter prev_positions_end, Result& result);
+        Move search(
+            const SmnPosition& position,
+            Iter prev_positions_begin,
+            Iter prev_positions_end,
+            const std::vector<Move>& prev_moves,
+            Result& result
+        );
     private:
-        void setup_position(const SmnPosition& position, Iter prev_positions_begin, Iter prev_positions_end);
+        void setup_position(
+            const SmnPosition& position,
+            Iter prev_positions_begin,
+            Iter prev_positions_end,
+            const std::vector<Move>& prev_moves
+        );
 
         // Pass null to previous_node, if there should be no history
-        Eval minimax(Player player, unsigned int depth, unsigned int plies_from_root,
-            Eval alpha, Eval beta, const repetition::Node* previous_node);
+        Eval minimax(
+            Player player,
+            unsigned int depth,
+            unsigned int plies_from_root,
+            Eval alpha,
+            Eval beta,
+            const repetition::Node* previous_node
+        );
 
         SearchCtx ctx;
 
