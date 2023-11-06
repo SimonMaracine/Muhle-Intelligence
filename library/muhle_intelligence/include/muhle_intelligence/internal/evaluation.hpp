@@ -12,7 +12,6 @@ namespace muhle {
         unsigned int plies_from_root, unsigned int& positions_evaluated);
     Eval calculate_material_both(SearchCtx& ctx);
     Eval calculate_freedom_both(SearchCtx& ctx);
-    unsigned int get_material(SearchCtx& ctx, Piece piece);
     void get_players_freedom(SearchCtx& ctx, unsigned int& white, unsigned int& black);
     unsigned int get_piece_freedom(SearchCtx& ctx, Idx index);
 }

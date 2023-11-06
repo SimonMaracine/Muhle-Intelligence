@@ -75,6 +75,7 @@ private:
     bool is_mill(Piece piece, Idx index);
     std::vector<Idx> neighbor_free_positions(Idx index);
     bool all_pieces_in_mills(Piece piece);
+    unsigned int count_pieces_on_board(Piece piece);
     static bool point_in_node(ImVec2 position, const Node& node, float radius);
     static std::pair<unsigned int, std::size_t> parse_integer(std::string_view string, std::size_t position);
 

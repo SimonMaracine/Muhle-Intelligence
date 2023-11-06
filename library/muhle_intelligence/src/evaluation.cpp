@@ -36,13 +36,7 @@ namespace muhle {
     }
 
     Eval calculate_material_both(SearchCtx& ctx) {
-        Eval evaluation_material {0};
-
-        for (IterIdx i {0}; i < NODES; i++) {
-            evaluation_material += static_cast<Eval>(ctx.board[i]);
-        }
-
-        return evaluation_material;
+        return static_cast<Eval>(ctx.white_pieces_on_board - ctx.black_pieces_on_board);
     }
 
     Eval calculate_freedom_both(SearchCtx& ctx) {
@@ -91,18 +85,6 @@ namespace muhle {
         }
 
         return evaluation_freedom;
-    }
-
-    unsigned int get_material(SearchCtx& ctx, Piece piece) {
-        assert(piece != Piece::None);
-
-        unsigned int piece_count {0};
-
-        for (IterIdx i {0}; i < NODES; i++) {
-            piece_count += ctx.board[i] == piece;
-        }
-
-        return piece_count;
     }
 
     void get_players_freedom(SearchCtx& ctx, unsigned int& white, unsigned int& black) {

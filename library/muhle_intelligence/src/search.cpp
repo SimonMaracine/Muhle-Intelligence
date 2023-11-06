@@ -3,8 +3,9 @@
 #include <vector>
 #include <limits>
 #include <chrono>
-#include <cassert>
 #include <cstddef>
+#include <algorithm>
+#include <cassert>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -149,7 +150,7 @@ namespace muhle {
         repetition::Node current_node;
 
         if (repetition::check_current_node(ctx.board, player, current_node, previous_node)) {
-            return 0;  // This means a tie
+            return 0;
         }
 
         if (player == Player::White) {
@@ -174,6 +175,12 @@ namespace muhle {
                         best_move.move = move;
                         best_move.piece = Piece::White;
                     }
+                }
+
+                alpha = std::max(alpha, evaluation);
+
+                if (beta <= alpha) {
+                    break;
                 }
             }
 
@@ -200,6 +207,12 @@ namespace muhle {
                         best_move.move = move;
                         best_move.piece = Piece::Black;
                     }
+                }
+
+                beta = std::min(beta, evaluation);
+
+                if (beta <= alpha) {
+                    break;
                 }
             }
 

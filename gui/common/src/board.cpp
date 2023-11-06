@@ -194,6 +194,11 @@ bool MuhleBoard::set_position(std::string_view smn_string) {
     this->plies_without_mills = plies_without_mills;
     this->plies = plies;
 
+    white_pieces_on_board = count_pieces_on_board(Piece::White);
+    black_pieces_on_board = count_pieces_on_board(Piece::Black);
+
+    legal_moves = generate_moves();
+
     return true;
 }
 
@@ -1068,6 +1073,16 @@ bool MuhleBoard::all_pieces_in_mills(Piece piece) {
     }
 
     return true;
+}
+
+unsigned int MuhleBoard::count_pieces_on_board(Piece piece) {
+    unsigned int result {0};
+
+    for (Idx i {0}; i < 24; i++) {
+        result += board[i].piece == piece;
+    }
+
+    return result;
 }
 
 bool MuhleBoard::point_in_node(ImVec2 position, const Node& node, float radius) {

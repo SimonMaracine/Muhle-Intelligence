@@ -155,6 +155,7 @@ void MuhlePlayer::load_library(const std::string& file_path) {
     muhle = muhle_intelligence_create();
     muhle->initialize();
     muhle->new_game();
+    // muhle->set_parameter("DEPTH", 6);
 
     library_name = muhle_intelligence_version();
 

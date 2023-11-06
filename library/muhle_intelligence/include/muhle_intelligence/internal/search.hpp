@@ -20,6 +20,7 @@ namespace muhle {
         using Iter = std::vector<Position>::const_iterator;
 
         void setup(std::unordered_map<std::string, int>& parameters);
+
         Move search(
             const SmnPosition& position,
             Iter prev_positions_begin,
