@@ -7,7 +7,6 @@
 #include <vector>
 #include <optional>
 #include <cassert>
-#include <iterator>
 
 #include "muhle_intelligence/muhle_intelligence.hpp"
 #include "muhle_intelligence/internal/library.hpp"
@@ -61,8 +60,7 @@ namespace muhle {
             const auto best_move {
                 instance.search(
                     game.position,
-                    game.previous_positions.cbegin(),
-                    std::prev(game.previous_positions.cend()),  // Don't pass the last position (current)
+                    game.previous_positions,  // Pass the current position too
                     game.moves_played,
                     result
                 )
@@ -108,7 +106,7 @@ namespace muhle {
     void MuhleImpl::set_position(const SmnPosition& position, const std::vector<Move>& moves) {
         // Save this initial position too
         game.position = position;
-        game.previous_positions.push_back(game.position.position);
+        game.previous_positions.push_back(game.position);
 
         for (const Move& move : moves) {
             play_move_and_save_position(move);
@@ -117,7 +115,7 @@ namespace muhle {
 
     void MuhleImpl::play_move_and_save_position(const Move& move) {
         play_move(game.position, move);
-        game.previous_positions.push_back(game.position.position);
+        game.previous_positions.push_back(game.position);
         game.moves_played.push_back(move);
     }
 }

@@ -17,22 +17,18 @@ namespace muhle {
     // For every invocation of the AI algorithm, create a new search instance object
     class Search {
     public:
-        using Iter = std::vector<Position>::const_iterator;
-
         void setup(std::unordered_map<std::string, int>& parameters);
 
         Move search(
             const SmnPosition& position,
-            Iter prev_positions_begin,
-            Iter prev_positions_end,
+            const std::vector<SmnPosition>& prev_positions,
             const std::vector<Move>& prev_moves,
             Result& result
         );
     private:
-        void setup_position(
+        void setup_nodes(
             const SmnPosition& position,
-            Iter prev_positions_begin,
-            Iter prev_positions_end,
+            const std::vector<SmnPosition>& prev_positions,
             const std::vector<Move>& prev_moves
         );
 
@@ -43,10 +39,11 @@ namespace muhle {
             unsigned int plies_from_root,
             Eval alpha,
             Eval beta,
-            const repetition::Node* previous_node
+            const SearchNode* previous_node
         );
 
-        SearchCtx ctx;
+        // SearchCtx ctx;
+        std::vector<SearchNode> nodes;
 
         struct {
             Move move {};

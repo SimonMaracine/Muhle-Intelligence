@@ -12,13 +12,13 @@ namespace muhle {
     static constexpr Eval BLACK_ADVANTAGE {-1};
     static constexpr Eval WHITE_ADVANTAGE {1};
 
-    bool all_pieces_in_mills(SearchCtx& ctx, Piece piece) {
+    bool all_pieces_in_mills(const SearchNode& node, Piece piece) {
         for (IterIdx i {0}; i < NODES; i++) {
-            if (ctx.board[i] != piece) {
+            if (node.board[i] != piece) {
                 continue;
             }
 
-            if (!is_mill(ctx, piece, i)) {
+            if (!is_mill(node, piece, i)) {
                 return false;
             }
         }
@@ -27,11 +27,11 @@ namespace muhle {
     }
 
 #define IS_FREE_CHECK(const_index) \
-    if (ctx.board[const_index] == Piece::None) { \
+    if (node.board[const_index] == Piece::None) { \
         result.push_back(const_index); \
     }
 
-    Array<Idx, 4> neighbor_free_positions(SearchCtx& ctx, Idx index) {
+    Array<Idx, 4> neighbor_free_positions(const SearchNode& node, Idx index) {
         Array<Idx, 4> result;
 
         switch (index) {
@@ -152,9 +152,9 @@ namespace muhle {
         return result;
     }
 
-#define IS_PC(const_index) (ctx.board[const_index] == piece)
+#define IS_PC(const_index) (node.board[const_index] == piece)
 
-    bool is_mill(SearchCtx& ctx, Piece piece, Idx index) {
+    bool is_mill(const SearchNode& node, Piece piece, Idx index) {
         assert(piece != Piece::None);
 
         switch (index) {
@@ -259,24 +259,24 @@ namespace muhle {
         return false;
     }
 
-    bool is_game_over(SearchCtx& ctx, Eval& evaluation_game_over) {
-        if (ctx.plies < 18) {
+    bool is_game_over(const SearchNode& node, Eval& evaluation_game_over) {
+        if (node.plies < 18) {
             return false;
         }
 
-        if (ctx.white_pieces_on_board < 3) {
+        if (node.white_pieces_on_board < 3) {
             evaluation_game_over = BLACK_ADVANTAGE;
             return true;
         }
 
-        if (ctx.black_pieces_on_board < 3) {
+        if (node.black_pieces_on_board < 3) {
             evaluation_game_over = WHITE_ADVANTAGE;
             return true;
         }
 
         unsigned int white_free_positions {0};
         unsigned int black_free_positions {0};
-        get_players_freedom(ctx, white_free_positions, black_free_positions);
+        get_players_freedom(node, white_free_positions, black_free_positions);
 
         if (white_free_positions == 0) {
             evaluation_game_over = BLACK_ADVANTAGE;
@@ -291,14 +291,14 @@ namespace muhle {
         return false;
     }
 
-    unsigned int pieces_on_board(SearchCtx& ctx, Piece piece) {
+    unsigned int pieces_on_board(const SearchNode& node, Piece piece) {
         assert(piece != Piece::None);
 
         switch (piece) {
             case Piece::White:
-                return ctx.white_pieces_on_board;
+                return node.white_pieces_on_board;
             case Piece::Black:
-                return ctx.black_pieces_on_board;
+                return node.black_pieces_on_board;
             default:
                 break;
         }
@@ -330,5 +330,20 @@ namespace muhle {
         }
 
         return {};
+    }
+
+    void count_pieces(const Board& board, unsigned int& white, unsigned int& black) {
+        for (IterIdx i {0}; i < NODES; i++) {
+            switch (board[i]) {
+                case Piece::White:
+                    white++;
+                    break;
+                case Piece::Black:
+                    black++;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }

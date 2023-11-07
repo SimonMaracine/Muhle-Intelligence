@@ -12,22 +12,22 @@
 #include "muhle_intelligence/internal/various.hpp"
 
 namespace muhle {
-    static void make_place_move(SearchCtx& ctx, Piece piece, Idx node_index) {
-        ctx.board[node_index] = piece;
+    static void make_place_move(SearchNode& node, Piece piece, Idx node_index) {
+        node.board[node_index] = piece;
     }
 
-    static void unmake_place_move(SearchCtx& ctx, Idx node_index) {
-        ctx.board[node_index] = Piece::None;
+    static void unmake_place_move(SearchNode& node, Idx node_index) {
+        node.board[node_index] = Piece::None;
     }
 
-    static void make_move_move(SearchCtx& ctx, Piece piece, Idx node_source_index, Idx node_destination_index) {
-        ctx.board[node_source_index] = Piece::None;
-        ctx.board[node_destination_index] = piece;
+    static void make_move_move(SearchNode& node, Piece piece, Idx node_source_index, Idx node_destination_index) {
+        node.board[node_source_index] = Piece::None;
+        node.board[node_destination_index] = piece;
     }
 
-    static void unmake_move_move(SearchCtx& ctx, Piece piece, Idx node_source_index, Idx node_destination_index) {
-        ctx.board[node_source_index] = piece;
-        ctx.board[node_destination_index] = Piece::None;
+    static void unmake_move_move(SearchNode& node, Piece piece, Idx node_source_index, Idx node_destination_index) {
+        node.board[node_source_index] = piece;
+        node.board[node_destination_index] = Piece::None;
     }
 
     static Move create_place(Idx node_index) {
@@ -66,26 +66,26 @@ namespace muhle {
         return move;
     }
 
-    static void get_moves_phase1(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
+    static void get_moves_phase1(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i {0}; i < NODES; i++) {
-            if (ctx.board[i] != Piece::None) {
+            if (node.board[i] != Piece::None) {
                 continue;
             }
 
-            make_place_move(ctx, piece, i);
+            make_place_move(node, piece, i);
 
-            if (is_mill(ctx, piece, i)) {
+            if (is_mill(node, piece, i)) {
                 const Piece opponent {opponent_piece(piece)};
-                const bool all_in_mills {all_pieces_in_mills(ctx, opponent)};
+                const bool all_in_mills {all_pieces_in_mills(node, opponent)};
 
                 for (IterIdx j {0}; j < NODES; j++) {
-                    if (ctx.board[j] != opponent) {
+                    if (node.board[j] != opponent) {
                         continue;
                     }
 
-                    if (is_mill(ctx, opponent, j) && !all_in_mills) {
+                    if (is_mill(node, opponent, j) && !all_in_mills) {
                         continue;
                     }
 
@@ -95,33 +95,33 @@ namespace muhle {
                 moves.push_back(create_place(i));
             }
 
-            unmake_place_move(ctx, i);
+            unmake_place_move(node, i);
         }
     }
 
-    static void get_moves_phase2(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
+    static void get_moves_phase2(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i {0}; i < NODES; i++) {
-            if (ctx.board[i] != piece) {
+            if (node.board[i] != piece) {
                 continue;
             }
 
-            const auto free_positions {neighbor_free_positions(ctx, i)};
+            const auto free_positions {neighbor_free_positions(node, i)};
 
             for (IterIdx j {0}; j < static_cast<IterIdx>(free_positions.size()); j++) {
-                make_move_move(ctx, piece, i, free_positions[j]);
+                make_move_move(node, piece, i, free_positions[j]);
 
-                if (is_mill(ctx, piece, free_positions[j])) {
+                if (is_mill(node, piece, free_positions[j])) {
                     const auto opponent {opponent_piece(piece)};
-                    const bool all_in_mills {all_pieces_in_mills(ctx, opponent)};
+                    const bool all_in_mills {all_pieces_in_mills(node, opponent)};
 
                     for (IterIdx k {0}; k < NODES; k++) {
-                        if (ctx.board[k] != opponent) {
+                        if (node.board[k] != opponent) {
                             continue;
                         }
 
-                        if (is_mill(ctx, opponent, k) && !all_in_mills) {
+                        if (is_mill(node, opponent, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -131,36 +131,36 @@ namespace muhle {
                     moves.push_back(create_move(i, free_positions[j]));
                 }
 
-                unmake_move_move(ctx, piece, i, free_positions[j]);
+                unmake_move_move(node, piece, i, free_positions[j]);
             }
         }
     }
 
-    static void get_moves_phase3(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
+    static void get_moves_phase3(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i {0}; i < NODES; i++) {
-            if (ctx.board[i] != piece) {
+            if (node.board[i] != piece) {
                 continue;
             }
 
             for (IterIdx j {0}; j < NODES; j++) {
-                if (ctx.board[j] != Piece::None) {
+                if (node.board[j] != Piece::None) {
                     continue;
                 }
 
-                make_move_move(ctx, piece, i, j);
+                make_move_move(node, piece, i, j);
 
-                if (is_mill(ctx, piece, j)) {
+                if (is_mill(node, piece, j)) {
                     const auto opponent {opponent_piece(piece)};
-                    const bool all_in_mills {all_pieces_in_mills(ctx, opponent)};
+                    const bool all_in_mills {all_pieces_in_mills(node, opponent)};
 
                     for (IterIdx k {0}; k < NODES; k++) {
-                        if (ctx.board[k] != opponent) {
+                        if (node.board[k] != opponent) {
                             continue;
                         }
 
-                        if (is_mill(ctx, opponent, k) && !all_in_mills) {
+                        if (is_mill(node, opponent, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -170,22 +170,22 @@ namespace muhle {
                     moves.push_back(create_move(i, j));
                 }
 
-                unmake_move_move(ctx, piece, i, j);
+                unmake_move_move(node, piece, i, j);
             }
         }
     }
 
-    void make_move(SearchCtx& ctx, const Move& move, Piece piece) {
+    void play_move(SearchNode& node, const Move& move, Piece piece) {
         switch (move.type) {
             case MoveType::Place:
-                ctx.board[move.place.place_index] = piece;
+                node.board[move.place.place_index] = piece;
 
                 switch (piece) {
                     case Piece::White:
-                        ctx.white_pieces_on_board++;
+                        node.white_pieces_on_board++;
                         break;
                     case Piece::Black:
-                        ctx.black_pieces_on_board++;
+                        node.black_pieces_on_board++;
                         break;
                     default:
                         break;
@@ -193,20 +193,20 @@ namespace muhle {
 
                 break;
             case MoveType::Move:
-                ctx.board[move.move.source_index] = Piece::None;
-                ctx.board[move.move.destination_index] = piece;
+                node.board[move.move.source_index] = Piece::None;
+                node.board[move.move.destination_index] = piece;
 
                 break;
             case MoveType::PlaceTake:
-                ctx.board[move.place_take.place_index] = piece;
-                ctx.board[move.place_take.take_index] = Piece::None;
+                node.board[move.place_take.place_index] = piece;
+                node.board[move.place_take.take_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
-                        ctx.black_pieces_on_board--;
+                        node.black_pieces_on_board--;
                         break;
                     case Piece::Black:
-                        ctx.white_pieces_on_board--;
+                        node.white_pieces_on_board--;
                         break;
                     default:
                         break;
@@ -214,16 +214,16 @@ namespace muhle {
 
                 break;
             case MoveType::MoveTake:
-                ctx.board[move.move_take.source_index] = Piece::None;
-                ctx.board[move.move_take.destination_index] = piece;
-                ctx.board[move.move_take.take_index] = Piece::None;
+                node.board[move.move_take.source_index] = Piece::None;
+                node.board[move.move_take.destination_index] = piece;
+                node.board[move.move_take.take_index] = Piece::None;
 
                 switch (piece) {
                     case Piece::White:
-                        ctx.black_pieces_on_board--;
+                        node.black_pieces_on_board--;
                         break;
                     case Piece::Black:
-                        ctx.white_pieces_on_board--;
+                        node.white_pieces_on_board--;
                         break;
                     default:
                         break;
@@ -232,68 +232,69 @@ namespace muhle {
                 break;
         }
 
-        ctx.plies++;
+        node.plies++;
+        // TODO plies_without_mills
     }
 
-    void unmake_move(SearchCtx& ctx, const Move& move, Piece piece) {
-        switch (move.type) {
-            case MoveType::Place:
-                ctx.board[move.place.place_index] = Piece::None;
+    // void unmake_move(SearchNode& node, const Move& move, Piece piece) {
+    //     switch (move.type) {
+    //         case MoveType::Place:
+    //             node.board[move.place.place_index] = Piece::None;
 
-                switch (piece) {
-                    case Piece::White:
-                        ctx.white_pieces_on_board--;
-                        break;
-                    case Piece::Black:
-                        ctx.black_pieces_on_board--;
-                        break;
-                    default:
-                        break;
-                }
+    //             switch (piece) {
+    //                 case Piece::White:
+    //                     node.white_pieces_on_board--;
+    //                     break;
+    //                 case Piece::Black:
+    //                     node.black_pieces_on_board--;
+    //                     break;
+    //                 default:
+    //                     break;
+    //             }
 
-                break;
-            case MoveType::Move:
-                ctx.board[move.move.source_index] = piece;
-                ctx.board[move.move.destination_index] = Piece::None;
+    //             break;
+    //         case MoveType::Move:
+    //             node.board[move.move.source_index] = piece;
+    //             node.board[move.move.destination_index] = Piece::None;
 
-                break;
-            case MoveType::PlaceTake:
-                ctx.board[move.place_take.place_index] = Piece::None;
-                ctx.board[move.place_take.take_index] = opponent_piece(piece);
+    //             break;
+    //         case MoveType::PlaceTake:
+    //             node.board[move.place_take.place_index] = Piece::None;
+    //             node.board[move.place_take.take_index] = opponent_piece(piece);
 
-                switch (piece) {
-                    case Piece::White:
-                        ctx.black_pieces_on_board++;
-                        break;
-                    case Piece::Black:
-                        ctx.white_pieces_on_board++;
-                        break;
-                    default:
-                        break;
-                }
+    //             switch (piece) {
+    //                 case Piece::White:
+    //                     node.black_pieces_on_board++;
+    //                     break;
+    //                 case Piece::Black:
+    //                     node.white_pieces_on_board++;
+    //                     break;
+    //                 default:
+    //                     break;
+    //             }
 
-                break;
-            case MoveType::MoveTake:
-                ctx.board[move.move_take.source_index] = piece;
-                ctx.board[move.move_take.destination_index] = Piece::None;
-                ctx.board[move.move_take.take_index] = opponent_piece(piece);
+    //             break;
+    //         case MoveType::MoveTake:
+    //             node.board[move.move_take.source_index] = piece;
+    //             node.board[move.move_take.destination_index] = Piece::None;
+    //             node.board[move.move_take.take_index] = opponent_piece(piece);
 
-                switch (piece) {
-                    case Piece::White:
-                        ctx.black_pieces_on_board++;
-                        break;
-                    case Piece::Black:
-                        ctx.white_pieces_on_board++;
-                        break;
-                    default:
-                        break;
-                }
+    //             switch (piece) {
+    //                 case Piece::White:
+    //                     node.black_pieces_on_board++;
+    //                     break;
+    //                 case Piece::Black:
+    //                     node.white_pieces_on_board++;
+    //                     break;
+    //                 default:
+    //                     break;
+    //             }
 
-                break;
-        }
+    //             break;
+    //     }
 
-        ctx.plies--;
-    }
+    //     node.plies--;
+    // }
 
     void play_move(SmnPosition& position, const Move& move) {
         static const Piece pieces[2] {Piece::White, Piece::Black};
@@ -323,24 +324,24 @@ namespace muhle {
         position.plies++;
     }
 
-    void generate_moves(SearchCtx& ctx, Piece piece, Array<Move, MAX_MOVES>& moves) {
-        if (ctx.plies < 18) {
-            get_moves_phase1(ctx, piece, moves);
+    void generate_moves(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
+        if (node.plies < 18) {
+            get_moves_phase1(node, piece, moves);
         } else {
-            if (pieces_on_board(ctx, piece) == 3) {
-                get_moves_phase3(ctx, piece, moves);
+            if (pieces_on_board(node, piece) == 3) {
+                get_moves_phase3(node, piece, moves);
             } else {
-                get_moves_phase2(ctx, piece, moves);
+                get_moves_phase2(node, piece, moves);
             }
         }
     }
 
-    Move random_move(SearchCtx& ctx, Piece piece) {
+    Move random_move(SearchNode& node, Piece piece) {
         std::random_device device;
         static std::mt19937 random {std::mt19937(device())};
 
         Array<Move, MAX_MOVES> moves;
-        generate_moves(ctx, piece, moves);
+        generate_moves(node, piece, moves);
 
         if (moves.empty()) {
             return {};

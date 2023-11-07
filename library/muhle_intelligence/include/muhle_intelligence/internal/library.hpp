@@ -40,7 +40,7 @@ namespace muhle {
 
         struct {
             SmnPosition position;
-            std::vector<Position> previous_positions;  // Always contains the current position too
+            std::vector<SmnPosition> previous_positions;  // Always contains the current position too
             std::vector<Move> moves_played;
         } game;
     };

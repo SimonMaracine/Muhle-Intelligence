@@ -1,12 +1,15 @@
 #pragma once
 
-#include <vector>
+#include <cstdint>
+#include <optional>
 
 #include <muhle_intelligence/definitions.hpp>
 
 #include "muhle_intelligence/internal/moves.hpp"
 
 namespace muhle {
+    struct SearchNode;
+
     namespace repetition {
         enum : std::uint64_t {
             None = 0b00,
@@ -22,30 +25,46 @@ namespace muhle {
             }
         };
 
-        struct Node {
-            Position position;
-            const Node* previous {nullptr};
-        };
-
         // Node previous can be null
-        bool check_node(const Board& board, Player turn, Node& current, const Node* previous);
-        Position make_position_bitboard(const Board& board, Player turn);
+        bool check_repetition(
+            const Board& board,
+            Player player,
+            const SearchNode& current,
+            const SearchNode* previous
+        );
+
+        Position make_position_bitboard(const Board& board, Player player);
     }
 
-    struct SearchCtx {
+    void fill_node(SearchNode& current, const SearchNode* previous, Player player);
+
+    struct SearchNode {
         Board board {};
         unsigned int plies {0};
         unsigned int plies_without_mills {0};
+        std::optional<repetition::Position> rep_position;
 
         // Cache
         unsigned int white_pieces_on_board {};
         unsigned int black_pieces_on_board {};
 
-        struct {
-            const repetition::Node* previous {nullptr};
-            std::vector<repetition::Node> nodes;
-        } previous;
+        const SearchNode* previous {nullptr};
     };
+
+    // struct SearchCtx {
+    //     Board board {};
+    //     unsigned int plies {0};
+    //     unsigned int plies_without_mills {0};
+
+    //     // Cache
+    //     unsigned int white_pieces_on_board {};
+    //     unsigned int black_pieces_on_board {};
+
+    //     struct {
+    //         const repetition::Node* previous {nullptr};
+    //         std::vector<repetition::Node> nodes;  // FIXME this
+    //     } previous;
+    // };
 
     struct Parameters {
         int PIECE {};
