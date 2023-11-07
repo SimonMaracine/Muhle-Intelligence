@@ -149,7 +149,7 @@ namespace muhle {
 
         repetition::Node current_node;
 
-        if (repetition::check_current_node(ctx.board, player, current_node, previous_node)) {
+        if (repetition::check_node(ctx.board, player, current_node, previous_node)) {
             return 0;
         }
 

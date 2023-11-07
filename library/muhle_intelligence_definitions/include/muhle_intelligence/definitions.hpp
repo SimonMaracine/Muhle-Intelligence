@@ -39,7 +39,7 @@ namespace muhle {
     struct SmnPosition {
         Position position;
         unsigned int plies {};
-        // TODO plies_witout_mills
+        unsigned int plies_witout_mills {};
     };
 
     struct Move {

@@ -13,6 +13,7 @@ set(SOURCES
     "src/evaluation.cpp"
     "src/library.cpp"
     "src/moves.cpp"
+    "src/search_context.cpp"
     "src/search.cpp"
     "src/various.cpp"
 )

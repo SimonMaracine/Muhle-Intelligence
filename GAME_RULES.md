@@ -18,7 +18,7 @@
 - Positions are considered the same, if
   - pieces of the same color occupy the same nodes and
   - the same player has the move
-- When 50 turns (plies) pass without forming any mill, the game ends in a tie
+- When 50 plies pass without forming any mill, the game ends in a tie
 - A player can resign at any time, which means they lose the game
 - A player's turn (ply) ends only after they either
   - put a piece on the board,
