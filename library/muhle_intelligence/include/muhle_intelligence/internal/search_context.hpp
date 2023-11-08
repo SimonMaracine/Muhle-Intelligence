@@ -30,14 +30,15 @@ namespace muhle {
             const Board& board,
             Player player,
             const SearchNode& current,
-            const SearchNode* previous
+            const SearchNode& previous
         );
 
         Position make_position_bitboard(const Board& board, Player player);
     }
 
-    void fill_node(SearchNode& current, const SearchNode* previous, Player player);
+    void fill_node(SearchNode& destination, const SearchNode& source, Player player);
 
+    // Default constructed is the initial position
     struct SearchNode {
         Board board {};
         unsigned int plies {0};
@@ -45,8 +46,8 @@ namespace muhle {
         std::optional<repetition::Position> rep_position;
 
         // Cache
-        unsigned int white_pieces_on_board {};
-        unsigned int black_pieces_on_board {};
+        unsigned int white_pieces_on_board {0};
+        unsigned int black_pieces_on_board {0};
 
         const SearchNode* previous {nullptr};
     };

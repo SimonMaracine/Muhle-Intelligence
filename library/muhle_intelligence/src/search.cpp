@@ -46,7 +46,7 @@ namespace muhle {
         const std::vector<Move>& prev_moves,
         Result& result
     ) {
-        setup_nodes(position, prev_positions, prev_moves);
+        const SearchNode* previous_node {setup_nodes(position, prev_positions, prev_moves)};
 
         const auto start {std::chrono::high_resolution_clock::now()};
 
@@ -57,7 +57,7 @@ namespace muhle {
                 0u,
                 MIN_EVALUATION,
                 MAX_EVALUATION,
-                &nodes[nodes.size() - 1]
+                previous_node
             )
         };
 
@@ -74,7 +74,7 @@ namespace muhle {
         return best_move.move;
     }
 
-    void Search::setup_nodes(
+    const SearchNode* Search::setup_nodes(
         const SmnPosition& position,
         const std::vector<SmnPosition>& prev_positions,
         const std::vector<Move>& prev_moves
@@ -97,9 +97,11 @@ namespace muhle {
                 node.board = position.position.board;
                 node.plies = position.plies;
                 node.plies_without_mills = position.plies_witout_mills;
-                node.rep_position = repetition::make_position_bitboard(
-                    position.position.board,
-                    position.position.player
+                node.rep_position = (
+                    repetition::make_position_bitboard(
+                        position.position.board,
+                        position.position.player
+                    )
                 );
                 count_pieces(
                     position.position.board,
@@ -114,12 +116,36 @@ namespace muhle {
             iter2++;
         }
 
+        SearchNode current_node;
+        current_node.board = position.position.board;
+        current_node.plies = position.plies;
+        current_node.plies_without_mills = position.plies_witout_mills;
+        current_node.rep_position = (
+            repetition::make_position_bitboard(
+                position.position.board,
+                position.position.player
+            )
+        );
+        count_pieces(
+            position.position.board,
+            current_node.white_pieces_on_board,
+            current_node.black_pieces_on_board
+        );
+
+        nodes.push_back(current_node);
+
         // Setup pointers only now
         for (std::size_t i {nodes.size()}; i > 1; i--) {
             const std::size_t I {i - 1};
 
             nodes[I].previous = &nodes[I - 1];
         }
+
+        // Array nodes cannot be empty
+        // It contains the current position and potentially previous positions
+        assert(!nodes.empty());
+
+        return nodes.back();
 
         // ctx.board = position.position.board;
         // ctx.plies = position.plies;
@@ -183,16 +209,16 @@ namespace muhle {
         unsigned int plies_from_root,
         Eval alpha,
         Eval beta,
-        const SearchNode* previous_node
+        const SearchNode& previous_node
     ) {
-        if (Eval game_over {0}; depth == 0 || is_game_over(*previous_node, game_over)) {
-            return evaluate_position(*previous_node, parameters, game_over, plies_from_root, positions_evaluated);
-        }
-
         SearchNode new_node;
         fill_node(new_node, previous_node, player);
 
-        if (repetition::check_repetition(previous_node->board, player, new_node, previous_node)) {
+        if (Eval game_over {0}; depth == 0 || is_game_over(new_node, game_over)) {
+            return evaluate_position(new_node, parameters, game_over, plies_from_root, positions_evaluated);
+        }
+
+        if (repetition::check_repetition(new_node.board, player, new_node, previous_node)) {
             return 0;
         }
 
@@ -202,15 +228,17 @@ namespace muhle {
             Eval max_evaluation {MIN_EVALUATION};
 
             Array<Move, MAX_MOVES> moves;
-            generate_moves(new_node, Piece::White, moves);
+            generate_moves(current_node, Piece::White, moves);
 
             assert(moves.size() > 0);
 
             for (const Move& move : moves) {
                 // const SearchNode* node {is_take_move(move) ? nullptr : &current_node};
 
-                play_move(new_node, move, Piece::White);
-                const Eval evaluation {minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, &new_node)};
+                play_move(current_node, move, Piece::White);
+                const Eval evaluation {
+                    minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, &new_node)
+                };
                 // unmake_move(node, move, Piece::White);
 
                 if (evaluation > max_evaluation) {
@@ -242,7 +270,9 @@ namespace muhle {
                 // const SearchNode* node {is_take_move(move) ? nullptr : &current_node};
 
                 play_move(new_node, move, Piece::Black);
-                const Eval evaluation {minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, &new_node)};
+                const Eval evaluation {
+                    minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, &new_node)
+                };
                 // unmake_move(node, move, Piece::Black);
 
                 if (evaluation < min_evaluation) {

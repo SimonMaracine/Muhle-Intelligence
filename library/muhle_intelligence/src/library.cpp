@@ -57,10 +57,14 @@ namespace muhle {
             assert(!game.previous_positions.empty());
             assert(game.previous_positions.size() - 1 == game.moves_played.size());
 
+            // Get rid of the current position
+            auto previous_positions {game.previous_positions};
+            previous_positions.pop_back();
+
             const auto best_move {
                 instance.search(
                     game.position,
-                    game.previous_positions,  // Pass the current position too
+                    previous_positions,
                     game.moves_played,
                     result
                 )

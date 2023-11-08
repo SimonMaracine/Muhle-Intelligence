@@ -11,10 +11,10 @@ namespace muhle {
             const Board& board,
             Player player,
             const SearchNode& current,
-            const SearchNode* previous
+            const SearchNode& previous
         ) {
             unsigned int repetition {1};
-            const SearchNode* node {previous};
+            const SearchNode* node {&previous};
 
             while (node != nullptr && node->rep_position) {
                 if (node->rep_position == current.rep_position) {
@@ -57,14 +57,14 @@ namespace muhle {
 
     }
 
-    void fill_node(SearchNode& current, const SearchNode* previous, Player player) {
-        current.board = previous->board;
-        current.plies = previous->plies;
-        current.plies_without_mills = previous->plies_without_mills;
-        current.rep_position = repetition::make_position_bitboard(previous->board, player);
-        current.white_pieces_on_board = previous->white_pieces_on_board;
-        current.black_pieces_on_board = previous->black_pieces_on_board;
+    void fill_node(SearchNode& destination, const SearchNode& source, Player player) {
+        destination.board = source.board;
+        destination.plies = source.plies;
+        destination.plies_without_mills = source.plies_without_mills;
+        destination.rep_position = source.rep_position;
+        destination.white_pieces_on_board = source.white_pieces_on_board;
+        destination.black_pieces_on_board = source.black_pieces_on_board;
 
-        current.previous = previous;
+        destination.previous = &source;
     }
 }
