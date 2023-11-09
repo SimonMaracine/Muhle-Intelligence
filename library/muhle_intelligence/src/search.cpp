@@ -46,7 +46,7 @@ namespace muhle {
         const std::vector<Move>& prev_moves,
         Result& result
     ) {
-        const SearchNode* previous_node {setup_nodes(position, prev_positions, prev_moves)};
+        SearchNode& current_node {setup_nodes(position, prev_positions, prev_moves)};
 
         const auto start {std::chrono::high_resolution_clock::now()};
 
@@ -57,7 +57,7 @@ namespace muhle {
                 0u,
                 MIN_EVALUATION,
                 MAX_EVALUATION,
-                previous_node
+                current_node
             )
         };
 
@@ -74,13 +74,13 @@ namespace muhle {
         return best_move.move;
     }
 
-    const SearchNode* Search::setup_nodes(
+    SearchNode& Search::setup_nodes(
         const SmnPosition& position,
         const std::vector<SmnPosition>& prev_positions,
         const std::vector<Move>& prev_moves
     ) {
         assert(!prev_positions.empty());
-        assert(prev_positions.size() - 1 == prev_moves.size());
+        assert(prev_positions.size() == prev_moves.size());
 
         auto iter1 = prev_positions.cbegin();
         auto iter2 = prev_moves.cbegin();
@@ -90,8 +90,8 @@ namespace muhle {
             const Move& move {*iter2};
 
             if (is_take_move(move)) {
-                // Simply cut all previous nodes
-                // ctx.previous.nodes.clear();
+                // Simply delete all previous nodes
+                nodes.clear();
             } else {
                 SearchNode node;
                 node.board = position.position.board;
@@ -209,35 +209,36 @@ namespace muhle {
         unsigned int plies_from_root,
         Eval alpha,
         Eval beta,
-        const SearchNode& previous_node
+        SearchNode& current_node
     ) {
-        SearchNode new_node;
-        fill_node(new_node, previous_node, player);
-
-        if (Eval game_over {0}; depth == 0 || is_game_over(new_node, game_over)) {
-            return evaluate_position(new_node, parameters, game_over, plies_from_root, positions_evaluated);
+        if (Eval game_over {0}; depth == 0 || is_game_over(current_node, game_over)) {
+            return evaluate_position(current_node, parameters, game_over, plies_from_root, positions_evaluated);
         }
 
-        if (repetition::check_repetition(new_node.board, player, new_node, previous_node)) {
+        if (repetition::check_repetition(current_node)) {
             return 0;
         }
 
-        // TODO 50-move rule
+        // TODO check 50-move rule
 
         if (player == Player::White) {
             Eval max_evaluation {MIN_EVALUATION};
 
-            Array<Move, MAX_MOVES> moves;
+            Moves moves;
             generate_moves(current_node, Piece::White, moves);
 
             assert(moves.size() > 0);
 
             for (const Move& move : moves) {
+                SearchNode new_node;
+                fill_node(new_node, current_node);
+
                 // const SearchNode* node {is_take_move(move) ? nullptr : &current_node};
 
-                play_move(current_node, move, Piece::White);
+                play_move(new_node, move, Piece::White);
+
                 const Eval evaluation {
-                    minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, &new_node)
+                    minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, new_node)
                 };
                 // unmake_move(node, move, Piece::White);
 
@@ -261,17 +262,20 @@ namespace muhle {
         } else {
             Eval min_evaluation {MAX_EVALUATION};
 
-            Array<Move, MAX_MOVES> moves;
-            generate_moves(new_node, Piece::Black, moves);
+            Moves moves;
+            generate_moves(current_node, Piece::Black, moves);
 
             assert(moves.size() > 0);
 
             for (const Move& move : moves) {
+                SearchNode new_node;
+                fill_node(new_node, current_node);
+
                 // const SearchNode* node {is_take_move(move) ? nullptr : &current_node};
 
                 play_move(new_node, move, Piece::Black);
                 const Eval evaluation {
-                    minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, &new_node)
+                    minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, new_node)
                 };
                 // unmake_move(node, move, Piece::Black);
 

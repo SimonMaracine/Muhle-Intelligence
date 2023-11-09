@@ -26,7 +26,7 @@ namespace muhle {
             Result& result
         );
     private:
-        const SearchNode* setup_nodes(
+        SearchNode& setup_nodes(
             const SmnPosition& position,
             const std::vector<SmnPosition>& prev_positions,
             const std::vector<Move>& prev_moves
@@ -39,11 +39,13 @@ namespace muhle {
             unsigned int plies_from_root,
             Eval alpha,
             Eval beta,
-            const SearchNode& previous_node
+            SearchNode& current_node
         );
 
         // SearchCtx ctx;
         // SearchNode current_node;
+
+        // Contains the current position and previous positions up until the last take move
         std::vector<SearchNode> nodes;
 
         struct {

@@ -12,13 +12,13 @@ namespace muhle {
     static constexpr Eval BLACK_ADVANTAGE {-1};
     static constexpr Eval WHITE_ADVANTAGE {1};
 
-    bool all_pieces_in_mills(const SearchNode& node, Piece piece) {
+    bool all_pieces_in_mills(const Board& board, Piece piece) {
         for (IterIdx i {0}; i < NODES; i++) {
-            if (node.board[i] != piece) {
+            if (board[i] != piece) {
                 continue;
             }
 
-            if (!is_mill(node, piece, i)) {
+            if (!is_mill(board, piece, i)) {
                 return false;
             }
         }
@@ -27,11 +27,11 @@ namespace muhle {
     }
 
 #define IS_FREE_CHECK(const_index) \
-    if (node.board[const_index] == Piece::None) { \
+    if (board[const_index] == Piece::None) { \
         result.push_back(const_index); \
     }
 
-    Array<Idx, 4> neighbor_free_positions(const SearchNode& node, Idx index) {
+    Array<Idx, 4> neighbor_free_positions(const Board& board, Idx index) {
         Array<Idx, 4> result;
 
         switch (index) {
@@ -152,9 +152,9 @@ namespace muhle {
         return result;
     }
 
-#define IS_PC(const_index) (node.board[const_index] == piece)
+#define IS_PC(const_index) (board[const_index] == piece)
 
-    bool is_mill(const SearchNode& node, Piece piece, Idx index) {
+    bool is_mill(const Board& board, Piece piece, Idx index) {
         assert(piece != Piece::None);
 
         switch (index) {

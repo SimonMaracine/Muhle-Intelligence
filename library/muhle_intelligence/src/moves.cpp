@@ -12,22 +12,22 @@
 #include "muhle_intelligence/internal/various.hpp"
 
 namespace muhle {
-    static void make_place_move(SearchNode& node, Piece piece, Idx node_index) {
-        node.board[node_index] = piece;
+    static void make_place_move(Board& board, Piece piece, Idx node_index) {
+        board[node_index] = piece;
     }
 
-    static void unmake_place_move(SearchNode& node, Idx node_index) {
-        node.board[node_index] = Piece::None;
+    static void unmake_place_move(Board& board, Idx node_index) {
+        board[node_index] = Piece::None;
     }
 
-    static void make_move_move(SearchNode& node, Piece piece, Idx node_source_index, Idx node_destination_index) {
-        node.board[node_source_index] = Piece::None;
-        node.board[node_destination_index] = piece;
+    static void make_move_move(Board& board, Piece piece, Idx node_source_index, Idx node_destination_index) {
+        board[node_source_index] = Piece::None;
+        board[node_destination_index] = piece;
     }
 
-    static void unmake_move_move(SearchNode& node, Piece piece, Idx node_source_index, Idx node_destination_index) {
-        node.board[node_source_index] = piece;
-        node.board[node_destination_index] = Piece::None;
+    static void unmake_move_move(Board& board, Piece piece, Idx node_source_index, Idx node_destination_index) {
+        board[node_source_index] = piece;
+        board[node_destination_index] = Piece::None;
     }
 
     static Move create_place(Idx node_index) {
@@ -66,26 +66,26 @@ namespace muhle {
         return move;
     }
 
-    static void get_moves_phase1(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
+    static void get_moves_phase1(Board& board, Piece piece, Moves& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i {0}; i < NODES; i++) {
-            if (node.board[i] != Piece::None) {
+            if (board[i] != Piece::None) {
                 continue;
             }
 
-            make_place_move(node, piece, i);
+            make_place_move(board, piece, i);
 
-            if (is_mill(node, piece, i)) {
+            if (is_mill(board, piece, i)) {
                 const Piece opponent {opponent_piece(piece)};
-                const bool all_in_mills {all_pieces_in_mills(node, opponent)};
+                const bool all_in_mills {all_pieces_in_mills(board, opponent)};
 
                 for (IterIdx j {0}; j < NODES; j++) {
-                    if (node.board[j] != opponent) {
+                    if (board[j] != opponent) {
                         continue;
                     }
 
-                    if (is_mill(node, opponent, j) && !all_in_mills) {
+                    if (is_mill(board, opponent, j) && !all_in_mills) {
                         continue;
                     }
 
@@ -95,33 +95,33 @@ namespace muhle {
                 moves.push_back(create_place(i));
             }
 
-            unmake_place_move(node, i);
+            unmake_place_move(board, i);
         }
     }
 
-    static void get_moves_phase2(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
+    static void get_moves_phase2(Board& board, Piece piece, Moves& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i {0}; i < NODES; i++) {
-            if (node.board[i] != piece) {
+            if (board[i] != piece) {
                 continue;
             }
 
-            const auto free_positions {neighbor_free_positions(node, i)};
+            const auto free_positions {neighbor_free_positions(board, i)};
 
             for (IterIdx j {0}; j < static_cast<IterIdx>(free_positions.size()); j++) {
-                make_move_move(node, piece, i, free_positions[j]);
+                make_move_move(board, piece, i, free_positions[j]);
 
-                if (is_mill(node, piece, free_positions[j])) {
+                if (is_mill(board, piece, free_positions[j])) {
                     const auto opponent {opponent_piece(piece)};
-                    const bool all_in_mills {all_pieces_in_mills(node, opponent)};
+                    const bool all_in_mills {all_pieces_in_mills(board, opponent)};
 
                     for (IterIdx k {0}; k < NODES; k++) {
-                        if (node.board[k] != opponent) {
+                        if (board[k] != opponent) {
                             continue;
                         }
 
-                        if (is_mill(node, opponent, k) && !all_in_mills) {
+                        if (is_mill(board, opponent, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -131,36 +131,36 @@ namespace muhle {
                     moves.push_back(create_move(i, free_positions[j]));
                 }
 
-                unmake_move_move(node, piece, i, free_positions[j]);
+                unmake_move_move(board, piece, i, free_positions[j]);
             }
         }
     }
 
-    static void get_moves_phase3(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
+    static void get_moves_phase3(Board& board, Piece piece, Moves& moves) {
         assert(piece != Piece::None);
 
         for (IterIdx i {0}; i < NODES; i++) {
-            if (node.board[i] != piece) {
+            if (board[i] != piece) {
                 continue;
             }
 
             for (IterIdx j {0}; j < NODES; j++) {
-                if (node.board[j] != Piece::None) {
+                if (board[j] != Piece::None) {
                     continue;
                 }
 
-                make_move_move(node, piece, i, j);
+                make_move_move(board, piece, i, j);
 
-                if (is_mill(node, piece, j)) {
+                if (is_mill(board, piece, j)) {
                     const auto opponent {opponent_piece(piece)};
-                    const bool all_in_mills {all_pieces_in_mills(node, opponent)};
+                    const bool all_in_mills {all_pieces_in_mills(board, opponent)};
 
                     for (IterIdx k {0}; k < NODES; k++) {
-                        if (node.board[k] != opponent) {
+                        if (board[k] != opponent) {
                             continue;
                         }
 
-                        if (is_mill(node, opponent, k) && !all_in_mills) {
+                        if (is_mill(board, opponent, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -170,7 +170,7 @@ namespace muhle {
                     moves.push_back(create_move(i, j));
                 }
 
-                unmake_move_move(node, piece, i, j);
+                unmake_move_move(board, piece, i, j);
             }
         }
     }
@@ -233,7 +233,21 @@ namespace muhle {
         }
 
         node.plies++;
-        // TODO plies_without_mills
+        node.rep_position = (
+            std::make_optional(
+                repetition::make_position_bitboard(
+                    node.board,
+                    piece == Piece::White ? Player::White : Player::Black  // TODO
+                )
+            )
+        );
+
+        if (is_take_move(move)) {
+            node.plies_without_mills = 0;
+            node.previous = nullptr;
+        } else {
+            node.plies_without_mills++;
+        }
     }
 
     // void unmake_move(SearchNode& node, const Move& move, Piece piece) {
@@ -324,14 +338,14 @@ namespace muhle {
         position.plies++;
     }
 
-    void generate_moves(SearchNode& node, Piece piece, Array<Move, MAX_MOVES>& moves) {
+    void generate_moves(SearchNode& node, Piece piece, Moves& moves) {
         if (node.plies < 18) {
-            get_moves_phase1(node, piece, moves);
+            get_moves_phase1(node.board, piece, moves);
         } else {
             if (pieces_on_board(node, piece) == 3) {
-                get_moves_phase3(node, piece, moves);
+                get_moves_phase3(node.board, piece, moves);
             } else {
-                get_moves_phase2(node, piece, moves);
+                get_moves_phase2(node.board, piece, moves);
             }
         }
     }
@@ -340,7 +354,7 @@ namespace muhle {
         std::random_device device;
         static std::mt19937 random {std::mt19937(device())};
 
-        Array<Move, MAX_MOVES> moves;
+        Moves moves;
         generate_moves(node, piece, moves);
 
         if (moves.empty()) {

@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <optional>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -7,14 +8,9 @@
 
 namespace muhle {
     namespace repetition {
-        bool check_repetition(
-            const Board& board,
-            Player player,
-            const SearchNode& current,
-            const SearchNode& previous
-        ) {
+        bool check_repetition(const SearchNode& current) {
             unsigned int repetition {1};
-            const SearchNode* node {&previous};
+            const SearchNode* node {current.previous};
 
             while (node != nullptr && node->rep_position) {
                 if (node->rep_position == current.rep_position) {
@@ -57,13 +53,14 @@ namespace muhle {
 
     }
 
-    void fill_node(SearchNode& destination, const SearchNode& source, Player player) {
+    void fill_node(SearchNode& destination, const SearchNode& source) {
         destination.board = source.board;
         destination.plies = source.plies;
         destination.plies_without_mills = source.plies_without_mills;
-        destination.rep_position = source.rep_position;
         destination.white_pieces_on_board = source.white_pieces_on_board;
         destination.black_pieces_on_board = source.black_pieces_on_board;
+
+        // No need to copy rep_position
 
         destination.previous = &source;
     }

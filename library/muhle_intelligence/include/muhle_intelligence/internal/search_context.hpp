@@ -25,20 +25,12 @@ namespace muhle {
             }
         };
 
-        // Node previous can be null
-        bool check_repetition(
-            const Board& board,
-            Player player,
-            const SearchNode& current,
-            const SearchNode& previous
-        );
-
+        bool check_repetition(const SearchNode& current);
         Position make_position_bitboard(const Board& board, Player player);
     }
 
-    void fill_node(SearchNode& destination, const SearchNode& source, Player player);
+    void fill_node(SearchNode& destination, const SearchNode& source);
 
-    // Default constructed is the initial position
     struct SearchNode {
         Board board {};
         unsigned int plies {0};
