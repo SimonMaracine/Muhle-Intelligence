@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -29,13 +28,11 @@ namespace muhle {
         Position make_position_bitboard(const Board& board, Player player);
     }
 
-    void fill_node(SearchNode& destination, const SearchNode& source);
-
     struct SearchNode {
         Board board {};
         unsigned int plies {0};
         unsigned int plies_without_mills {0};
-        std::optional<repetition::Position> rep_position;
+        repetition::Position rep_position;
 
         // Cache
         unsigned int white_pieces_on_board {0};
@@ -44,20 +41,8 @@ namespace muhle {
         const SearchNode* previous {nullptr};
     };
 
-    // struct SearchCtx {
-    //     Board board {};
-    //     unsigned int plies {0};
-    //     unsigned int plies_without_mills {0};
-
-    //     // Cache
-    //     unsigned int white_pieces_on_board {};
-    //     unsigned int black_pieces_on_board {};
-
-    //     struct {
-    //         const repetition::Node* previous {nullptr};
-    //         std::vector<repetition::Node> nodes;  // FIXME this
-    //     } previous;
-    // };
+    void fill_node(SearchNode& destination, const SearchNode& source);
+    bool check_fifty_move(const SearchNode& current);
 
     struct Parameters {
         int PIECE {};

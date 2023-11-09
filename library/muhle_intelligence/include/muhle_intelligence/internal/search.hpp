@@ -8,11 +8,6 @@
 
 #include "muhle_intelligence/internal/search_context.hpp"
 
-/*
-    FIXME
-    implement 50 move rule
-*/
-
 namespace muhle {
     // For every invocation of the AI algorithm, create a new search instance object
     class Search {
@@ -41,9 +36,6 @@ namespace muhle {
             Eval beta,
             SearchNode& current_node
         );
-
-        // SearchCtx ctx;
-        // SearchNode current_node;
 
         // Contains the current position and previous positions up until the last take move
         std::vector<SearchNode> nodes;

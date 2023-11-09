@@ -26,7 +26,7 @@ namespace muhle {
         return true;
     }
 
-#define IS_FREE_CHECK(const_index) \
+#define IS_FREE(const_index) \
     if (board[const_index] == Piece::None) { \
         result.push_back(const_index); \
     }
@@ -36,116 +36,116 @@ namespace muhle {
 
         switch (index) {
             case 0:
-                IS_FREE_CHECK(1)
-                IS_FREE_CHECK(9)
+                IS_FREE(1)
+                IS_FREE(9)
                 break;
             case 1:
-                IS_FREE_CHECK(0)
-                IS_FREE_CHECK(2)
-                IS_FREE_CHECK(4)
+                IS_FREE(0)
+                IS_FREE(2)
+                IS_FREE(4)
                 break;
             case 2:
-                IS_FREE_CHECK(1)
-                IS_FREE_CHECK(14)
+                IS_FREE(1)
+                IS_FREE(14)
                 break;
             case 3:
-                IS_FREE_CHECK(4)
-                IS_FREE_CHECK(10)
+                IS_FREE(4)
+                IS_FREE(10)
                 break;
             case 4:
-                IS_FREE_CHECK(1)
-                IS_FREE_CHECK(3)
-                IS_FREE_CHECK(5)
-                IS_FREE_CHECK(7)
+                IS_FREE(1)
+                IS_FREE(3)
+                IS_FREE(5)
+                IS_FREE(7)
                 break;
             case 5:
-                IS_FREE_CHECK(4)
-                IS_FREE_CHECK(13)
+                IS_FREE(4)
+                IS_FREE(13)
                 break;
             case 6:
-                IS_FREE_CHECK(7)
-                IS_FREE_CHECK(11)
+                IS_FREE(7)
+                IS_FREE(11)
                 break;
             case 7:
-                IS_FREE_CHECK(4)
-                IS_FREE_CHECK(6)
-                IS_FREE_CHECK(8)
+                IS_FREE(4)
+                IS_FREE(6)
+                IS_FREE(8)
                 break;
             case 8:
-                IS_FREE_CHECK(7)
-                IS_FREE_CHECK(12)
+                IS_FREE(7)
+                IS_FREE(12)
                 break;
             case 9:
-                IS_FREE_CHECK(0)
-                IS_FREE_CHECK(10)
-                IS_FREE_CHECK(21)
+                IS_FREE(0)
+                IS_FREE(10)
+                IS_FREE(21)
                 break;
             case 10:
-                IS_FREE_CHECK(3)
-                IS_FREE_CHECK(9)
-                IS_FREE_CHECK(11)
-                IS_FREE_CHECK(18)
+                IS_FREE(3)
+                IS_FREE(9)
+                IS_FREE(11)
+                IS_FREE(18)
                 break;
             case 11:
-                IS_FREE_CHECK(6)
-                IS_FREE_CHECK(10)
-                IS_FREE_CHECK(15)
+                IS_FREE(6)
+                IS_FREE(10)
+                IS_FREE(15)
                 break;
             case 12:
-                IS_FREE_CHECK(8)
-                IS_FREE_CHECK(13)
-                IS_FREE_CHECK(17)
+                IS_FREE(8)
+                IS_FREE(13)
+                IS_FREE(17)
                 break;
             case 13:
-                IS_FREE_CHECK(5)
-                IS_FREE_CHECK(12)
-                IS_FREE_CHECK(14)
-                IS_FREE_CHECK(20)
+                IS_FREE(5)
+                IS_FREE(12)
+                IS_FREE(14)
+                IS_FREE(20)
                 break;
             case 14:
-                IS_FREE_CHECK(2)
-                IS_FREE_CHECK(13)
-                IS_FREE_CHECK(23)
+                IS_FREE(2)
+                IS_FREE(13)
+                IS_FREE(23)
                 break;
             case 15:
-                IS_FREE_CHECK(11)
-                IS_FREE_CHECK(16)
+                IS_FREE(11)
+                IS_FREE(16)
                 break;
             case 16:
-                IS_FREE_CHECK(15)
-                IS_FREE_CHECK(17)
-                IS_FREE_CHECK(19)
+                IS_FREE(15)
+                IS_FREE(17)
+                IS_FREE(19)
                 break;
             case 17:
-                IS_FREE_CHECK(12)
-                IS_FREE_CHECK(16)
+                IS_FREE(12)
+                IS_FREE(16)
                 break;
             case 18:
-                IS_FREE_CHECK(10)
-                IS_FREE_CHECK(19)
+                IS_FREE(10)
+                IS_FREE(19)
                 break;
             case 19:
-                IS_FREE_CHECK(16)
-                IS_FREE_CHECK(18)
-                IS_FREE_CHECK(20)
-                IS_FREE_CHECK(22)
+                IS_FREE(16)
+                IS_FREE(18)
+                IS_FREE(20)
+                IS_FREE(22)
                 break;
             case 20:
-                IS_FREE_CHECK(13)
-                IS_FREE_CHECK(19)
+                IS_FREE(13)
+                IS_FREE(19)
                 break;
             case 21:
-                IS_FREE_CHECK(9)
-                IS_FREE_CHECK(22)
+                IS_FREE(9)
+                IS_FREE(22)
                 break;
             case 22:
-                IS_FREE_CHECK(19)
-                IS_FREE_CHECK(21)
-                IS_FREE_CHECK(23)
+                IS_FREE(19)
+                IS_FREE(21)
+                IS_FREE(23)
                 break;
             case 23:
-                IS_FREE_CHECK(14)
-                IS_FREE_CHECK(22)
+                IS_FREE(14)
+                IS_FREE(22)
                 break;
         }
 

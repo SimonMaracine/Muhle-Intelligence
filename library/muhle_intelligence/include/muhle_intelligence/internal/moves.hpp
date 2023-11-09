@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
-#include <utility>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -17,7 +15,6 @@ namespace muhle {
     using Moves = Array<Move, MAX_MOVES>;
 
     void play_move(SearchNode& node, const Move& move, Piece piece);
-    // void unmake_move(SearchNode& node, const Move& move, Piece piece);
     void play_move(SmnPosition& position, const Move& move);
     void generate_moves(SearchNode& node, Piece piece, Moves& moves);
     Move random_move(SearchNode& node, Piece piece);

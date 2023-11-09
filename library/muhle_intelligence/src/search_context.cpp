@@ -1,5 +1,5 @@
 #include <cstdint>
-#include <optional>
+#include <cassert>
 
 #include <muhle_intelligence/definitions.hpp>
 
@@ -12,7 +12,7 @@ namespace muhle {
             unsigned int repetition {1};
             const SearchNode* node {current.previous};
 
-            while (node != nullptr && node->rep_position) {
+            while (node != nullptr) {
                 if (node->rep_position == current.rep_position) {
                     repetition++;
 
@@ -63,5 +63,11 @@ namespace muhle {
         // No need to copy rep_position
 
         destination.previous = &source;
+    }
+
+    bool check_fifty_move(const SearchNode& current) {
+        assert(current.plies_without_mills <= 50);
+
+        return current.plies_without_mills == 50;
     }
 }

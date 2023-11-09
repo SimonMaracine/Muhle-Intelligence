@@ -90,7 +90,7 @@ namespace muhle {
             const Move& move {*iter2};
 
             if (is_take_move(move)) {
-                // Simply delete all previous nodes
+                // Simply delete all currently created nodes
                 nodes.clear();
             } else {
                 SearchNode node;
@@ -146,61 +146,6 @@ namespace muhle {
         assert(!nodes.empty());
 
         return nodes.back();
-
-        // ctx.board = position.position.board;
-        // ctx.plies = position.plies;
-
-        // for (IterIdx i {0}; i < NODES; i++) {
-        //     switch (position.position.board[i]) {
-        //         case Piece::White:
-        //             ctx.white_pieces_on_board++;
-        //             break;
-        //         case Piece::Black:
-        //             ctx.black_pieces_on_board++;
-        //             break;
-        //         default:
-        //             break;
-        //     }
-        // }
-
-        // if (prev_positions_begin == prev_positions_end) {
-        //     // Pointer ctx.previous.previous will remain null
-        //     return;
-        // }
-
-        // auto iter1 = prev_positions_begin;
-        // auto iter2 = prev_moves.cbegin();
-
-        // while (iter1 != prev_positions_end && iter2 != prev_moves.cend()) {
-        //     const Position& position {*iter1};
-        //     const Move& move {*iter2};
-
-        //     if (is_take_move(move)) {
-        //         // Simply cut all previous nodes
-        //         ctx.previous.nodes.clear();
-        //     } else {
-        //         SearchNode node;
-        //         node.rep_position = repetition::make_position_bitboard(position.board, position.player);
-
-        //         ctx.previous.nodes.push_back(node);
-        //     }
-
-        //     iter1++;
-        //     iter2++;
-        // }
-
-        // // Setup pointers only now
-        // for (std::size_t i {ctx.previous.nodes.size()}; i > 0; i--) {
-        //     const std::size_t I {i - 1};
-
-        //     if (I > 0) {
-        //         ctx.previous.nodes[I].previous = &ctx.previous.nodes[I - 1];
-        //     }
-        // }
-
-        // if (!ctx.previous.nodes.empty()) {
-        //     ctx.previous.previous = &ctx.previous.nodes[ctx.previous.nodes.size() - 1];
-        // }
     }
 
     Eval Search::minimax(
@@ -219,7 +164,9 @@ namespace muhle {
             return 0;
         }
 
-        // TODO check 50-move rule
+        if (check_fifty_move(current_node)) {
+            return 0;
+        }
 
         if (player == Player::White) {
             Eval max_evaluation {MIN_EVALUATION};
@@ -233,14 +180,11 @@ namespace muhle {
                 SearchNode new_node;
                 fill_node(new_node, current_node);
 
-                // const SearchNode* node {is_take_move(move) ? nullptr : &current_node};
-
                 play_move(new_node, move, Piece::White);
 
                 const Eval evaluation {
                     minimax(Player::Black, depth - 1, plies_from_root + 1, alpha, beta, new_node)
                 };
-                // unmake_move(node, move, Piece::White);
 
                 if (evaluation > max_evaluation) {
                     max_evaluation = evaluation;
@@ -271,13 +215,11 @@ namespace muhle {
                 SearchNode new_node;
                 fill_node(new_node, current_node);
 
-                // const SearchNode* node {is_take_move(move) ? nullptr : &current_node};
-
                 play_move(new_node, move, Piece::Black);
+
                 const Eval evaluation {
                     minimax(Player::White, depth - 1, plies_from_root + 1, alpha, beta, new_node)
                 };
-                // unmake_move(node, move, Piece::Black);
 
                 if (evaluation < min_evaluation) {
                     min_evaluation = evaluation;

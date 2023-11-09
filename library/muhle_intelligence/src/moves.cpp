@@ -1,6 +1,4 @@
 #include <cstddef>
-#include <cstdint>
-#include <utility>
 #include <cassert>
 #include <random>
 
@@ -234,11 +232,9 @@ namespace muhle {
 
         node.plies++;
         node.rep_position = (
-            std::make_optional(
-                repetition::make_position_bitboard(
-                    node.board,
-                    piece == Piece::White ? Player::White : Player::Black  // TODO
-                )
+            repetition::make_position_bitboard(
+                node.board,
+                piece == Piece::White ? Player::White : Player::Black  // TODO
             )
         );
 
@@ -249,66 +245,6 @@ namespace muhle {
             node.plies_without_mills++;
         }
     }
-
-    // void unmake_move(SearchNode& node, const Move& move, Piece piece) {
-    //     switch (move.type) {
-    //         case MoveType::Place:
-    //             node.board[move.place.place_index] = Piece::None;
-
-    //             switch (piece) {
-    //                 case Piece::White:
-    //                     node.white_pieces_on_board--;
-    //                     break;
-    //                 case Piece::Black:
-    //                     node.black_pieces_on_board--;
-    //                     break;
-    //                 default:
-    //                     break;
-    //             }
-
-    //             break;
-    //         case MoveType::Move:
-    //             node.board[move.move.source_index] = piece;
-    //             node.board[move.move.destination_index] = Piece::None;
-
-    //             break;
-    //         case MoveType::PlaceTake:
-    //             node.board[move.place_take.place_index] = Piece::None;
-    //             node.board[move.place_take.take_index] = opponent_piece(piece);
-
-    //             switch (piece) {
-    //                 case Piece::White:
-    //                     node.black_pieces_on_board++;
-    //                     break;
-    //                 case Piece::Black:
-    //                     node.white_pieces_on_board++;
-    //                     break;
-    //                 default:
-    //                     break;
-    //             }
-
-    //             break;
-    //         case MoveType::MoveTake:
-    //             node.board[move.move_take.source_index] = piece;
-    //             node.board[move.move_take.destination_index] = Piece::None;
-    //             node.board[move.move_take.take_index] = opponent_piece(piece);
-
-    //             switch (piece) {
-    //                 case Piece::White:
-    //                     node.black_pieces_on_board++;
-    //                     break;
-    //                 case Piece::Black:
-    //                     node.white_pieces_on_board++;
-    //                     break;
-    //                 default:
-    //                     break;
-    //             }
-
-    //             break;
-    //     }
-
-    //     node.plies--;
-    // }
 
     void play_move(SmnPosition& position, const Move& move) {
         static const Piece pieces[2] {Piece::White, Piece::Black};
