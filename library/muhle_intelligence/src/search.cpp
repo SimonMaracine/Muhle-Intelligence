@@ -96,7 +96,7 @@ namespace muhle {
                 SearchNode node;
                 node.board = position.position.board;
                 node.plies = position.plies;
-                node.plies_without_mills = position.plies_witout_mills;
+                node.plies_without_mills = position.plies_without_mills;
                 node.rep_position = (
                     repetition::make_position_bitboard(
                         position.position.board,
@@ -119,7 +119,7 @@ namespace muhle {
         SearchNode current_node;
         current_node.board = position.position.board;
         current_node.plies = position.plies;
-        current_node.plies_without_mills = position.plies_witout_mills;
+        current_node.plies_without_mills = position.plies_without_mills;
         current_node.rep_position = (
             repetition::make_position_bitboard(
                 position.position.board,

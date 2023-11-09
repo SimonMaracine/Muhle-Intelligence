@@ -53,16 +53,16 @@ namespace muhle {
 
     }
 
-    void fill_node(SearchNode& destination, const SearchNode& source) {
-        destination.board = source.board;
-        destination.plies = source.plies;
-        destination.plies_without_mills = source.plies_without_mills;
-        destination.white_pieces_on_board = source.white_pieces_on_board;
-        destination.black_pieces_on_board = source.black_pieces_on_board;
+    void fill_node(SearchNode& current, const SearchNode& previous) {
+        current.board = previous.board;
+        current.plies = previous.plies;
+        current.plies_without_mills = previous.plies_without_mills;
+        current.white_pieces_on_board = previous.white_pieces_on_board;
+        current.black_pieces_on_board = previous.black_pieces_on_board;
 
         // No need to copy rep_position
 
-        destination.previous = &source;
+        current.previous = &previous;
     }
 
     bool check_fifty_move(const SearchNode& current) {

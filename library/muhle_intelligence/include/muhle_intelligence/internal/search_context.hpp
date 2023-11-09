@@ -41,7 +41,7 @@ namespace muhle {
         const SearchNode* previous {nullptr};
     };
 
-    void fill_node(SearchNode& destination, const SearchNode& source);
+    void fill_node(SearchNode& current, const SearchNode& previous);
     bool check_fifty_move(const SearchNode& current);
 
     struct Parameters {

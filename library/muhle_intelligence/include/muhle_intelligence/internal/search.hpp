@@ -27,7 +27,6 @@ namespace muhle {
             const std::vector<Move>& prev_moves
         );
 
-        // Pass null to previous_node, if there should be no history
         Eval minimax(
             Player player,
             unsigned int depth,

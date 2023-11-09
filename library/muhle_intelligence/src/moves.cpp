@@ -234,7 +234,7 @@ namespace muhle {
         node.rep_position = (
             repetition::make_position_bitboard(
                 node.board,
-                piece == Piece::White ? Player::White : Player::Black  // TODO
+                piece == Piece::White ? Player::White : Player::Black
             )
         );
 
