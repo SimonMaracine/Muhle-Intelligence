@@ -456,185 +456,185 @@ void MuhleBoard::maybe_generate_moves() {
     }
 }
 
-void MuhleBoard::try_place(const Move& move, Idx place_index) {
-    if (must_take_piece) {
-        // A move is already in process
-        return;
-    }
+// void MuhleBoard::try_place(const Move& move, Idx place_index) {
+//     if (must_take_piece) {
+//         // A move is already in process
+//         return;
+//     }
 
-    if (move.place.place_index != place_index) {
-        return;
-    }
+//     if (move.place.place_index != place_index) {
+//         return;
+//     }
 
-    log.log_move(move, turn);
-    move_callback(move);
+//     log.log_move(move, turn);
+//     move_callback(move);
 
-    do_place(place_index);
-}
+//     do_place(place_index);
+// }
 
-void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_index) {
-    if (must_take_piece) {
-        if (move.place_take.take_index != take_index) {
-            return;
-        }
+// void MuhleBoard::try_place_take(const Move& move, Idx place_index, Idx take_index) {
+//     if (must_take_piece) {
+//         if (move.place_take.take_index != take_index) {
+//             return;
+//         }
 
-        log.log_move(move, turn);
-        move_callback(move);
-    } else {
-        if (move.place_take.place_index != place_index) {
-            return;
-        }
-    }
+//         log.log_move(move, turn);
+//         move_callback(move);
+//     } else {
+//         if (move.place_take.place_index != place_index) {
+//             return;
+//         }
+//     }
 
-    do_place_take(place_index, take_index);
-}
+//     do_place_take(place_index, take_index);
+// }
 
-void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_index) {
-    if (must_take_piece) {
-        // A move is already in process
-        return;
-    }
+// void MuhleBoard::try_move(const Move& move, Idx source_index, Idx destination_index) {
+//     if (must_take_piece) {
+//         // A move is already in process
+//         return;
+//     }
 
-    if (move.move.source_index != source_index || move.move.destination_index != destination_index) {
-        return;
-    }
+//     if (move.move.source_index != source_index || move.move.destination_index != destination_index) {
+//         return;
+//     }
 
-    log.log_move(move, turn);
-    move_callback(move);
+//     log.log_move(move, turn);
+//     move_callback(move);
 
-    do_move(source_index, destination_index);
-}
+//     do_move(source_index, destination_index);
+// }
 
-void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index) {
-    if (must_take_piece) {
-        if (move.move_take.take_index != take_index) {
-            return;
-        }
+// void MuhleBoard::try_move_take(const Move& move, Idx source_index, Idx destination_index, Idx take_index) {
+//     if (must_take_piece) {
+//         if (move.move_take.take_index != take_index) {
+//             return;
+//         }
 
-        log.log_move(move, turn);
-        move_callback(move);
-    } else {
-        if (move.move_take.source_index != source_index || move.move_take.destination_index != destination_index) {
-            return;
-        }
-    }
+//         log.log_move(move, turn);
+//         move_callback(move);
+//     } else {
+//         if (move.move_take.source_index != source_index || move.move_take.destination_index != destination_index) {
+//             return;
+//         }
+//     }
 
-    do_move_take(source_index, destination_index, take_index);
-}
+//     do_move_take(source_index, destination_index, take_index);
+// }
 
-void MuhleBoard::do_place(Idx place_index) {
-    assert(board[place_index].piece == Piece::None);
+// void MuhleBoard::do_place(Idx place_index) {
+//     assert(board[place_index].piece == Piece::None);
 
-    if (turn == Player::White) {
-        board[place_index].piece = Piece::White;
-        white_pieces_on_board++;
-    } else {
-        board[place_index].piece = Piece::Black;
-        black_pieces_on_board++;
-    }
+//     if (turn == Player::White) {
+//         board[place_index].piece = Piece::White;
+//         white_pieces_on_board++;
+//     } else {
+//         board[place_index].piece = Piece::Black;
+//         black_pieces_on_board++;
+//     }
 
-    change_turn();
-    maybe_generate_moves();
-    check_winner_blocking();
-}
+//     change_turn();
+//     maybe_generate_moves();
+//     check_winner_blocking();
+// }
 
-void MuhleBoard::do_place_take(Idx place_index, Idx take_index) {
-    if (must_take_piece) {
-        if (turn == Player::White) {
-            assert(board[take_index].piece == Piece::Black);
-        } else {
-            assert(board[take_index].piece == Piece::White);
-        }
+// void MuhleBoard::do_place_take(Idx place_index, Idx take_index) {
+//     if (must_take_piece) {
+//         if (turn == Player::White) {
+//             assert(board[take_index].piece == Piece::Black);
+//         } else {
+//             assert(board[take_index].piece == Piece::White);
+//         }
 
-        board[take_index].piece = Piece::None;
+//         board[take_index].piece = Piece::None;
 
-        if (turn == Player::White) {
-            black_pieces_on_board--;
-        } else {
-            white_pieces_on_board--;
-        }
+//         if (turn == Player::White) {
+//             black_pieces_on_board--;
+//         } else {
+//             white_pieces_on_board--;
+//         }
 
-        must_take_piece = false;
+//         must_take_piece = false;
 
-        // Previous positions can occur no more
-        repetition.clear_repetition();
+//         // Previous positions can occur no more
+//         repetition.clear_repetition();
 
-        check_winner_material();
-        change_turn_after_take();
-        maybe_generate_moves();
-        check_winner_blocking();
-    } else {
-        assert(board[place_index].piece == Piece::None);
+//         check_winner_material();
+//         change_turn_after_take();
+//         maybe_generate_moves();
+//         check_winner_blocking();
+//     } else {
+//         assert(board[place_index].piece == Piece::None);
 
-        if (turn == Player::White) {
-            board[place_index].piece = Piece::White;
-            white_pieces_on_board++;
-        } else {
-            board[place_index].piece = Piece::Black;
-            black_pieces_on_board++;
-        }
+//         if (turn == Player::White) {
+//             board[place_index].piece = Piece::White;
+//             white_pieces_on_board++;
+//         } else {
+//             board[place_index].piece = Piece::Black;
+//             black_pieces_on_board++;
+//         }
 
-        must_take_piece = true;
-    }
-}
+//         must_take_piece = true;
+//     }
+// }
 
-void MuhleBoard::do_move(Idx source_index, Idx destination_index) {
-    if (turn == Player::White) {
-        assert(board[source_index].piece == Piece::White);
-    } else {
-        assert(board[source_index].piece == Piece::Black);
-    }
-    assert(board[destination_index].piece == Piece::None);
+// void MuhleBoard::do_move(Idx source_index, Idx destination_index) {
+//     if (turn == Player::White) {
+//         assert(board[source_index].piece == Piece::White);
+//     } else {
+//         assert(board[source_index].piece == Piece::Black);
+//     }
+//     assert(board[destination_index].piece == Piece::None);
 
-    std::swap(board[source_index].piece, board[destination_index].piece);
+//     std::swap(board[source_index].piece, board[destination_index].piece);
 
-    change_turn();
-    maybe_generate_moves();
-    check_winner_blocking();
+//     change_turn();
+//     maybe_generate_moves();
+//     check_winner_blocking();
 
-    selected_piece_index = INVALID_INDEX;
-}
+//     selected_piece_index = INVALID_INDEX;
+// }
 
-void MuhleBoard::do_move_take(Idx source_index, Idx destination_index, Idx take_index) {
-    if (must_take_piece) {
-        if (turn == Player::White) {
-            assert(board[take_index].piece == Piece::Black);
-        } else {
-            assert(board[take_index].piece == Piece::White);
-        }
+// void MuhleBoard::do_move_take(Idx source_index, Idx destination_index, Idx take_index) {
+//     if (must_take_piece) {
+//         if (turn == Player::White) {
+//             assert(board[take_index].piece == Piece::Black);
+//         } else {
+//             assert(board[take_index].piece == Piece::White);
+//         }
 
-        board[take_index].piece = Piece::None;
+//         board[take_index].piece = Piece::None;
 
-        if (turn == Player::White) {
-            black_pieces_on_board--;
-        } else {
-            white_pieces_on_board--;
-        }
+//         if (turn == Player::White) {
+//             black_pieces_on_board--;
+//         } else {
+//             white_pieces_on_board--;
+//         }
 
-        must_take_piece = false;
+//         must_take_piece = false;
 
-        // Previous positions can occur no more
-        repetition.clear_repetition();
+//         // Previous positions can occur no more
+//         repetition.clear_repetition();
 
-        check_winner_material();
-        change_turn_after_take();
-        maybe_generate_moves();
-        check_winner_blocking();
-    } else {
-        if (turn == Player::White) {
-            assert(board[source_index].piece == Piece::White);
-        } else {
-            assert(board[source_index].piece == Piece::Black);
-        }
-        assert(board[destination_index].piece == Piece::None);
+//         check_winner_material();
+//         change_turn_after_take();
+//         maybe_generate_moves();
+//         check_winner_blocking();
+//     } else {
+//         if (turn == Player::White) {
+//             assert(board[source_index].piece == Piece::White);
+//         } else {
+//             assert(board[source_index].piece == Piece::Black);
+//         }
+//         assert(board[destination_index].piece == Piece::None);
 
-        std::swap(board[source_index].piece, board[destination_index].piece);
+//         std::swap(board[source_index].piece, board[destination_index].piece);
 
-        selected_piece_index = INVALID_INDEX;
+//         selected_piece_index = INVALID_INDEX;
 
-        must_take_piece = true;
-    }
-}
+//         must_take_piece = true;
+//     }
+// }
 
 std::vector<Move> MuhleBoard::generate_moves() {
     std::vector<Move> moves;
