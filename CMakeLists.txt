@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Variable used to control the build type")
 
-option(MUHLE_SHARED_LIBRARY "Build the AI library as static or as dynamic" OFF)
 option(MUHLE_BUILD_GUI "Build the GUI components" OFF)
 option(MUHLE_BUILD_TESTS "Build tests" OFF)
 
@@ -33,7 +32,6 @@ if(MUHLE_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-message(STATUS "Muhle: Building shared library: ${MUHLE_SHARED_LIBRARY}")
 message(STATUS "Muhle: Building GUI: ${MUHLE_BUILD_GUI}")
 message(STATUS "Muhle: Building tests: ${MUHLE_BUILD_TESTS}")
 message(STATUS "Muhle: Build type: ${CMAKE_BUILD_TYPE}")

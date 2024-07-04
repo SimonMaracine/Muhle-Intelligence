@@ -1,29 +1,15 @@
+#include "muhle_player.hpp"
+
 #include <iostream>
 #include <string>
 
 #include <gui_base/gui_base.hpp>
 #include <ImGuiFileDialog.h>
-#include <just_dl/just_dl.hpp>
-#include <muhle_intelligence/muhle_intelligence.hpp>
-#include <muhle_intelligence/miscellaneous.hpp>
-
-#include "muhle_player.hpp"
-
-/*
-    TODO
-    cache last library path location
-*/
 
 void MuhlePlayer::start() {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigWindowsMoveFromTitleBarOnly = true;
-
-    muhle_board.set_move_callback([this](const Move& move) {
-        muhle->move(move_to_muhle_move(move));
-
-        state = State::NextTurn;
-        muhle_board.user_input = false;
-    });
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 }
 
 void MuhlePlayer::update() {
@@ -32,86 +18,21 @@ void MuhlePlayer::update() {
     controls();
     load_library_dialog();
 
-    if (muhle == nullptr || muhle_board.is_game_over()) {
-        return;
-    }
-
     switch (state) {
         case State::NextTurn:
-            switch (muhle_board.get_turn()) {
-                case Player::White:
-                    switch (white) {
-                        case PlayerHuman:
-                            state = State::HumanThinking;
-                            break;
-                        case PlayerComputer:
-                            state = State::ComputerBegin;
-                            break;
-                    }
-
-                    break;
-                case Player::Black:
-                    switch (black) {
-                        case PlayerHuman:
-                            state = State::HumanThinking;
-                            break;
-                        case PlayerComputer:
-                            state = State::ComputerBegin;
-                            break;
-                    }
-
-                    break;
-            }
-
             break;
         case State::HumanThinking:
-            muhle_board.user_input = true;
-
             break;
-        case State::ComputerBegin: {
-            muhle->go(muhle_result);
-
+        case State::ComputerBegin:
             state = State::ComputerThinking;
-
             break;
-        }
         case State::ComputerThinking:
-            if (muhle_result.done) {
-                muhle::print_result_statistics(muhle_result, std::cout);
-
-                switch (muhle_result.result.type) {
-                    case muhle::MoveType::Place:
-                        muhle_board.place_piece(muhle_result.result.place.place_index);
-                        break;
-                    case muhle::MoveType::Move:
-                        muhle_board.move_piece(
-                            muhle_result.result.move.source_index,
-                            muhle_result.result.move.destination_index
-                        );
-                        break;
-                    case muhle::MoveType::PlaceTake:
-                        muhle_board.place_take_piece(
-                            muhle_result.result.place_take.place_index,
-                            muhle_result.result.place_take.take_index
-                        );
-                        break;
-                    case muhle::MoveType::MoveTake:
-                        muhle_board.move_take_piece(
-                            muhle_result.result.move_take.source_index,
-                            muhle_result.result.move_take.destination_index,
-                            muhle_result.result.move_take.take_index
-                        );
-                        break;
-                }
-
-                state = State::NextTurn;
-            }
-
+            state = State::NextTurn;
             break;
     }
 }
 
-void MuhlePlayer::dispose() {
+void MuhlePlayer::stop() {
     unload_library();
 }
 
@@ -119,69 +40,10 @@ void MuhlePlayer::load_library(const std::string& file_path) {
     if (file_path.empty()) {
         return;
     }
-
-    unload_library();
-
-    just_dl::Error err;
-
-    library_handle = just_dl::open_library(file_path, 0, err);
-
-    if (err) {
-        std::cout << "Could not open library: " << err.message() << '\n';
-        return;
-    }
-
-    muhle_intelligence_create = reinterpret_cast<LibraryCreate>(
-        just_dl::load_function(library_handle, "muhle_intelligence_create", err)
-    );
-
-    muhle_intelligence_destroy = reinterpret_cast<LibraryDestroy>(
-        just_dl::load_function(library_handle, "muhle_intelligence_destroy", err)
-    );
-
-    muhle_intelligence_version = reinterpret_cast<LibraryVersion>(
-        just_dl::load_function(library_handle, "muhle_intelligence_version", err)
-    );
-
-    if (err) {
-        std::cout << "Could not load functions: " << err.message() << '\n';
-
-        just_dl::close_library(library_handle, err);
-        library_handle = nullptr;
-
-        return;
-    }
-
-    muhle = muhle_intelligence_create();
-    muhle->initialize();
-    muhle->new_game();
-    // muhle->set_parameter("DEPTH", 6);
-
-    library_name = muhle_intelligence_version();
-
-    std::cout << "Successfully loaded library `" << file_path << "`, named `" << library_name << "`\n";
 }
 
 void MuhlePlayer::unload_library() {
-    if (library_handle == nullptr) {
-        return;
-    }
 
-    muhle->join_thread();
-    muhle_intelligence_destroy(muhle);
-
-    just_dl::Error err;
-
-    just_dl::close_library(library_handle, err);
-
-    if (err) {
-        std::cout << err.message() << '\n';
-        return;
-    }
-
-    std::cout << "Successfully unloaded library named: `" << library_name << "`\n";
-
-    library_name = "[None]";
 }
 
 void MuhlePlayer::main_menu_bar() {
@@ -230,9 +92,15 @@ void MuhlePlayer::main_menu_bar() {
 }
 
 void MuhlePlayer::load_library() {
-    ImGuiFileDialog::Instance()->OpenDialog(
-        "FileDialog", "Choose File", ".so,.dll", ".", 1, nullptr, ImGuiFileDialogFlags_Modal
-    );
+    // ImGuiFileDialog::Instance()->OpenDialog(
+    //     "FileDialog",
+    //     "Choose File",
+    //     ".so,.dll",
+    //     ".",
+    //     1,
+    //     nullptr,
+    //     ImGuiFileDialogFlags_Modal
+    // );
 }
 
 void MuhlePlayer::load_library_dialog() {
@@ -251,19 +119,15 @@ void MuhlePlayer::import_position() {
     char buffer[32] {};
 
     if (ImGui::InputText("SMN string", buffer, 32, ImGuiInputTextFlags_EnterReturnsTrue)) {
-        if (!muhle_board.set_position(buffer)) {
-            std::cout << "Invalid SMN string\n";
-        }
+        // if (!muhle_board.set_position(buffer)) {
+        //     std::cout << "Invalid SMN string\n";
+        // }
     }
 }
 
 void MuhlePlayer::reset() {
-    muhle_board.reset();
+    // muhle_board.reset();
     state = State::NextTurn;
-
-    if (muhle != nullptr) {
-        muhle->new_game();
-    }
 }
 
 void MuhlePlayer::about() {
@@ -285,7 +149,7 @@ void MuhlePlayer::board() {
 
 void MuhlePlayer::controls() {
     if (ImGui::Begin("Controls")) {
-        ImGui::Text("AI library name: %s", library_name.c_str());
+        ImGui::Text("AI library name: %s", "");
         ImGui::Separator();
 
         ImGui::Spacing();
@@ -307,13 +171,13 @@ void MuhlePlayer::controls() {
         // FIXME don't change state when user made half move
 
         if (state != State::ComputerThinking) {
-            if (ImGui::RadioButton("Human##w", &white, PlayerHuman)) {
+            if (ImGui::RadioButton("Human##w", &white, 0)) {
                 state = State::NextTurn;
             }
 
             ImGui::SameLine();
 
-            if (ImGui::RadioButton("Computer##w", &white, PlayerComputer)) {
+            if (ImGui::RadioButton("Computer##w", &white, 1)) {
                 state = State::NextTurn;
             }
         } else {
@@ -326,13 +190,13 @@ void MuhlePlayer::controls() {
         ImGui::SameLine();
 
         if (state != State::ComputerThinking) {
-            if (ImGui::RadioButton("Human##b", &black, PlayerHuman)) {
+            if (ImGui::RadioButton("Human##b", &black, 0)) {
                 state = State::NextTurn;
             }
 
             ImGui::SameLine();
 
-            if (ImGui::RadioButton("Computer##b", &black, PlayerComputer)) {
+            if (ImGui::RadioButton("Computer##b", &black, 1)) {
                 state = State::NextTurn;
             }
         } else {
@@ -343,33 +207,4 @@ void MuhlePlayer::controls() {
     }
 
     ImGui::End();
-}
-
-muhle::Move MuhlePlayer::move_to_muhle_move(const Move& move) {
-    muhle::Move result;
-
-    switch (move.type) {
-        case MoveType::Place:
-            result.type = muhle::MoveType::Place;
-            result.place.place_index = static_cast<muhle::Idx>(move.place.place_index);
-            break;
-        case MoveType::Move:
-            result.type = muhle::MoveType::Move;
-            result.move.source_index = static_cast<muhle::Idx>(move.move.source_index);
-            result.move.destination_index = static_cast<muhle::Idx>(move.move.destination_index);
-            break;
-        case MoveType::PlaceTake:
-            result.type = muhle::MoveType::PlaceTake;
-            result.place_take.place_index = static_cast<muhle::Idx>(move.place_take.place_index);
-            result.place_take.take_index = static_cast<muhle::Idx>(move.place_take.take_index);
-            break;
-        case MoveType::MoveTake:
-            result.type = muhle::MoveType::MoveTake;
-            result.move_take.source_index = static_cast<muhle::Idx>(move.move_take.source_index);
-            result.move_take.destination_index = static_cast<muhle::Idx>(move.move_take.destination_index);
-            result.move_take.take_index = static_cast<muhle::Idx>(move.move_take.take_index);
-            break;
-    }
-
-    return result;
 }

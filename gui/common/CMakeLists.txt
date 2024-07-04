@@ -7,17 +7,9 @@ add_library(common STATIC
     "src/game.cpp"
 )
 
-target_link_libraries(common PRIVATE
-    gui_base
-    muhle_intelligence_api
-    muhle_intelligence_miscellaneous
-)
-
 target_include_directories(common PUBLIC "include")
+
+target_link_libraries(common PRIVATE gui_base)
 
 set_cpp_standard(common)
 enable_warnings(common)
-
-if(UNIX)
-    target_compile_options(common PRIVATE "-Wno-parentheses")
-endif()
