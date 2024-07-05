@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Variable used to control the build type")
-
 project("Muhle-Intelligence" LANGUAGES CXX)
+
+set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Variable used to control the build type")
 
 function(enable_warnings target)
     if(UNIX)
