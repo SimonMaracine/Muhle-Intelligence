@@ -12,8 +12,8 @@ namespace board {
     inline constexpr Idx NULL_INDEX {-1};
 
     enum class Player {
-        White,
-        Black
+        White = 1,
+        Black = 2
     };
 
     enum class MoveType {
@@ -24,7 +24,7 @@ namespace board {
     };
 
     enum class Node {
-        Empty = -1,
+        Empty,
         White,
         Black
     };
@@ -64,10 +64,22 @@ namespace board {
 
     using Board = std::array<Node, 24>;
 
+    struct Position {
+        Board board {};
+        Player turn {};
+
+        bool operator==(const Position& other) const {
+            return board == other.board && turn == other.turn;
+        }
+    };
+
     class MuhleBoard {
     public:
+        MuhleBoard();
+
         void update(bool user_input = true);
         void reset(std::string_view position_string = "");
+        void debug() const;
 
         void place(Idx place_index);
         void place_take(Idx place_index, Idx take_index);
@@ -75,7 +87,34 @@ namespace board {
         void move_take(Idx source_index, Idx destination_index, Idx take_index);
     private:
         void update_user_input();
-        Idx get_index(ImVec2 position);
+        bool select_piece(Idx index);
+        void try_place(Idx place_index);
+        void try_place_take(Idx place_index, Idx take_index);
+        void try_move(Idx source_index, Idx destination_index);
+        void try_move_take(Idx source_index, Idx destination_index, Idx take_index);
+        void finish_turn(bool advancement = true);
+        void check_winner_material();
+        void check_winner_blocking();
+        void check_fifty_move_rule();
+        void check_threefold_repetition(const Position& position);
+        std::vector<Move> generate_moves() const;
+        static void generate_moves_phase1(Player player, Board& board, std::vector<Move>& moves);
+        static void generate_moves_phase2(Player player, Board& board, std::vector<Move>& moves);
+        static void generate_moves_phase3(Player player, Board& board, std::vector<Move>& moves);
+        static void make_place_move(Player player, Idx place_index, Board& board);
+        static void unmake_place_move(Idx place_index, Board& board);
+        static void make_move_move(Idx source_index, Idx destination_index, Board& board);
+        static void unmake_move_move(Idx source_index, Idx destination_index, Board& board);
+        static bool is_mill(Player player, Idx index, const Board& board);
+        static bool all_pieces_in_mills(Player player, const Board& board);
+        static std::vector<Idx> neighbor_free_positions(Idx index, const Board& board);
+        static Move create_place(Idx place_index);
+        static Move create_place_take(Idx place_index, Idx take_index);
+        static Move create_move(Idx source_index, Idx destination_index);
+        static Move create_move_take(Idx source_index, Idx destination_index, Idx take_index);
+        Idx get_index(ImVec2 position) const;
+        unsigned int count_pieces(Player player) const;
+        static Player opponent(Player player);
         static bool point_in_circle(ImVec2 point, ImVec2 circle, float radius);
 
         Board board {};
@@ -83,13 +122,14 @@ namespace board {
         GameOver game_over {GameOver::None};
         unsigned int plies {};
         unsigned int plies_without_advancement {};
-        // TODO repetition history
+        std::vector<Position> positions;
 
         // GUI data
         float board_unit {};
         ImVec2 board_offset {};
-        std::array<ImVec2, 24> positions {};
-        Idx selected_node_index {NULL_INDEX};
+        Idx user_stored_index1 {NULL_INDEX};
+        Idx user_stored_index2 {NULL_INDEX};
+        bool user_must_take_piece {false};
         std::vector<Move> legal_moves;
 
         static constexpr float NODE_RADIUS {2.2f};

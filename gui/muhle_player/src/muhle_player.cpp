@@ -7,7 +7,7 @@
 #include <ImGuiFileDialog.h>
 
 void MuhlePlayer::start() {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io {ImGui::GetIO()};
     io.ConfigWindowsMoveFromTitleBarOnly = true;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 }
@@ -126,7 +126,7 @@ void MuhlePlayer::import_position() {
 }
 
 void MuhlePlayer::reset() {
-    // muhle_board.reset();
+    muhle_board.reset();
     state = State::NextTurn;
 }
 
@@ -145,6 +145,7 @@ void MuhlePlayer::notation() {
 
 void MuhlePlayer::board() {
     muhle_board.update();
+    muhle_board.debug();
 }
 
 void MuhlePlayer::controls() {

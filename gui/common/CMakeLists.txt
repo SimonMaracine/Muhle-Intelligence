@@ -11,5 +11,5 @@ target_include_directories(common PUBLIC "include")
 
 target_link_libraries(common PRIVATE gui_base)
 
-set_cpp_standard(common)
 enable_warnings(common)
+set_cpp_standard(common)
