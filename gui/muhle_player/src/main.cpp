@@ -7,8 +7,8 @@
 int main() {
     gui_base::WindowProperties properties;
     properties.width = 1024;
-    properties.height = 768;
-    properties.title = "Muhle Intelligence";
+    properties.height = 576;
+    properties.title = u8"Mühle Player";
 
     try {
         MuhlePlayer program {properties};

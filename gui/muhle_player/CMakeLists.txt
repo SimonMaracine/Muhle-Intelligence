@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 add_executable(muhle_player
     "src/main.cpp"
-    "src/muhle_player.hpp"
     "src/muhle_player.cpp"
+    "src/muhle_player.hpp"
 )
 
 target_link_libraries(muhle_player PRIVATE

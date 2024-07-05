@@ -4,6 +4,3 @@ set(INSTALL_GTEST OFF)
 set(BUILD_GMOCK OFF)
 
 add_subdirectory(extern/googletest)
-
-# add_subdirectory(test_library)  # FIXME
-# add_subdirectory(test_move_generation_speed)

@@ -49,7 +49,7 @@ void MuhlePlayer::unload_library() {
 void MuhlePlayer::main_menu_bar() {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("Player")) {
-            if (ImGui::MenuItem("Load AI")) {
+            if (ImGui::MenuItem("Load Engine")) {
                 load_library();
             }
             if (ImGui::MenuItem("Reset Board", nullptr, nullptr, state != State::ComputerThinking)) {
@@ -118,7 +118,7 @@ void MuhlePlayer::load_library_dialog() {
 void MuhlePlayer::import_position() {
     char buffer[32] {};
 
-    if (ImGui::InputText("SMN string", buffer, 32, ImGuiInputTextFlags_EnterReturnsTrue)) {
+    if (ImGui::InputText("string", buffer, 32, ImGuiInputTextFlags_EnterReturnsTrue)) {
         // if (!muhle_board.set_position(buffer)) {
         //     std::cout << "Invalid SMN string\n";
         // }
@@ -150,12 +150,12 @@ void MuhlePlayer::board() {
 
 void MuhlePlayer::controls() {
     if (ImGui::Begin("Controls")) {
-        ImGui::Text("AI library name: %s", "");
+        ImGui::Text("Engine name: %s", "");
         ImGui::Separator();
 
         ImGui::Spacing();
 
-        if (ImGui::Button("Stop AI")) {
+        if (ImGui::Button("Stop Engine")) {
 
         }
 
