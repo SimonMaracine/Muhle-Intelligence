@@ -302,8 +302,17 @@ namespace board {
                 return true;
             }
         } else {
-            if (user_stored_index1 == index) {
-                user_stored_index1 = NULL_INDEX;
+            if (index == user_stored_index1) {
+                if (user_stored_index2 == NULL_INDEX) {
+                    user_stored_index1 = NULL_INDEX;
+                }
+
+                return true;
+            } else if (board[index] == static_cast<Node>(turn)) {
+                if (user_stored_index2 == NULL_INDEX) {
+                    user_stored_index1 = index;
+                }
+
                 return true;
             }
         }
@@ -916,7 +925,7 @@ namespace board {
     }
 
     bool MuhleBoard::point_in_circle(ImVec2 point, ImVec2 circle, float radius) {
-        const ImVec2 subtracted {ImVec2(circle.x - point.x, circle.y - point.y)};
+        const ImVec2 subtracted {circle.x - point.x, circle.y - point.y};
         const float length {std::pow(subtracted.x * subtracted.x + subtracted.y * subtracted.y, 0.5f)};
 
         return length < radius;
