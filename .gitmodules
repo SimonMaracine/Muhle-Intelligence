@@ -1,3 +1,4 @@
 [submodule "gui/extern/tiny-gui-base"]
 	path = gui/extern/tiny-gui-base
-	url = https://github.com/SimonMaracine/tiny-gui-base/
+	url = https://github.com/SimonMaracine/tiny-gui-base
+	branch = stable
