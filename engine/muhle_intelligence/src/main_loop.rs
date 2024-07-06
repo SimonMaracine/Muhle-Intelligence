@@ -1,8 +1,9 @@
-use std::{io, str::FromStr};
+use std::io;
 
 use crate::commands;
+use crate::engine;
 
-pub fn main_loop() -> Result<(), String> {
+pub fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
     loop {
         let input = read_input();
 
@@ -17,11 +18,11 @@ pub fn main_loop() -> Result<(), String> {
         }
 
         if tokens[0] == "quit" {
-            commands::quit();
+            commands::quit(engine, tokens);
             return Ok(());
         }
 
-        if let Err(err) = execute_command(tokens) {
+        if let Err(err) = execute_command(engine, tokens) {
             eprintln!("{}", err);
         }
     }
@@ -34,24 +35,31 @@ fn read_input() -> Result<String, io::Error> {
 }
 
 fn tokenize_input(input: String) -> Vec<String> {
-    input.split(" ").filter(|token| {
+    input.split([' ', '\t']).filter(|token| {
         !token.trim().is_empty()
     }).map(|token| {
-        let string = String::from_str(token.trim());
-
-        match string {
-            Ok(string) => string,
-            Err(_) => String::from("__error_token__")
-        }
+        String::from(token.trim())
     }).collect::<Vec<_>>()
 }
 
-fn execute_command(tokens: Vec<String>) -> Result<(), String> {
+fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
     let command = tokens[0].as_str();
 
     match command {
         "init" => {
-            commands::init();
+            commands::init(engine, tokens);
+        }
+        "newgame" => {
+            commands::newgame(engine, tokens);
+        }
+        "move" => {
+            commands::r#move(engine, tokens)?;
+        }
+        "go" => {
+            commands::go(engine, tokens);
+        }
+        "stop" => {
+            commands::stop(engine, tokens);
         }
         _ => return Err(format!("Invalid command: `{}`", command))
     }
