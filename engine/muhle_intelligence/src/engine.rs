@@ -33,7 +33,7 @@ impl Engine {
     }
 
     pub fn init(&mut self) {
-        todo!()
+
     }
 
     pub fn newgame(&mut self, position: Option<String>) {
@@ -42,32 +42,34 @@ impl Engine {
         self.game.position = game::Position::default();
     }
 
-    pub fn r#move(&mut self, r#move: String) -> Result<(), String> {
-        let r#move = game::Move::from_str(&r#move)?;
+    pub fn move_(&mut self, move_: String) -> Result<(), String> {
+        let move_ = game::Move::from_str(&move_)?;
 
-        self.game.position.play_move(&r#move);
+        self.game.position.play_move(&move_);
 
         Ok(())
     }
 
-    pub fn go(&mut self, no_play: bool) {
+    pub fn go(&mut self, no_play: bool) -> Result<(), String> {
         // TODO parameter
 
         let search = search::Search::new();
         let ctx = search::SearchContext::new();
 
-        let best_move = search.search(ctx);
+        let best_move = search.search(ctx, &self.game.position);
 
         self.game.position.play_move(&best_move);
 
-        messages::bestmove(best_move);  // TODO
+        messages::bestmove(best_move)?;
+
+        Ok(())
     }
 
     pub fn stop(&mut self) {
-        todo!()
+
     }
 
     pub fn quit(&mut self) {
-        todo!()
+
     }
 }

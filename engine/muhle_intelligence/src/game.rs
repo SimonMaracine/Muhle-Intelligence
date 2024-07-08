@@ -210,25 +210,37 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn play_move(&mut self, r#move: &Move) {
-        match r#move {
+    pub fn play_move(&mut self, move_: &Move) {
+        match move_ {
             Move::Place { place_index } => {
+                assert!(self.board[*place_index as usize] == Piece::None);
+
                 self.board[*place_index as usize] = various::player_piece(self.player);
 
                 self.plies_without_advancement += 1;
             }
             Move::PlaceTake { place_index, take_index } => {
+                assert!(self.board[*place_index as usize] == Piece::None);
+                assert!(self.board[*take_index as usize] != Piece::None);
+
                 self.board[*place_index as usize] = various::player_piece(self.player);
                 self.board[*take_index as usize] = Piece::None;
 
                 self.plies_without_advancement = 0;
             }
             Move::Move { source_index, destination_index } => {
+                assert!(self.board[*source_index as usize] != Piece::None);
+                assert!(self.board[*destination_index as usize] != Piece::None);
+
                 self.board.swap(*source_index as usize, *destination_index as usize);
 
                 self.plies_without_advancement += 1;
             }
             Move::MoveTake { source_index, destination_index, take_index } => {
+                assert!(self.board[*source_index as usize] != Piece::None);
+                assert!(self.board[*destination_index as usize] != Piece::None);
+                assert!(self.board[*take_index as usize] != Piece::None);
+
                 self.board.swap(*source_index as usize, *destination_index as usize);
                 self.board[*take_index as usize] = Piece::None;
 

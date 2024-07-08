@@ -11,28 +11,25 @@ pub fn newgame(engine: &mut engine::Engine, tokens: Vec<String>) {
     engine.newgame(position);
 }
 
-pub fn r#move(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
-    let r#move = tokens.get(1);
+pub fn move_(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
+    let move_ = tokens.get(1);
 
-    if let None = r#move {
+    if let None = move_ {
         return Err(String::from("Expected second token to be a move string"));
     }
 
-    engine.r#move(r#move.unwrap().to_owned());
+    engine.move_(move_.unwrap().to_owned())?;
 
     Ok(())
 }
 
-pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) {
+pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
     let noplay = tokens.get(1);
     let noplay = noplay.map_or(false, |noplay| { noplay == "noplay" });
 
-    engine.go(noplay);
+    engine.go(noplay)?;
 
-    // TODO temp
-    for token in &tokens {
-        println!("`{}`", token);
-    }
+    Ok(())
 }
 
 pub fn stop(engine: &mut engine::Engine, _tokens: Vec<String>) {

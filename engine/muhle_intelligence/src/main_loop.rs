@@ -53,10 +53,10 @@ fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(
             commands::newgame(engine, tokens);
         }
         "move" => {
-            commands::r#move(engine, tokens)?;
+            commands::move_(engine, tokens)?;
         }
         "go" => {
-            commands::go(engine, tokens);
+            commands::go(engine, tokens)?;
         }
         "stop" => {
             commands::stop(engine, tokens);

@@ -44,6 +44,8 @@ fn generate_moves_phase1(board: &mut game::Board, player: game::Player) -> Vec<g
         } else {
             moves.push(game::Move::new_place(i));
         }
+
+        unmake_place_move(board, i);
     }
 
     moves
