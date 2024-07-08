@@ -6,6 +6,7 @@ mod search;
 mod evaluation;
 mod move_generation;
 mod various;
+mod messages;
 
 use std::process::ExitCode;
 

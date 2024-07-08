@@ -1,14 +1,16 @@
 use crate::game;
 use crate::evaluation as eval;
 use crate::move_generation;
+use crate::various;
 
 pub struct SearchNode<'a> {
     pub board: game::Board,
     pub player: game::Player,
     pub plies: u32,
     pub plies_without_advancement: u32,
+    // TODO repetition
 
-    pub previous: &'a SearchNode<'a>,
+    pub previous: Option<&'a SearchNode<'a>>,
 }
 
 pub struct Search<'a> {
@@ -75,7 +77,35 @@ impl SearchContext {
 }
 
 impl<'a> SearchNode<'a> {
-    pub fn play_move(r#move: &game::Move) {
+    pub fn play_move(&mut self, r#move: &game::Move) {
+        match r#move {
+            game::Move::Place { place_index } => {
+                self.board[*place_index as usize] = various::player_piece(self.player);
 
+                self.plies_without_advancement += 1;
+            }
+            game::Move::PlaceTake { place_index, take_index } => {
+                self.board[*place_index as usize] = various::player_piece(self.player);
+                self.board[*take_index as usize] = game::Piece::None;
+
+                self.plies_without_advancement = 0;
+                self.previous = None;
+            }
+            game::Move::Move { source_index, destination_index } => {
+                self.board.swap(*source_index as usize, *destination_index as usize);
+
+                self.plies_without_advancement += 1;
+            }
+            game::Move::MoveTake { source_index, destination_index, take_index } => {
+                self.board.swap(*source_index as usize, *destination_index as usize);
+                self.board[*take_index as usize] = game::Piece::None;
+
+                self.plies_without_advancement = 0;
+                self.previous = None;
+            }
+        }
+
+        self.player = various::opponent(self.player);
+        self.plies += 1;
     }
 }
