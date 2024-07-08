@@ -72,7 +72,7 @@ impl SearchContext {
             return eval::static_evaluation(current_node);
         }
 
-        let mut max_evaluation = eval::Eval::min_value();
+        let mut max_evaluation = eval::Eval::MIN;
 
         let moves = move_generation::generate_moves(&current_node);
 

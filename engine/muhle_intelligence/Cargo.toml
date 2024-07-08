@@ -3,6 +3,15 @@ name = "muhle_intelligence"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "muhle_intelligence_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "muhle_intelligence"
+path = "src/bin.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

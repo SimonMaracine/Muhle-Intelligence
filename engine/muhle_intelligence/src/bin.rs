@@ -1,14 +1,8 @@
 mod main_loop;
-mod commands;
-mod engine;
-mod game;
-mod search;
-mod evaluation;
-mod move_generation;
-mod various;
-mod messages;
 
 use std::process::ExitCode;
+
+use muhle_intelligence_core::engine;
 
 fn main() -> ExitCode {
     let mut engine = engine::Engine::new();

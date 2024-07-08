@@ -1,7 +1,7 @@
 use std::io;
 
-use crate::commands;
-use crate::engine;
+use muhle_intelligence_core::commands;
+use muhle_intelligence_core::engine;
 
 pub fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
     loop {
