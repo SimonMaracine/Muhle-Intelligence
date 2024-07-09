@@ -9,9 +9,12 @@ pub enum Parameter {
     Int(i32),
 }
 
+pub type MessageWriter = fn(String) -> Result<(), String>;
+
 pub struct Engine {
     parameters: HashMap<String, Parameter>,
     game: Game,
+    message_writer: MessageWriter,
 }
 
 struct Game {
@@ -21,7 +24,7 @@ struct Game {
 }
 
 impl Engine {
-    pub fn new() -> Self {
+    pub fn new(message_writer: MessageWriter) -> Self {
         Self {
             parameters: HashMap::new(),
             game: Game {
@@ -29,7 +32,12 @@ impl Engine {
                 previous_positions: Vec::new(),
                 moves_played: Vec::new(),
             },
+            message_writer,
         }
+    }
+
+    pub fn get_message_writer(&self) -> MessageWriter {
+        self.message_writer
     }
 
     pub fn init(&mut self) {
@@ -60,7 +68,7 @@ impl Engine {
 
         self.game.position.play_move(&best_move);
 
-        messages::bestmove(best_move)?;
+        messages::bestmove(self, best_move)?;
 
         Ok(())
     }

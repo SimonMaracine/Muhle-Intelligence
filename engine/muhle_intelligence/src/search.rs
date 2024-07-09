@@ -101,7 +101,7 @@ impl SearchContext {
 }
 
 impl<'a> SearchNode<'a> {
-    pub fn from_node(node: &'a SearchNode) -> Self {
+    fn from_node(node: &'a SearchNode) -> Self {
         SearchNode {
             board: node.board,
             player: node.player,
@@ -111,7 +111,7 @@ impl<'a> SearchNode<'a> {
         }
     }
 
-    pub fn play_move(&mut self, move_: &game::Move) {
+    fn play_move(&mut self, move_: &game::Move) {
         match move_ {
             game::Move::Place { place_index } => {
                 assert!(self.board[*place_index as usize] == game::Piece::None);

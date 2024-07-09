@@ -10,35 +10,28 @@ pub mod messages;
 // use std::ffi::;
 use std::os::raw::{c_char, c_void};
 use std::ptr;
-use std::alloc;
 
 struct MuhleIntelligence {
     engine: engine::Engine,
-    incoming_messages: Vec<String>,
     outgoing_messages: Vec<String>,
 }
 
 type CtxHandle = *mut c_void;
 
 pub extern "C" fn muhle_intelligence_initialize() -> CtxHandle {
-    let layout = alloc::Layout::new::<MuhleIntelligence>();
+    let ctx = Box::new(
+        MuhleIntelligence {
+            engine: engine::Engine::new(write_message),
+            outgoing_messages: Vec::new(),
+        }
+    );
 
-    let ctx = unsafe {
-        alloc::alloc(layout)
-    };
-
-    if ctx.is_null() {
-        return ptr::null_mut();
-    }
-
-    ctx as CtxHandle
+    Box::leak(ctx) as *mut MuhleIntelligence as CtxHandle
 }
 
 pub extern "C" fn muhle_intelligence_uninitialize(ctx: CtxHandle) {
-    let layout = alloc::Layout::new::<MuhleIntelligence>();
-
     unsafe {
-        alloc::dealloc(ctx as *mut u8, layout)
+        drop(Box::from_raw(ctx as *mut MuhleIntelligence));
     }
 }
 
@@ -50,4 +43,8 @@ pub extern "C" fn muhle_intelligence_send(ctx: CtxHandle, string: *const c_char)
 pub extern "C" fn muhle_intelligence_receive(ctx: CtxHandle, string: *mut c_char) {
     let ctx = ctx as *mut MuhleIntelligence;
 
+}
+
+fn write_message(buffer: String) -> Result<(), String> {
+    todo!()
 }
