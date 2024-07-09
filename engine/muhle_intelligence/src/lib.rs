@@ -7,44 +7,168 @@ pub mod move_generation;
 pub mod various;
 pub mod messages;
 
-// use std::ffi::;
-use std::os::raw::{c_char, c_void};
+use std::ffi::{c_char, c_int, c_uint, CStr};
 use std::ptr;
+use std::sync::Mutex;
+use std::collections::VecDeque;
 
 struct MuhleIntelligence {
     engine: engine::Engine,
-    outgoing_messages: Vec<String>,
+    messages: Mutex<VecDeque<String>>,
 }
 
-type CtxHandle = *mut c_void;
+static mut G_CONTEXT: Option<MuhleIntelligence> = None;
 
-pub extern "C" fn muhle_intelligence_initialize() -> CtxHandle {
-    let ctx = Box::new(
-        MuhleIntelligence {
-            engine: engine::Engine::new(write_message),
-            outgoing_messages: Vec::new(),
-        }
-    );
+const MUHLE_INTELLIGENCE_ERROR: i32 = -1;
+const MUHLE_INTELLIGENCE_SUCCESS: i32 = 0;
+const MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE: i32 = 1;
 
-    Box::leak(ctx) as *mut MuhleIntelligence as CtxHandle
-}
-
-pub extern "C" fn muhle_intelligence_uninitialize(ctx: CtxHandle) {
+#[no_mangle]
+pub extern "C" fn muhle_intelligence_initialize() -> c_int {
     unsafe {
-        drop(Box::from_raw(ctx as *mut MuhleIntelligence));
+        if G_CONTEXT.is_some() {
+            return MUHLE_INTELLIGENCE_ERROR;
+        }
     }
+
+    unsafe {
+        G_CONTEXT = Some(MuhleIntelligence {
+            engine: engine::Engine::new(write_message),
+            messages: Mutex::new(VecDeque::new())
+        });
+    }
+
+    MUHLE_INTELLIGENCE_SUCCESS
 }
 
-pub extern "C" fn muhle_intelligence_send(ctx: CtxHandle, string: *const c_char) {
-    let ctx = ctx as *mut MuhleIntelligence;
+#[no_mangle]
+pub extern "C" fn muhle_intelligence_uninitialize() -> c_int {
+    unsafe {
+        if G_CONTEXT.is_none() {
+            return MUHLE_INTELLIGENCE_ERROR;
+        }
+    }
 
+    unsafe {
+        G_CONTEXT = None;
+    }
+
+    MUHLE_INTELLIGENCE_SUCCESS
 }
 
-pub extern "C" fn muhle_intelligence_receive(ctx: CtxHandle, string: *mut c_char) {
-    let ctx = ctx as *mut MuhleIntelligence;
+#[no_mangle]
+pub extern "C" fn muhle_intelligence_send(string: *const c_char) -> c_int {
+    let ctx = unsafe {
+        G_CONTEXT.as_mut()
+    };
 
+    if let None = ctx {
+        return MUHLE_INTELLIGENCE_ERROR;
+    }
+
+    let input = unsafe {
+        CStr::from_ptr(string).to_string_lossy().into_owned()
+    };
+
+    let tokens = commands::tokenize_command_input(input);
+
+    if tokens.is_empty() {
+        return MUHLE_INTELLIGENCE_SUCCESS;
+    }
+
+    if tokens[0] == "quit" {
+        commands::quit(&mut ctx.unwrap().engine, tokens);
+        return MUHLE_INTELLIGENCE_SUCCESS;
+    }
+
+    if let Err(_err) = commands::execute_command(&mut ctx.unwrap().engine, tokens) {
+        return MUHLE_INTELLIGENCE_ERROR;
+    }
+
+    MUHLE_INTELLIGENCE_SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn muhle_intelligence_receive_size(size: *mut c_uint) -> c_int {
+    let ctx = unsafe {
+        G_CONTEXT.as_mut()
+    };
+
+    if let None = ctx {
+        return MUHLE_INTELLIGENCE_ERROR;
+    }
+
+    match ctx.unwrap().messages.lock() {
+        Ok(messages) => {
+            let message = messages.front();
+
+            if let None = message {
+                unsafe {
+                    *size = 0;
+                }
+
+                return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
+            }
+
+            unsafe {
+                *size = message.unwrap().len() as u32;
+            }
+        }
+        Err(_err) => {
+            return MUHLE_INTELLIGENCE_ERROR;
+        }
+    }
+
+    MUHLE_INTELLIGENCE_SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
+    let ctx = unsafe {
+        G_CONTEXT.as_mut()
+    };
+
+    if let None = ctx {
+        return MUHLE_INTELLIGENCE_ERROR;
+    }
+
+    match ctx.unwrap().messages.lock() {
+        Ok(mut messages) => {
+            let message = messages.pop_front();
+
+            if let None = message {
+                return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
+            }
+
+            unsafe {
+                ptr::copy(message.as_ref().unwrap().as_ptr(), string as *mut u8, message.unwrap().len());
+            }
+        }
+        Err(_err) => {
+            return MUHLE_INTELLIGENCE_ERROR;
+        }
+    }
+
+    MUHLE_INTELLIGENCE_SUCCESS
 }
 
 fn write_message(buffer: String) -> Result<(), String> {
-    todo!()
+    let ctx = unsafe {
+        G_CONTEXT.as_mut()
+    };
+
+    if let None = ctx {
+        return Err(String::from("Context is not created"));
+    }
+
+    match ctx.unwrap().messages.lock() {
+        Ok(mut messages) => {
+            messages.push_back(buffer);
+        }
+        Err(err) => {
+            return Err(format!("Could not lock the messages mutex: {}", err));
+        }
+    }
+
+    Ok(())
 }
