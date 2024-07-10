@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdlib>
+#include <cstring>
 #include <utility>
 
 #include <unistd.h>
@@ -194,7 +195,7 @@ namespace subprocess {
     }
 
     bool Subprocess::wait_for() noexcept {
-        if (waitpid(std::exchange(child_pid, -1), nullptr, 0) < 0) {
+        if (waitpid(std::exchange(child_pid, -1), nullptr, 0) < 0) {  // TODO this is an error
             return false;
         }
 

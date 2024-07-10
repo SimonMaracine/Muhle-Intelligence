@@ -32,7 +32,36 @@ namespace board {
         { 8, 8 }
     };
 
-    MuhleBoard::MuhleBoard() {
+    static Idx index_from_string(std::string_view string) {
+        if (string == "a7") return 0;
+        else if (string == "d7") return 1;
+        else if (string == "g7") return 2;
+        else if (string == "b6") return 3;
+        else if (string == "d6") return 4;
+        else if (string == "f6") return 5;
+        else if (string == "c5") return 6;
+        else if (string == "d5") return 7;
+        else if (string == "e5") return 8;
+        else if (string == "a4") return 9;
+        else if (string == "b4") return 10;
+        else if (string == "c4") return 11;
+        else if (string == "e4") return 12;
+        else if (string == "f4") return 13;
+        else if (string == "g4") return 14;
+        else if (string == "c3") return 15;
+        else if (string == "d3") return 16;
+        else if (string == "e3") return 17;
+        else if (string == "b2") return 18;
+        else if (string == "d2") return 19;
+        else if (string == "f2") return 20;
+        else if (string == "a1") return 21;
+        else if (string == "d1") return 22;
+        else if (string == "g1") return 23;
+        else return 0;
+    }
+
+    MuhleBoard::MuhleBoard(const MoveCallback& move_callback)
+        : move_callback(move_callback) {
         legal_moves = generate_moves();
     }
 
@@ -213,6 +242,11 @@ namespace board {
 
         board[place_index] = static_cast<Node>(turn);
 
+        Move move;
+        move.type = MoveType::Place;
+        move.place.place_index = place_index;
+        move_callback(move, turn);
+
         finish_turn();
         check_winner_blocking();
     }
@@ -224,6 +258,12 @@ namespace board {
         board[place_index] = static_cast<Node>(turn);
         board[take_index] = Node::Empty;
 
+        Move move;
+        move.type = MoveType::PlaceTake;
+        move.place_take.place_index = place_index;
+        move.place_take.take_index = take_index;
+        move_callback(move, turn);
+
         finish_turn();
         check_winner_material();
         check_winner_blocking();
@@ -234,6 +274,12 @@ namespace board {
         assert(board[destination_index] == Node::Empty);
 
         std::swap(board[source_index], board[destination_index]);
+
+        Move move;
+        move.type = MoveType::Move;
+        move.move.source_index = source_index;
+        move.move.destination_index = destination_index;
+        move_callback(move, turn);
 
         finish_turn(false);
         check_winner_blocking();
@@ -248,6 +294,13 @@ namespace board {
 
         std::swap(board[source_index], board[destination_index]);
         board[take_index] = Node::Empty;
+
+        Move move;
+        move.type = MoveType::PlaceTake;
+        move.move_take.source_index = source_index;
+        move.move_take.destination_index = destination_index;
+        move.move_take.take_index = take_index;
+        move_callback(move, turn);
 
         finish_turn();
         check_winner_material();
@@ -938,5 +991,51 @@ namespace board {
         const float length {std::pow(subtracted.x * subtracted.x + subtracted.y * subtracted.y, 0.5f)};
 
         return length < radius;
+    }
+
+    Move move_from_string(std::string_view string) {
+        Move result {};
+
+        switch (string[0]) {
+            case 'P': {
+                const Idx place_index {index_from_string(string.substr(1, 2))};
+
+                if (string.size() > 3) {
+                    const Idx take_index {index_from_string(string.substr(3, 2))};
+
+                    result.type = MoveType::PlaceTake;
+                    result.place_take.place_index = place_index;
+                    result.place_take.take_index = take_index;
+                } else {
+                    result.type = MoveType::Place;
+                    result.place.place_index = place_index;
+                }
+
+                return result;
+            }
+            case 'M': {
+                const Idx source_index {index_from_string(string.substr(1, 2))};
+                const Idx destination_index {index_from_string(string.substr(3, 2))};
+
+                if (string.size() > 5) {
+                    const Idx take_index {index_from_string(string.substr(3, 2))};
+
+                    result.type = MoveType::MoveTake;
+                    result.move_take.source_index = source_index;
+                    result.move_take.destination_index = destination_index;
+                    result.move_take.take_index = take_index;
+                } else {
+                    result.type = MoveType::Move;
+                    result.move.source_index = source_index;
+                    result.move.destination_index = destination_index;
+                }
+
+                return result;
+            }
+        }
+
+        assert(false);
+
+        return {};
     }
 }

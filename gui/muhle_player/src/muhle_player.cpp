@@ -1,7 +1,7 @@
 #include "muhle_player.hpp"
 
 #include <iostream>
-#include <string>
+#include <cstring>
 
 #include <gui_base/gui_base.hpp>
 #include <ImGuiFileDialog.h>
@@ -10,6 +10,27 @@ void MuhlePlayer::start() {
     ImGuiIO& io {ImGui::GetIO()};
     io.ConfigWindowsMoveFromTitleBarOnly = true;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    muhle_board = board::MuhleBoard([this](const board::Move& move, board::Player turn) {
+        int player {};
+
+        switch (turn) {
+            case board::Player::White:
+                player = white;
+                break;
+            case board::Player::Black:
+                player = black;
+                break;
+        }
+
+        switch (player) {
+            case PlayerHuman:
+                state = State::NextTurn;
+                break;
+            case PlayerComputer:
+                break;
+        }
+    });
 }
 
 void MuhlePlayer::update() {
@@ -19,16 +40,69 @@ void MuhlePlayer::update() {
     load_library_dialog();
 
     switch (state) {
-        case State::NextTurn:
+        case State::NextTurn: {
+            int player {};
+
+            switch (muhle_board.get_turn()) {
+                case board::Player::White:
+                    player = white;
+                    break;
+                case board::Player::Black:
+                    player = black;
+                    break;
+            }
+
+            switch (player) {
+                case PlayerHuman:
+                    state = State::HumanThinking;
+                    break;
+                case PlayerComputer:
+                    state = State::ComputerBegin;
+                    break;
+            }
+
             break;
+        }
         case State::HumanThinking:
             break;
         case State::ComputerBegin:
+            if (!muhle_process.write_to("go\n")) {
+                std::cerr << "Could not write command\n";
+            }
+
             state = State::ComputerThinking;
+
             break;
-        case State::ComputerThinking:
+        case State::ComputerThinking: {
+            std::string data;
+
+            if (muhle_process.read_from(data)) {
+                const auto tokens {parse_message(data)};
+
+                if (tokens.at(0) == "bestmove") {
+                    const board::Move move {board::move_from_string(tokens.at(1))};
+
+                    switch (move.type) {
+                        case board::MoveType::Place:
+                            muhle_board.place(move.place.place_index);
+                            break;
+                        case board::MoveType::PlaceTake:
+                            muhle_board.place_take(move.place_take.place_index, move.place_take.take_index);
+                            break;
+                        case board::MoveType::Move:
+                            muhle_board.move(move.move.source_index, move.move.destination_index);
+                            break;
+                        case board::MoveType::MoveTake:
+                            muhle_board.move_take(move.move_take.source_index, move.move_take.destination_index, move.move_take.take_index);
+                            break;
+                    }
+                }
+            }
+
             state = State::NextTurn;
+
             break;
+        }
     }
 }
 
@@ -37,13 +111,23 @@ void MuhlePlayer::stop() {
 }
 
 void MuhlePlayer::load_library(const std::string& file_path) {
-    if (file_path.empty()) {
-        return;
+    try {
+        muhle_process = subprocess::Subprocess(file_path);
+    } catch (const subprocess::Error& e) {
+        std::cerr << "Could not start subprocess: " << e.what() << '\n';
+    }
+
+    if (!muhle_process.write_to("init\n")) {
+        std::cerr << "Could not write command\n";
     }
 }
 
 void MuhlePlayer::unload_library() {
+    if (!muhle_process.write_to("quit\n")) {
+        std::cerr << "Could not write command\n";
+    }
 
+    muhle_process.wait_for();
 }
 
 void MuhlePlayer::main_menu_bar() {
@@ -92,23 +176,25 @@ void MuhlePlayer::main_menu_bar() {
 }
 
 void MuhlePlayer::load_library() {
-    // ImGuiFileDialog::Instance()->OpenDialog(
-    //     "FileDialog",
-    //     "Choose File",
-    //     ".so,.dll",
-    //     ".",
-    //     1,
-    //     nullptr,
-    //     ImGuiFileDialogFlags_Modal
-    // );
+    IGFD::FileDialogConfig config;
+    config.flags |= ImGuiFileDialogFlags_Modal;
+
+    ImGuiFileDialog::Instance()->OpenDialog(
+        "FileDialog",
+        "Choose File",
+        "((.))",
+        config
+    );
 }
 
 void MuhlePlayer::load_library_dialog() {
     if (ImGuiFileDialog::Instance()->Display("FileDialog", 32, ImVec2(768, 432))) {
         if (ImGuiFileDialog::Instance()->IsOk()) {
-            const std::string file_path = ImGuiFileDialog::Instance()->GetFilePathName();
+            const std::string file_path {ImGuiFileDialog::Instance()->GetFilePathName()};
 
-            load_library(file_path);
+            if (!file_path.empty()) {
+                load_library(file_path);
+            }
         }
 
         ImGuiFileDialog::Instance()->Close();
@@ -118,7 +204,7 @@ void MuhlePlayer::load_library_dialog() {
 void MuhlePlayer::import_position() {
     char buffer[32] {};
 
-    if (ImGui::InputText("string", buffer, 32, ImGuiInputTextFlags_EnterReturnsTrue)) {
+    if (ImGui::InputText("string", buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
         // if (!muhle_board.set_position(buffer)) {
         //     std::cout << "Invalid SMN string\n";
         // }
@@ -144,7 +230,7 @@ void MuhlePlayer::notation() {
 }
 
 void MuhlePlayer::board() {
-    muhle_board.update();
+    muhle_board.update(state == State::HumanThinking);
     muhle_board.debug();
 }
 
@@ -208,4 +294,20 @@ void MuhlePlayer::controls() {
     }
 
     ImGui::End();
+}
+
+std::vector<std::string> MuhlePlayer::parse_message(const std::string& message) {
+    std::vector<std::string> tokens;
+
+    std::string mutable_buffer {message};
+
+    char* token {std::strtok(mutable_buffer.data(), " \t")};
+
+    while (token != nullptr) {
+        tokens.emplace_back(token);
+
+        token = std::strtok(nullptr, " \t");
+    }
+
+    return tokens;
 }

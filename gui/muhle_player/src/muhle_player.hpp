@@ -5,6 +5,7 @@
 
 #include <gui_base/gui_base.hpp>
 #include <common/board.hpp>
+#include <common/subprocess.hpp>
 
 struct MuhlePlayer : public gui_base::GuiApplication {
     explicit MuhlePlayer(const gui_base::WindowProperties& properties)
@@ -27,10 +28,13 @@ struct MuhlePlayer : public gui_base::GuiApplication {
     void board();
     void controls();
 
-    board::MuhleBoard muhle_board;
+    std::vector<std::string> parse_message(const std::string& message);
 
-    int white {};
-    int black {};
+    board::MuhleBoard muhle_board;
+    subprocess::Subprocess muhle_process;
+
+    int white {PlayerHuman};
+    int black {PlayerComputer};
 
     enum class State {
         NextTurn,
@@ -38,4 +42,7 @@ struct MuhlePlayer : public gui_base::GuiApplication {
         ComputerBegin,
         ComputerThinking
     } state {State::NextTurn};
+
+    static constexpr int PlayerHuman {0};
+    static constexpr int PlayerComputer {1};
 };

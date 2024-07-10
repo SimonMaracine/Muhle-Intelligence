@@ -3,6 +3,7 @@
 #include <array>
 #include <vector>
 #include <string_view>
+#include <functional>
 
 #include <gui_base/gui_base.hpp>
 
@@ -73,9 +74,12 @@ namespace board {
         }
     };
 
+    using MoveCallback = std::function<void(const Move&, Player)>;
+
     class MuhleBoard {
     public:
-        MuhleBoard();
+        MuhleBoard() = default;
+        explicit MuhleBoard(const MoveCallback& move_callback);
 
         void update(bool user_input = true);
         void reset(std::string_view position_string = "");
@@ -85,6 +89,9 @@ namespace board {
         void place_take(Idx place_index, Idx take_index);
         void move(Idx source_index, Idx destination_index);
         void move_take(Idx source_index, Idx destination_index, Idx take_index);
+
+        Player get_turn() const { return turn; }
+        GameOver get_game_over() const { return game_over; }
     private:
         void update_user_input();
         bool select_piece(Idx index);
@@ -131,7 +138,10 @@ namespace board {
         Idx user_stored_index2 {NULL_INDEX};
         bool user_must_take_piece {false};
         std::vector<Move> legal_moves;
+        MoveCallback move_callback {[](const Move&, Player) {}};
 
         static constexpr float NODE_RADIUS {2.2f};
     };
+
+    Move move_from_string(std::string_view string);
 }
