@@ -60,6 +60,36 @@ namespace board {
         else return 0;
     }
 
+    static std::string_view string_from_index(Idx index) {
+        switch (index) {
+            case 0: return "a7";
+            case 1: return "d7";
+            case 2: return "g7";
+            case 3: return "b6";
+            case 4: return "d6";
+            case 5: return "f6";
+            case 6: return "c5";
+            case 7: return "d5";
+            case 8: return "e5";
+            case 9: return "a4";
+            case 10: return "b4";
+            case 11: return "c4";
+            case 12: return "e4";
+            case 13: return "f4";
+            case 14: return "g4";
+            case 15: return "c3";
+            case 16: return "d3";
+            case 17: return "e3";
+            case 18: return "b2";
+            case 19: return "d2";
+            case 20: return "f2";
+            case 21: return "a1";
+            case 22: return "d1";
+            case 23: return "g1";
+            default: return "";
+        }
+    }
+
     MuhleBoard::MuhleBoard(const MoveCallback& move_callback)
         : move_callback(move_callback) {
         legal_moves = generate_moves();
@@ -1037,5 +1067,34 @@ namespace board {
         assert(false);
 
         return {};
+    }
+
+    std::string move_to_string(const Move& move) {
+        std::string result;
+
+        switch (move.type) {
+            case MoveType::Place:
+                result += 'P';
+                result += string_from_index(move.place.place_index);
+                break;
+            case MoveType::PlaceTake:
+                result += 'P';
+                result += string_from_index(move.place_take.place_index);
+                result += string_from_index(move.place_take.take_index);
+                break;
+            case MoveType::Move:
+                result += 'M';
+                result += string_from_index(move.move.source_index);
+                result += string_from_index(move.move.destination_index);
+                break;
+            case MoveType::MoveTake:
+                result += 'M';
+                result += string_from_index(move.move_take.source_index);
+                result += string_from_index(move.move_take.destination_index);
+                result += string_from_index(move.move_take.take_index);
+                break;
+        }
+
+        return result;
     }
 }

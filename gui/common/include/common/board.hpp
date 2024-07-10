@@ -144,4 +144,5 @@ namespace board {
     };
 
     Move move_from_string(std::string_view string);
+    std::string move_to_string(const Move& move);
 }

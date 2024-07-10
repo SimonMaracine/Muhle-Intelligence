@@ -22,12 +22,13 @@ namespace subprocess {
         Subprocess(Subprocess&& other) noexcept;
         Subprocess& operator=(Subprocess&& other) noexcept;
 
-        bool read_from(std::string& data) const;
-        bool write_to(const std::string& data) const;
-        bool wait_for() noexcept;
+        bool read(std::string& data) const;
+        bool write(const std::string& data) const;
+        bool wait() noexcept;
+        bool active() const noexcept;
     private:
-        int input {};  // Read from
-        int output {};  // Write to
+        int input {-1};  // Read from
+        int output {-1};  // Write to
         int child_pid {-1};
 
         mutable std::string buffered;

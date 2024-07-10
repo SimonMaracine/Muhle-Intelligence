@@ -25,6 +25,10 @@ void MuhlePlayer::start() {
 
         switch (player) {
             case PlayerHuman:
+                if (!muhle_process.write("move " + board::move_to_string(move) + '\n')) {
+                    std::cerr << "Could not write command\n";
+                }
+
                 state = State::NextTurn;
                 break;
             case PlayerComputer:
@@ -66,7 +70,7 @@ void MuhlePlayer::update() {
         case State::HumanThinking:
             break;
         case State::ComputerBegin:
-            if (!muhle_process.write_to("go\n")) {
+            if (!muhle_process.write("go\n")) {
                 std::cerr << "Could not write command\n";
             }
 
@@ -76,8 +80,8 @@ void MuhlePlayer::update() {
         case State::ComputerThinking: {
             std::string data;
 
-            if (muhle_process.read_from(data)) {
-                const auto tokens {parse_message(data)};
+            if (muhle_process.read(data)) {
+                const auto tokens {parse_message(data.substr(0, data.size() - 2))};
 
                 if (tokens.at(0) == "bestmove") {
                     const board::Move move {board::move_from_string(tokens.at(1))};
@@ -117,17 +121,21 @@ void MuhlePlayer::load_library(const std::string& file_path) {
         std::cerr << "Could not start subprocess: " << e.what() << '\n';
     }
 
-    if (!muhle_process.write_to("init\n")) {
+    if (!muhle_process.write("init\n")) {
         std::cerr << "Could not write command\n";
     }
 }
 
 void MuhlePlayer::unload_library() {
-    if (!muhle_process.write_to("quit\n")) {
+    if (!muhle_process.active()) {
+        return;
+    }
+
+    if (!muhle_process.write("quit\n")) {
         std::cerr << "Could not write command\n";
     }
 
-    muhle_process.wait_for();
+    muhle_process.wait();
 }
 
 void MuhlePlayer::main_menu_bar() {

@@ -113,7 +113,7 @@ namespace subprocess {
         return *this;
     }
 
-    bool Subprocess::read_from(std::string& data) const {
+    bool Subprocess::read(std::string& data) const {
         {
             std::size_t bytes_up_to_newline {};
 
@@ -155,7 +155,7 @@ namespace subprocess {
 
         while (true) {
             char buffer[CHUNK] {};
-            const ssize_t bytes {read(input, buffer, CHUNK)};
+            const ssize_t bytes {::read(input, buffer, CHUNK)};
 
             if (bytes < 0) {
                 throw Error(std::string("Could not read from file: ") + strerror(errno));
@@ -182,8 +182,8 @@ namespace subprocess {
         }
     }
 
-    bool Subprocess::write_to(const std::string& data) const {
-        const ssize_t bytes {write(output, data.c_str(), data.size())};
+    bool Subprocess::write(const std::string& data) const {
+        const ssize_t bytes {::write(output, data.c_str(), data.size())};
 
         if (bytes < 0) {
             throw Error(std::string("Could not write to file: ") + strerror(errno));
@@ -194,11 +194,15 @@ namespace subprocess {
         return true;
     }
 
-    bool Subprocess::wait_for() noexcept {
+    bool Subprocess::wait() noexcept {
         if (waitpid(std::exchange(child_pid, -1), nullptr, 0) < 0) {  // TODO this is an error
             return false;
         }
 
         return true;
+    }
+
+    bool Subprocess::active() const noexcept {
+        return child_pid != -1;
     }
 }
