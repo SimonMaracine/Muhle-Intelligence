@@ -17,7 +17,7 @@ struct MuhleIntelligence {
     messages: Mutex<VecDeque<String>>,
 }
 
-static mut G_CONTEXT: Option<MuhleIntelligence> = None;
+static mut CONTEXT: Option<MuhleIntelligence> = None;
 
 const MUHLE_INTELLIGENCE_ERROR: i32 = -1;
 const MUHLE_INTELLIGENCE_SUCCESS: i32 = 0;
@@ -26,13 +26,13 @@ const MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE: i32 = 1;
 #[no_mangle]
 pub extern "C" fn muhle_intelligence_initialize() -> c_int {
     unsafe {
-        if G_CONTEXT.is_some() {
+        if CONTEXT.is_some() {
             return MUHLE_INTELLIGENCE_ERROR;
         }
     }
 
     unsafe {
-        G_CONTEXT = Some(MuhleIntelligence {
+        CONTEXT = Some(MuhleIntelligence {
             engine: engine::Engine::new(write_message),
             messages: Mutex::new(VecDeque::new())
         });
@@ -44,13 +44,13 @@ pub extern "C" fn muhle_intelligence_initialize() -> c_int {
 #[no_mangle]
 pub extern "C" fn muhle_intelligence_uninitialize() -> c_int {
     unsafe {
-        if G_CONTEXT.is_none() {
+        if CONTEXT.is_none() {
             return MUHLE_INTELLIGENCE_ERROR;
         }
     }
 
     unsafe {
-        G_CONTEXT = None;
+        CONTEXT = None;
     }
 
     MUHLE_INTELLIGENCE_SUCCESS
@@ -59,7 +59,7 @@ pub extern "C" fn muhle_intelligence_uninitialize() -> c_int {
 #[no_mangle]
 pub extern "C" fn muhle_intelligence_send(string: *const c_char) -> c_int {
     let ctx = unsafe {
-        G_CONTEXT.as_mut()
+        CONTEXT.as_mut()
     };
 
     if let None = ctx {
@@ -91,7 +91,7 @@ pub extern "C" fn muhle_intelligence_send(string: *const c_char) -> c_int {
 #[no_mangle]
 pub extern "C" fn muhle_intelligence_receive_size(size: *mut c_uint) -> c_int {
     let ctx = unsafe {
-        G_CONTEXT.as_mut()
+        CONTEXT.as_mut()
     };
 
     if let None = ctx {
@@ -125,7 +125,7 @@ pub extern "C" fn muhle_intelligence_receive_size(size: *mut c_uint) -> c_int {
 #[no_mangle]
 pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
     let ctx = unsafe {
-        G_CONTEXT.as_mut()
+        CONTEXT.as_mut()
     };
 
     if let None = ctx {
@@ -154,7 +154,7 @@ pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
 
 fn write_message(buffer: String) -> Result<(), String> {
     let ctx = unsafe {
-        G_CONTEXT.as_mut()
+        CONTEXT.as_mut()
     };
 
     if let None = ctx {
