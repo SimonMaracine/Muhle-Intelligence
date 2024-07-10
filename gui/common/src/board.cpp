@@ -130,12 +130,13 @@ namespace board {
                 }
             }
 
+            const float WIDTH {board_unit < 55.0f ? 2.0f : 3.0f};
+
             if (user_stored_index1 != NULL_INDEX) {
                 const ImVec2 position {
                     static_cast<float>(NODE_POSITIONS[user_stored_index1][0]) * board_unit + board_offset.x,
                     static_cast<float>(NODE_POSITIONS[user_stored_index1][1]) * board_unit + board_offset.y
                 };
-                const float WIDTH {board_unit < 55.0f ? 2.0f : 3.0f};
 
                 draw_list->AddCircle(position, board_unit / NODE_RADIUS + 1.0f, ImColor(240, 30, 30, 255), 0, WIDTH);
             }
@@ -145,7 +146,6 @@ namespace board {
                     static_cast<float>(NODE_POSITIONS[user_stored_index2][0]) * board_unit + board_offset.x,
                     static_cast<float>(NODE_POSITIONS[user_stored_index2][1]) * board_unit + board_offset.y
                 };
-                const float WIDTH {board_unit < 55.0f ? 2.0f : 3.0f};
 
                 draw_list->AddCircle(position, board_unit / NODE_RADIUS + 1.0f, ImColor(30, 30, 240, 255), 0, WIDTH);
             }
@@ -466,36 +466,36 @@ namespace board {
         Board local_board {board};
 
         if (plies < 18) {
-            generate_moves_phase1(turn, local_board, moves);
+            generate_moves_phase1(local_board, moves, turn);
         } else {
             if (count_pieces(turn) == 3) {
-                generate_moves_phase3(turn, local_board, moves);
+                generate_moves_phase3(local_board, moves, turn);
             } else {
-                generate_moves_phase2(turn, local_board, moves);
+                generate_moves_phase2(local_board, moves, turn);
             }
         }
 
         return moves;
     }
 
-    void MuhleBoard::generate_moves_phase1(Player player, Board& board, std::vector<Move>& moves) {
+    void MuhleBoard::generate_moves_phase1(Board& board, std::vector<Move>& moves, Player player) {
         for (Idx i {0}; i < 24; i++) {
             if (board[i] != Node::Empty) {
                 continue;
             }
 
-            make_place_move(player, i, board);
+            make_place_move(board, player, i);
 
-            if (is_mill(player, i, board)) {
+            if (is_mill(board, player, i)) {
                 const Player opponent_player {opponent(player)};
-                const bool all_in_mills {all_pieces_in_mills(opponent_player, board)};
+                const bool all_in_mills {all_pieces_in_mills(board, opponent_player)};
 
                 for (Idx j {0}; j < 24; j++) {
                     if (board[j] != static_cast<Node>(opponent_player)) {
                         continue;
                     }
 
-                    if (is_mill(opponent_player, j, board) && !all_in_mills) {
+                    if (is_mill(board, opponent_player, j) && !all_in_mills) {
                         continue;
                     }
 
@@ -505,31 +505,31 @@ namespace board {
                 moves.push_back(create_place(i));
             }
 
-            unmake_place_move(i, board);
+            unmake_place_move(board, i);
         }
     }
 
-    void MuhleBoard::generate_moves_phase2(Player player, Board& board, std::vector<Move>& moves) {
+    void MuhleBoard::generate_moves_phase2(Board& board, std::vector<Move>& moves, Player player) {
         for (Idx i {0}; i < 24; i++) {
             if (board[i] != static_cast<Node>(player)) {
                 continue;
             }
 
-            const auto free_positions {neighbor_free_positions(i, board)};
+            const auto free_positions {neighbor_free_positions(board, i)};
 
             for (Idx j {0}; j < static_cast<Idx>(free_positions.size()); j++) {
-                make_move_move(i, free_positions[j], board);
+                make_move_move(board, i, free_positions[j]);
 
-                if (is_mill(player, free_positions[j], board)) {
+                if (is_mill(board, player, free_positions[j])) {
                     const Player opponent_player {opponent(player)};
-                    const bool all_in_mills {all_pieces_in_mills(opponent_player, board)};
+                    const bool all_in_mills {all_pieces_in_mills(board, opponent_player)};
 
                     for (Idx k {0}; k < 24; k++) {
                         if (board[k] != static_cast<Node>(opponent_player)) {
                             continue;
                         }
 
-                        if (is_mill(opponent_player, k, board) && !all_in_mills) {
+                        if (is_mill(board, opponent_player, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -539,12 +539,12 @@ namespace board {
                     moves.push_back(create_move(i, free_positions[j]));
                 }
 
-                unmake_move_move(i, free_positions[j], board);
+                unmake_move_move(board, i, free_positions[j]);
             }
         }
     }
 
-    void MuhleBoard::generate_moves_phase3(Player player, Board& board, std::vector<Move>& moves) {
+    void MuhleBoard::generate_moves_phase3(Board& board, std::vector<Move>& moves, Player player) {
         for (Idx i {0}; i < 24; i++) {
             if (board[i] != static_cast<Node>(player)) {
                 continue;
@@ -555,18 +555,18 @@ namespace board {
                     continue;
                 }
 
-                make_move_move(i, j, board);
+                make_move_move(board, i, j);
 
-                if (is_mill(player, j, board)) {
+                if (is_mill(board, player, j)) {
                     const Player opponent_player {opponent(player)};
-                    const bool all_in_mills {all_pieces_in_mills(opponent_player, board)};
+                    const bool all_in_mills {all_pieces_in_mills(board, opponent_player)};
 
                     for (Idx k {0}; k < 24; k++) {
                         if (board[k] != static_cast<Node>(opponent_player)) {
                             continue;
                         }
 
-                        if (is_mill(opponent_player, k, board) && !all_in_mills) {
+                        if (is_mill(board, opponent_player, k) && !all_in_mills) {
                             continue;
                         }
 
@@ -576,40 +576,45 @@ namespace board {
                     moves.push_back(create_move(i, j));
                 }
 
-                unmake_move_move(i, j, board);
+                unmake_move_move(board, i, j);
             }
         }
     }
 
-    void MuhleBoard::make_place_move(Player player, Idx place_index, Board& local_board) {
-        assert(local_board[place_index] == Node::Empty);
+    void MuhleBoard::make_place_move(Board& board, Player player, Idx place_index) {
+        assert(board[place_index] == Node::Empty);
 
-        local_board[place_index] = static_cast<Node>(player);
+        board[place_index] = static_cast<Node>(player);
     }
 
-    void MuhleBoard::unmake_place_move(Idx place_index, Board& local_board) {
-        assert(local_board[place_index] != Node::Empty);
+    void MuhleBoard::unmake_place_move(Board& board, Idx place_index) {
+        assert(board[place_index] != Node::Empty);
 
-        local_board[place_index] = Node::Empty;
+        board[place_index] = Node::Empty;
     }
 
-    void MuhleBoard::make_move_move(Idx source_index, Idx destination_index, Board& local_board) {
-        assert(local_board[source_index] != Node::Empty);
-        assert(local_board[destination_index] == Node::Empty);
+    void MuhleBoard::make_move_move(Board& board, Idx source_index, Idx destination_index) {
+        assert(board[source_index] != Node::Empty);
+        assert(board[destination_index] == Node::Empty);
 
-        std::swap(local_board[source_index], local_board[destination_index]);
+        std::swap(board[source_index], board[destination_index]);
     }
 
-    void MuhleBoard::unmake_move_move(Idx source_index, Idx destination_index, Board& local_board) {
-        assert(local_board[source_index] == Node::Empty);
-        assert(local_board[destination_index] != Node::Empty);
+    void MuhleBoard::unmake_move_move(Board& board, Idx source_index, Idx destination_index) {
+        assert(board[source_index] == Node::Empty);
+        assert(board[destination_index] != Node::Empty);
 
-        std::swap(local_board[source_index], local_board[destination_index]);
+        std::swap(board[source_index], board[destination_index]);
     }
+
+#ifdef __GNUG__
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wparentheses"
+#endif
 
 #define IS_PC(const_index) (board[const_index] == node)
 
-    bool MuhleBoard::is_mill(Player player, Idx index, const Board& board) {
+    bool MuhleBoard::is_mill(const Board& board, Player player, Idx index) {
         const Node node {static_cast<Node>(player)};
 
         switch (index) {
@@ -714,13 +719,17 @@ namespace board {
         return false;
     }
 
-    bool MuhleBoard::all_pieces_in_mills(Player player, const Board& board) {
+#ifdef __GNUG__
+    #pragma GCC diagnostic pop
+#endif
+
+    bool MuhleBoard::all_pieces_in_mills(const Board& board, Player player) {
         for (Idx i {0}; i < 24; i++) {
             if (board[i] != static_cast<Node>(player)) {
                 continue;
             }
 
-            if (!is_mill(player, i, board)) {
+            if (!is_mill(board, player, i)) {
                 return false;
             }
         }
@@ -733,7 +742,7 @@ namespace board {
         result.push_back(const_index); \
     }
 
-    std::vector<Idx> MuhleBoard::neighbor_free_positions(Idx index, const Board& board) {
+    std::vector<Idx> MuhleBoard::neighbor_free_positions(const Board& board, Idx index) {
         std::vector<Idx> result;
         result.reserve(4);
 
