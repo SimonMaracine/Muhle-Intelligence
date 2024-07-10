@@ -9,7 +9,7 @@ pub enum Parameter {
     Int(i32),
 }
 
-pub type MessageWriter = fn(String) -> Result<(), String>;
+type MessageWriter = fn(String) -> Result<(), String>;
 
 pub struct Engine {
     parameters: HashMap<String, Parameter>,

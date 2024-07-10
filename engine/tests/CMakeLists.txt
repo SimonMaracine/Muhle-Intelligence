@@ -25,7 +25,8 @@ target_include_directories(muhle_intelligence_test PRIVATE "${CMAKE_CURRENT_BINA
 
 target_link_directories(muhle_intelligence_test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
-target_link_libraries(muhle_intelligence_test PRIVATE GTest::gtest_main muhle_intelligence_core)
+target_link_libraries(muhle_intelligence_test PRIVATE GTest::gtest_main)
+target_link_libraries(muhle_intelligence_test PRIVATE muhle_intelligence_core)
 
 if(UNIX)
     target_compile_options(muhle_intelligence_test PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-Wconversion")

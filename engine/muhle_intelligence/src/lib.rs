@@ -111,7 +111,7 @@ pub extern "C" fn muhle_intelligence_receive_size(size: *mut c_uint) -> c_int {
             }
 
             unsafe {
-                *size = message.unwrap().len() as u32;
+                *size = (message.unwrap().len() + 1) as u32;
             }
         }
         Err(_err) => {
@@ -140,8 +140,11 @@ pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
                 return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
             }
 
+            let length = message.as_ref().unwrap().len();
+
             unsafe {
-                ptr::copy(message.as_ref().unwrap().as_ptr(), string as *mut u8, message.unwrap().len());
+                ptr::copy(message.unwrap().as_ptr(), string as *mut u8, length);
+                string.add(length).write(0);
             }
         }
         Err(_err) => {
