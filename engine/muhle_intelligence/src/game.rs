@@ -22,6 +22,7 @@ pub enum Piece {
     Black,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum Move {
     Place {
         place_index: Idx,
@@ -134,7 +135,7 @@ impl FromStr for Move {
                 let place_index = Self::index_from_string(&string[1..3])?;
 
                 match string.get(3..4) {
-                    Some(string) => {
+                    Some(_) => {
                         let take_index = Self::index_from_string(&string[4..6])?;
 
                         Ok(Self::new_place_take(place_index, take_index))
@@ -149,8 +150,8 @@ impl FromStr for Move {
                 let destination_index = Self::index_from_string(&string[4..6])?;
 
                 match string.get(6..7) {
-                    Some(string) => {
-                        let take_index = Self::index_from_string(&string[7..8])?;
+                    Some(_) => {
+                        let take_index = Self::index_from_string(&string[7..9])?;
 
                         Ok(Self::new_move_take(source_index, destination_index, take_index))
                     }
@@ -168,30 +169,30 @@ impl ToString for Move {
     fn to_string(&self) -> String {
         let mut result = String::new();
 
-        match self {
+        match *self {
             Self::Place { place_index } => {
                 result.push('P');
-                result.push_str(Self::string_from_index(*place_index).unwrap());
+                result.push_str(Self::string_from_index(place_index).unwrap());
             }
             Self::PlaceTake { place_index, take_index } => {
                 result.push('P');
-                result.push_str(Self::string_from_index(*place_index).unwrap());
+                result.push_str(Self::string_from_index(place_index).unwrap());
                 result.push('T');
-                result.push_str(Self::string_from_index(*take_index).unwrap());
+                result.push_str(Self::string_from_index(take_index).unwrap());
             }
             Self::Move { source_index, destination_index } => {
                 result.push('M');
-                result.push_str(Self::string_from_index(*source_index).unwrap());
+                result.push_str(Self::string_from_index(source_index).unwrap());
                 result.push('-');
-                result.push_str(Self::string_from_index(*destination_index).unwrap());
+                result.push_str(Self::string_from_index(destination_index).unwrap());
             }
             Self::MoveTake { source_index, destination_index, take_index } => {
                 result.push('M');
-                result.push_str(Self::string_from_index(*source_index).unwrap());
+                result.push_str(Self::string_from_index(source_index).unwrap());
                 result.push('-');
-                result.push_str(Self::string_from_index(*destination_index).unwrap());
+                result.push_str(Self::string_from_index(destination_index).unwrap());
                 result.push('T');
-                result.push_str(Self::string_from_index(*take_index).unwrap());
+                result.push_str(Self::string_from_index(take_index).unwrap());
             }
         }
 
@@ -211,38 +212,38 @@ pub struct Position {
 
 impl Position {
     pub fn play_move(&mut self, move_: &Move) {
-        match move_ {
+        match *move_ {
             Move::Place { place_index } => {
-                assert!(self.board[*place_index as usize] == Piece::None);
+                assert!(self.board[place_index as usize] == Piece::None);
 
-                self.board[*place_index as usize] = various::player_piece(self.player);
+                self.board[place_index as usize] = various::player_piece(self.player);
 
                 self.plies_without_advancement += 1;
             }
             Move::PlaceTake { place_index, take_index } => {
-                assert!(self.board[*place_index as usize] == Piece::None);
-                assert!(self.board[*take_index as usize] != Piece::None);
+                assert!(self.board[place_index as usize] == Piece::None);
+                assert!(self.board[take_index as usize] != Piece::None);
 
-                self.board[*place_index as usize] = various::player_piece(self.player);
-                self.board[*take_index as usize] = Piece::None;
+                self.board[place_index as usize] = various::player_piece(self.player);
+                self.board[take_index as usize] = Piece::None;
 
                 self.plies_without_advancement = 0;
             }
             Move::Move { source_index, destination_index } => {
-                assert!(self.board[*source_index as usize] != Piece::None);
-                assert!(self.board[*destination_index as usize] != Piece::None);
+                assert!(self.board[source_index as usize] != Piece::None);
+                assert!(self.board[destination_index as usize] == Piece::None);
 
-                self.board.swap(*source_index as usize, *destination_index as usize);
+                self.board.swap(source_index as usize, destination_index as usize);
 
                 self.plies_without_advancement += 1;
             }
             Move::MoveTake { source_index, destination_index, take_index } => {
-                assert!(self.board[*source_index as usize] != Piece::None);
-                assert!(self.board[*destination_index as usize] != Piece::None);
-                assert!(self.board[*take_index as usize] != Piece::None);
+                assert!(self.board[source_index as usize] != Piece::None);
+                assert!(self.board[destination_index as usize] == Piece::None);
+                assert!(self.board[take_index as usize] != Piece::None);
 
-                self.board.swap(*source_index as usize, *destination_index as usize);
-                self.board[*take_index as usize] = Piece::None;
+                self.board.swap(source_index as usize, destination_index as usize);
+                self.board[take_index as usize] = Piece::None;
 
                 self.plies_without_advancement = 0;
             }

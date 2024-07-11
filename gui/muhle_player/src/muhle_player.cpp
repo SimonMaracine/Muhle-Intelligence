@@ -25,6 +25,8 @@ void MuhlePlayer::start() {
 
         switch (player) {
             case PlayerHuman:
+                std::cerr << "Writing " << board::move_to_string(move) << '\n';
+
                 if (!muhle_process.write("move " + board::move_to_string(move) + '\n')) {
                     std::cerr << "Could not write command\n";
                 }
@@ -81,9 +83,11 @@ void MuhlePlayer::update() {
             std::string data;
 
             if (muhle_process.read(data)) {
-                const auto tokens {parse_message(data.substr(0, data.size() - 2))};
+                const auto tokens {parse_message(data.substr(0, data.size() - 1))};
 
                 if (tokens.at(0) == "bestmove") {
+                    std::cerr << "Board making engine move " << tokens.at(1) << '\n';
+
                     const board::Move move {board::move_from_string(tokens.at(1))};
 
                     switch (move.type) {
@@ -100,10 +104,10 @@ void MuhlePlayer::update() {
                             muhle_board.move_take(move.move_take.source_index, move.move_take.destination_index, move.move_take.take_index);
                             break;
                     }
+
+                    state = State::NextTurn;
                 }
             }
-
-            state = State::NextTurn;
 
             break;
         }

@@ -51,6 +51,8 @@ impl Engine {
     }
 
     pub fn move_(&mut self, move_: String) -> Result<(), String> {
+        eprintln!("Making move {}", move_);
+
         let move_ = game::Move::from_str(&move_)?;
 
         self.game.position.play_move(&move_);
@@ -61,10 +63,14 @@ impl Engine {
     pub fn go(&mut self, no_play: bool) -> Result<(), String> {
         // TODO parameter
 
+        eprintln!("Go");
+
         let search = search::Search::new();
         let ctx = search::SearchContext::new();
 
-        let best_move = search.search(ctx, &self.game.position);
+        let best_move = search.search(ctx, &self.game.position);  // FIXME returned default (invalid) move
+
+        eprintln!("Making best move {}", best_move.to_string());
 
         self.game.position.play_move(&best_move);
 

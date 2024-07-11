@@ -28,10 +28,10 @@ fn generate_moves_phase1(board: &mut game::Board, player: game::Player) -> Vec<g
 
         if is_mill(board, player, i) {
             let opponent_player = various::opponent(player);
-            let all_in_mills = all_pieces_in_mills(board, player);
+            let all_in_mills = all_pieces_in_mills(board, opponent_player);
 
             for j in 0..24 as game::Idx {
-                if board[j as usize] != various::player_piece(player) {
+                if board[j as usize] != various::player_piece(opponent_player) {
                     continue;
                 }
 
@@ -66,18 +66,18 @@ fn generate_moves_phase2(board: &mut game::Board, player: game::Player) -> Vec<g
 
             if is_mill(board, player, free_positions[j as usize]) {
                 let opponent_player = various::opponent(player);
-                let all_in_mills = all_pieces_in_mills(board, player);
+                let all_in_mills = all_pieces_in_mills(board, opponent_player);
 
                 for k in 0..24 as game::Idx {
-                    if board[j as usize] != various::player_piece(player) {
+                    if board[k as usize] != various::player_piece(opponent_player) {
                         continue;
                     }
 
-                    if is_mill(board, opponent_player, j) && !all_in_mills {
+                    if is_mill(board, opponent_player, k) && !all_in_mills {
                         continue;
                     }
 
-                    moves.push(game::Move::new_move_take(i, j, k));
+                    moves.push(game::Move::new_move_take(i, free_positions[j as usize], k));
                 }
             } else {
                 moves.push(game::Move::new_move(i, free_positions[j as usize]));
@@ -107,14 +107,14 @@ fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<g
 
             if is_mill(board, player, j) {
                 let opponent_player = various::opponent(player);
-                let all_in_mills = all_pieces_in_mills(board, player);
+                let all_in_mills = all_pieces_in_mills(board, opponent_player);
 
                 for k in 0..24 as game::Idx {
-                    if board[j as usize] != various::player_piece(player) {
+                    if board[k as usize] != various::player_piece(opponent_player) {
                         continue;
                     }
 
-                    if is_mill(board, opponent_player, j) && !all_in_mills {
+                    if is_mill(board, opponent_player, k) && !all_in_mills {
                         continue;
                     }
 

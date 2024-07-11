@@ -24,8 +24,8 @@ namespace board {
         MoveTake
     };
 
-    enum class Node {
-        Empty,
+    enum class Piece {
+        None,
         White,
         Black
     };
@@ -63,7 +63,7 @@ namespace board {
         MoveType type {};
     };
 
-    using Board = std::array<Node, 24>;
+    using Board = std::array<Piece, 24>;
 
     struct Position {
         Board board {};

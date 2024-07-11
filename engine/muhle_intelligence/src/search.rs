@@ -32,10 +32,12 @@ impl<'a> Search<'a> {
         let current_node = self.setup(position);
 
         let evalation = ctx.minimax(
-            3,
+            4,
             0,
             current_node,
         );
+
+        assert_ne!(ctx.best_move, game::Move::default());
 
         ctx.best_move
     }
@@ -112,39 +114,39 @@ impl<'a> SearchNode<'a> {
     }
 
     fn play_move(&mut self, move_: &game::Move) {
-        match move_ {
+        match *move_ {
             game::Move::Place { place_index } => {
-                assert!(self.board[*place_index as usize] == game::Piece::None);
+                assert!(self.board[place_index as usize] == game::Piece::None);
 
-                self.board[*place_index as usize] = various::player_piece(self.player);
+                self.board[place_index as usize] = various::player_piece(self.player);
 
                 self.plies_without_advancement += 1;
             }
             game::Move::PlaceTake { place_index, take_index } => {
-                assert!(self.board[*place_index as usize] == game::Piece::None);
-                assert!(self.board[*take_index as usize] != game::Piece::None);
+                assert!(self.board[place_index as usize] == game::Piece::None);
+                assert!(self.board[take_index as usize] != game::Piece::None);
 
-                self.board[*place_index as usize] = various::player_piece(self.player);
-                self.board[*take_index as usize] = game::Piece::None;
+                self.board[place_index as usize] = various::player_piece(self.player);
+                self.board[take_index as usize] = game::Piece::None;
 
                 self.plies_without_advancement = 0;
                 self.previous = None;
             }
             game::Move::Move { source_index, destination_index } => {
-                assert!(self.board[*source_index as usize] != game::Piece::None);
-                assert!(self.board[*destination_index as usize] != game::Piece::None);
+                assert!(self.board[source_index as usize] != game::Piece::None);
+                assert!(self.board[destination_index as usize] == game::Piece::None);
 
-                self.board.swap(*source_index as usize, *destination_index as usize);
+                self.board.swap(source_index as usize, destination_index as usize);
 
                 self.plies_without_advancement += 1;
             }
             game::Move::MoveTake { source_index, destination_index, take_index } => {
-                assert!(self.board[*source_index as usize] != game::Piece::None);
-                assert!(self.board[*destination_index as usize] != game::Piece::None);
-                assert!(self.board[*take_index as usize] != game::Piece::None);
+                assert!(self.board[source_index as usize] != game::Piece::None);
+                assert!(self.board[destination_index as usize] == game::Piece::None);
+                assert!(self.board[take_index as usize] != game::Piece::None);
 
-                self.board.swap(*source_index as usize, *destination_index as usize);
-                self.board[*take_index as usize] = game::Piece::None;
+                self.board.swap(source_index as usize, destination_index as usize);
+                self.board[take_index as usize] = game::Piece::None;
 
                 self.plies_without_advancement = 0;
                 self.previous = None;

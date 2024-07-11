@@ -164,9 +164,9 @@ namespace board {
 
             for (Idx i {0}; i < 24; i++) {
                 switch (board[i]) {
-                    case Node::Empty:
+                    case Piece::None:
                         break;
-                    case Node::White:
+                    case Piece::White:
                         draw_list->AddCircleFilled(
                             ImVec2(
                                 static_cast<float>(NODE_POSITIONS[i][0]) * board_unit + board_offset.x,
@@ -176,7 +176,7 @@ namespace board {
                             ImColor(235, 235, 235, 255)
                         );
                         break;
-                    case Node::Black:
+                    case Piece::Black:
                         draw_list->AddCircleFilled(
                             ImVec2(
                                 static_cast<float>(NODE_POSITIONS[i][0]) * board_unit + board_offset.x,
@@ -268,9 +268,9 @@ namespace board {
     }
 
     void MuhleBoard::place(Idx place_index) {
-        assert(board[place_index] == Node::Empty);
+        assert(board[place_index] == Piece::None);
 
-        board[place_index] = static_cast<Node>(turn);
+        board[place_index] = static_cast<Piece>(turn);
 
         Move move;
         move.type = MoveType::Place;
@@ -282,11 +282,11 @@ namespace board {
     }
 
     void MuhleBoard::place_take(Idx place_index, Idx take_index) {
-        assert(board[place_index] == Node::Empty);
-        assert(board[take_index] != Node::Empty);
+        assert(board[place_index] == Piece::None);
+        assert(board[take_index] != Piece::None);
 
-        board[place_index] = static_cast<Node>(turn);
-        board[take_index] = Node::Empty;
+        board[place_index] = static_cast<Piece>(turn);
+        board[take_index] = Piece::None;
 
         Move move;
         move.type = MoveType::PlaceTake;
@@ -300,8 +300,8 @@ namespace board {
     }
 
     void MuhleBoard::move(Idx source_index, Idx destination_index) {
-        assert(board[source_index] != Node::Empty);
-        assert(board[destination_index] == Node::Empty);
+        assert(board[source_index] != Piece::None);
+        assert(board[destination_index] == Piece::None);
 
         std::swap(board[source_index], board[destination_index]);
 
@@ -318,15 +318,15 @@ namespace board {
     }
 
     void MuhleBoard::move_take(Idx source_index, Idx destination_index, Idx take_index) {
-        assert(board[source_index] != Node::Empty);
-        assert(board[destination_index] == Node::Empty);
-        assert(board[take_index] != Node::Empty);
+        assert(board[source_index] != Piece::None);
+        assert(board[destination_index] == Piece::None);
+        assert(board[take_index] != Piece::None);
 
         std::swap(board[source_index], board[destination_index]);
-        board[take_index] = Node::Empty;
+        board[take_index] = Piece::None;
 
         Move move;
-        move.type = MoveType::PlaceTake;
+        move.type = MoveType::MoveTake;
         move.move_take.source_index = source_index;
         move.move_take.destination_index = destination_index;
         move.move_take.take_index = take_index;
@@ -380,7 +380,7 @@ namespace board {
 
     bool MuhleBoard::select_piece(Idx index) {
         if (user_stored_index1 == NULL_INDEX) {
-            if (board[index] == static_cast<Node>(turn)) {
+            if (board[index] == static_cast<Piece>(turn)) {
                 user_stored_index1 = index;
                 return true;
             }
@@ -391,7 +391,7 @@ namespace board {
                 }
 
                 return true;
-            } else if (board[index] == static_cast<Node>(turn)) {
+            } else if (board[index] == static_cast<Piece>(turn)) {
                 if (user_stored_index2 == NULL_INDEX) {
                     user_stored_index1 = index;
                 }
@@ -563,7 +563,7 @@ namespace board {
 
     void MuhleBoard::generate_moves_phase1(Board& board, std::vector<Move>& moves, Player player) {
         for (Idx i {0}; i < 24; i++) {
-            if (board[i] != Node::Empty) {
+            if (board[i] != Piece::None) {
                 continue;
             }
 
@@ -574,7 +574,7 @@ namespace board {
                 const bool all_in_mills {all_pieces_in_mills(board, opponent_player)};
 
                 for (Idx j {0}; j < 24; j++) {
-                    if (board[j] != static_cast<Node>(opponent_player)) {
+                    if (board[j] != static_cast<Piece>(opponent_player)) {
                         continue;
                     }
 
@@ -594,7 +594,7 @@ namespace board {
 
     void MuhleBoard::generate_moves_phase2(Board& board, std::vector<Move>& moves, Player player) {
         for (Idx i {0}; i < 24; i++) {
-            if (board[i] != static_cast<Node>(player)) {
+            if (board[i] != static_cast<Piece>(player)) {
                 continue;
             }
 
@@ -608,7 +608,7 @@ namespace board {
                     const bool all_in_mills {all_pieces_in_mills(board, opponent_player)};
 
                     for (Idx k {0}; k < 24; k++) {
-                        if (board[k] != static_cast<Node>(opponent_player)) {
+                        if (board[k] != static_cast<Piece>(opponent_player)) {
                             continue;
                         }
 
@@ -629,12 +629,12 @@ namespace board {
 
     void MuhleBoard::generate_moves_phase3(Board& board, std::vector<Move>& moves, Player player) {
         for (Idx i {0}; i < 24; i++) {
-            if (board[i] != static_cast<Node>(player)) {
+            if (board[i] != static_cast<Piece>(player)) {
                 continue;
             }
 
             for (Idx j {0}; j < 24; j++) {
-                if (board[j] != Node::Empty) {
+                if (board[j] != Piece::None) {
                     continue;
                 }
 
@@ -645,7 +645,7 @@ namespace board {
                     const bool all_in_mills {all_pieces_in_mills(board, opponent_player)};
 
                     for (Idx k {0}; k < 24; k++) {
-                        if (board[k] != static_cast<Node>(opponent_player)) {
+                        if (board[k] != static_cast<Piece>(opponent_player)) {
                             continue;
                         }
 
@@ -665,27 +665,27 @@ namespace board {
     }
 
     void MuhleBoard::make_place_move(Board& board, Player player, Idx place_index) {
-        assert(board[place_index] == Node::Empty);
+        assert(board[place_index] == Piece::None);
 
-        board[place_index] = static_cast<Node>(player);
+        board[place_index] = static_cast<Piece>(player);
     }
 
     void MuhleBoard::unmake_place_move(Board& board, Idx place_index) {
-        assert(board[place_index] != Node::Empty);
+        assert(board[place_index] != Piece::None);
 
-        board[place_index] = Node::Empty;
+        board[place_index] = Piece::None;
     }
 
     void MuhleBoard::make_move_move(Board& board, Idx source_index, Idx destination_index) {
-        assert(board[source_index] != Node::Empty);
-        assert(board[destination_index] == Node::Empty);
+        assert(board[source_index] != Piece::None);
+        assert(board[destination_index] == Piece::None);
 
         std::swap(board[source_index], board[destination_index]);
     }
 
     void MuhleBoard::unmake_move_move(Board& board, Idx source_index, Idx destination_index) {
-        assert(board[source_index] == Node::Empty);
-        assert(board[destination_index] != Node::Empty);
+        assert(board[source_index] == Piece::None);
+        assert(board[destination_index] != Piece::None);
 
         std::swap(board[source_index], board[destination_index]);
     }
@@ -695,10 +695,10 @@ namespace board {
     #pragma GCC diagnostic ignored "-Wparentheses"
 #endif
 
-#define IS_PC(const_index) (board[const_index] == node)
+#define IS_PC(const_index) (board[const_index] == piece)
 
     bool MuhleBoard::is_mill(const Board& board, Player player, Idx index) {
-        const Node node {static_cast<Node>(player)};
+        const Piece piece {static_cast<Piece>(player)};
 
         switch (index) {
             case 0:
@@ -808,7 +808,7 @@ namespace board {
 
     bool MuhleBoard::all_pieces_in_mills(const Board& board, Player player) {
         for (Idx i {0}; i < 24; i++) {
-            if (board[i] != static_cast<Node>(player)) {
+            if (board[i] != static_cast<Piece>(player)) {
                 continue;
             }
 
@@ -821,7 +821,7 @@ namespace board {
     }
 
 #define IS_FREE_CHECK(const_index) \
-    if (board[const_index] == Node::Empty) { \
+    if (board[const_index] == Piece::None) { \
         result.push_back(const_index); \
     }
 
@@ -1001,8 +1001,8 @@ namespace board {
     unsigned int MuhleBoard::count_pieces(Player player) const {
         unsigned int result {0};
 
-        for (Node node : board) {
-            result += static_cast<unsigned int>(node == static_cast<Node>(player));
+        for (const Piece piece : board) {
+            result += static_cast<unsigned int>(piece == static_cast<Piece>(player));
         }
 
         return result;
@@ -1031,7 +1031,7 @@ namespace board {
                 const Idx place_index {index_from_string(string.substr(1, 2))};
 
                 if (string.size() > 3) {
-                    const Idx take_index {index_from_string(string.substr(3, 2))};
+                    const Idx take_index {index_from_string(string.substr(4, 2))};
 
                     result.type = MoveType::PlaceTake;
                     result.place_take.place_index = place_index;
@@ -1045,10 +1045,10 @@ namespace board {
             }
             case 'M': {
                 const Idx source_index {index_from_string(string.substr(1, 2))};
-                const Idx destination_index {index_from_string(string.substr(3, 2))};
+                const Idx destination_index {index_from_string(string.substr(4, 2))};
 
-                if (string.size() > 5) {
-                    const Idx take_index {index_from_string(string.substr(3, 2))};
+                if (string.size() > 6) {
+                    const Idx take_index {index_from_string(string.substr(7, 2))};
 
                     result.type = MoveType::MoveTake;
                     result.move_take.source_index = source_index;
@@ -1080,17 +1080,21 @@ namespace board {
             case MoveType::PlaceTake:
                 result += 'P';
                 result += string_from_index(move.place_take.place_index);
+                result += 'T';
                 result += string_from_index(move.place_take.take_index);
                 break;
             case MoveType::Move:
                 result += 'M';
                 result += string_from_index(move.move.source_index);
+                result += '-';
                 result += string_from_index(move.move.destination_index);
                 break;
             case MoveType::MoveTake:
                 result += 'M';
                 result += string_from_index(move.move_take.source_index);
+                result += '-';
                 result += string_from_index(move.move_take.destination_index);
+                result += 'T';
                 result += string_from_index(move.move_take.take_index);
                 break;
         }
