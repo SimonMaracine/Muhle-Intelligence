@@ -6,18 +6,22 @@
 
 Initialize the engine and prepare it to play the first game.
 
-### newgame [start position]
+### newgame [`start position`]
 
 Prepare the engine for a new game. Optionally set a start position.
 
-### move \<move\>
+### move `move`
 
 Play the move on the engine's internal board.
 
-### go [don't play move]
+If the current internal position is a game over, then the engine should do nothing.
+
+### go [noplay]
 
 Make the engine think, play and return the best move of its current internal position. Optionally don't play the
 move on the internal board, if the second token is *noplay*.
+
+If the current internal position is a game over, then the engine should respond with the best move as *none*.
 
 ### stop
 
@@ -29,10 +33,10 @@ Shut down the engine.
 
 ## Messages From Engine To GUI
 
-### bestmove
+### bestmove (`move` | none)
 
 The response after a `go` command.
 
-### info [nodes \<value\>] [eval \<value\>] time \<value\>
+### info [nodes `value`] [eval `value`] time `value`
 
 General information about the thinking algorithm.

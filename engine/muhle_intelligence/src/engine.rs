@@ -4,6 +4,7 @@ use std::str::FromStr;
 use crate::game;
 use crate::search;
 use crate::messages;
+use crate::various;
 
 pub enum Parameter {
     Int(i32),
@@ -51,6 +52,10 @@ impl Engine {
     }
 
     pub fn move_(&mut self, move_: String) -> Result<(), String> {
+        if various::is_game_over(&self.game.position) {
+            return Ok(());
+        }
+
         eprintln!("Making move {}", move_);
 
         let move_ = game::Move::from_str(&move_)?;
@@ -70,11 +75,13 @@ impl Engine {
 
         let best_move = search.search(ctx, &self.game.position);  // FIXME returned default (invalid) move
 
-        eprintln!("Making best move {}", best_move.to_string());
+        if let Some(best_move) = &best_move {
+            eprintln!("Making best move {}", best_move.to_string());
 
-        self.game.position.play_move(&best_move);
+            self.game.position.play_move(best_move);
+        }
 
-        messages::bestmove(self, best_move)?;
+        messages::bestmove(self, best_move.as_ref())?;
 
         Ok(())
     }

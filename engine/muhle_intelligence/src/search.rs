@@ -28,7 +28,7 @@ impl<'a> Search<'a> {
         }
     }
 
-    pub fn search(mut self, mut ctx: SearchContext, position: &game::Position) -> game::Move {
+    pub fn search(mut self, mut ctx: SearchContext, position: &game::Position) -> Option<game::Move> {
         let current_node = self.setup(position);
 
         let evalation = ctx.minimax(
@@ -37,21 +37,15 @@ impl<'a> Search<'a> {
             current_node,
         );
 
-        assert_ne!(ctx.best_move, game::Move::default());
+        if ctx.best_move == game::Move::default() {
+            return None;
+        }
 
-        ctx.best_move
+        Some(ctx.best_move)
     }
 
     fn setup(&mut self, position: &game::Position) -> &SearchNode<'a> {
-        let node = SearchNode {
-            board: position.board,
-            player: position.player,
-            plies: position.plies,
-            plies_without_advancement: position.plies_without_advancement,
-            previous: None,
-        };
-
-        self.nodes.push(node);
+        self.nodes.push(SearchNode::from_position(position));
 
         self.nodes.last().unwrap()
     }
@@ -70,7 +64,7 @@ impl SearchContext {
         plies_from_root: u32,
         current_node: &SearchNode,
     ) -> eval::Eval {
-        if depth == 0 {
+        if depth == 0 || various::is_game_over_winner_material(current_node) {
             return eval::static_evaluation(current_node);
         }
 
@@ -78,7 +72,7 @@ impl SearchContext {
 
         let moves = move_generation::generate_moves(&current_node);
 
-        if moves.is_empty() {
+        if moves.is_empty() {  // Game over
             return eval::static_evaluation(current_node);
         }
 
@@ -103,8 +97,18 @@ impl SearchContext {
 }
 
 impl<'a> SearchNode<'a> {
+    pub fn from_position(position: &game::Position) -> Self {
+        Self {
+            board: position.board,
+            player: position.player,
+            plies: position.plies,
+            plies_without_advancement: position.plies_without_advancement,
+            previous: None,
+        }
+    }
+
     fn from_node(node: &'a SearchNode) -> Self {
-        SearchNode {
+        Self {
             board: node.board,
             player: node.player,
             plies: node.plies,

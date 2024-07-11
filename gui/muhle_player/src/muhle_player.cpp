@@ -45,6 +45,10 @@ void MuhlePlayer::update() {
     controls();
     load_library_dialog();
 
+    if (muhle_board.get_game_over() != board::GameOver::None) {
+        return;
+    }
+
     switch (state) {
         case State::NextTurn: {
             int player {};
