@@ -8,7 +8,7 @@ pub fn bestmove(engine: &engine::Engine, move_: Option<&game::Move>) -> Result<(
         String::from("bestmove none\n")
     };
 
-    engine.get_message_writer()(buffer)?;
+    engine.send_message(buffer)?;
 
     Ok(())
 }

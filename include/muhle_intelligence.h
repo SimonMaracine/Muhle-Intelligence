@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MUHLE_INTELLIGENCE_H
+#define MUHLE_INTELLIGENCE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,4 +17,6 @@ extern int muhle_intelligence_receive(char* string);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -10,12 +10,10 @@ pub enum Parameter {
     Int(i32),
 }
 
-type MessageWriter = fn(String) -> Result<(), String>;
-
 pub struct Engine {
     parameters: HashMap<String, Parameter>,
     game: Game,
-    message_writer: MessageWriter,
+    message_writer: fn(String) -> Result<(), String>,
 }
 
 struct Game {
@@ -25,7 +23,7 @@ struct Game {
 }
 
 impl Engine {
-    pub fn new(message_writer: MessageWriter) -> Self {
+    pub fn new(message_writer: fn(String) -> Result<(), String>) -> Self {
         Self {
             parameters: HashMap::new(),
             game: Game {
@@ -37,8 +35,8 @@ impl Engine {
         }
     }
 
-    pub fn get_message_writer(&self) -> MessageWriter {
-        self.message_writer
+    pub fn send_message(&self, buffer: String) -> Result<(), String> {
+        (self.message_writer)(buffer)
     }
 
     pub fn init(&mut self) {
@@ -56,8 +54,6 @@ impl Engine {
             return Ok(());
         }
 
-        eprintln!("Making move {}", move_);
-
         let move_ = game::Move::from_str(&move_)?;
 
         self.game.position.play_move(&move_);
@@ -68,16 +64,12 @@ impl Engine {
     pub fn go(&mut self, no_play: bool) -> Result<(), String> {
         // TODO parameter
 
-        eprintln!("Go");
-
         let search = search::Search::new();
         let ctx = search::SearchContext::new();
 
         let best_move = search.search(ctx, &self.game.position);  // FIXME returned default (invalid) move
 
         if let Some(best_move) = &best_move {
-            eprintln!("Making best move {}", best_move.to_string());
-
             self.game.position.play_move(best_move);
         }
 

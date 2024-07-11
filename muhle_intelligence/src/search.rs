@@ -1,5 +1,5 @@
 use crate::game;
-use crate::evaluation as eval;
+use crate::evaluation;
 use crate::move_generation;
 use crate::various;
 
@@ -63,17 +63,17 @@ impl SearchContext {
         depth: u32,
         plies_from_root: u32,
         current_node: &SearchNode,
-    ) -> eval::Eval {
+    ) -> evaluation::Eval {
         if depth == 0 || various::is_game_over_winner_material(current_node) {
-            return eval::static_evaluation(current_node);
+            return evaluation::static_evaluation(current_node);
         }
 
-        let mut max_evaluation = eval::Eval::MIN;
+        let mut max_evaluation = evaluation::Eval::MIN;
 
         let moves = move_generation::generate_moves(&current_node);
 
         if moves.is_empty() {  // Game over
-            return eval::static_evaluation(current_node);
+            return evaluation::static_evaluation(current_node);
         }
 
         for move_ in moves {
