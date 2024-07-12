@@ -6,6 +6,13 @@ use muhle_intelligence_core::commands;
 
 fn main() -> ExitCode {
     let mut engine = engine::Engine::new(write_to_stdout);
+
+    // First send a message for the parent process to know if we at least started
+    if let Err(err) = engine.ready() {
+        eprintln!("Could not send ready signal: {}", err);
+        return ExitCode::from(1);
+    }
+
     let result = main_loop(&mut engine);
 
     if let Err(err) = result {

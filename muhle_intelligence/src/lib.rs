@@ -32,6 +32,15 @@ pub extern "C" fn muhle_intelligence_initialize() -> c_int {
         });
     }
 
+    let ctx = unsafe {
+        CONTEXT.as_mut().unwrap()
+    };
+
+    // Do this even though it's not that necessary for a library
+    if let Err(_err) = ctx.engine.ready() {
+        return MUHLE_INTELLIGENCE_ERROR;
+    }
+
     MUHLE_INTELLIGENCE_SUCCESS
 }
 
@@ -105,7 +114,7 @@ pub extern "C" fn muhle_intelligence_receive_size(size: *mut c_uint) -> c_int {
             }
 
             unsafe {
-                *size = (message.unwrap().len() + 1) as u32;
+                *size = message.unwrap().len() as u32;
             }
         }
         Err(_err) => {
@@ -138,7 +147,6 @@ pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
 
             unsafe {
                 ptr::copy(message.unwrap().as_ptr(), string as *mut u8, length);
-                string.add(length).write(0);
             }
         }
         Err(_err) => {

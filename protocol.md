@@ -33,6 +33,10 @@ Shut down the engine.
 
 ## Messages From Engine To GUI
 
+### ready
+
+Sent at the beginning, as a signal for the GUI that the engine has started.
+
 ### bestmove (`move` | none)
 
 The response after a `go` command.

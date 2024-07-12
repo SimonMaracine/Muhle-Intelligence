@@ -3,7 +3,6 @@ use std::str::FromStr;
 
 use crate::game;
 use crate::search;
-use crate::messages;
 use crate::various;
 
 pub enum Parameter {
@@ -33,10 +32,6 @@ impl Engine {
             },
             message_writer,
         }
-    }
-
-    pub fn send_message(&self, buffer: String) -> Result<(), String> {
-        (self.message_writer)(buffer)
     }
 
     pub fn init(&mut self) {
@@ -73,7 +68,7 @@ impl Engine {
             }
         }
 
-        messages::bestmove(self, best_move.as_ref())?;
+        self.bestmove(best_move.as_ref())?;
 
         Ok(())
     }
@@ -84,5 +79,25 @@ impl Engine {
 
     pub fn quit(&mut self) {
 
+    }
+
+    pub fn ready(&self, ) -> Result<(), String> {
+        let buffer = String::from("ready\n");
+
+        (self.message_writer)(buffer)?;
+
+        Ok(())
+    }
+
+    fn bestmove(&self, move_: Option<&game::Move>) -> Result<(), String> {
+        let buffer = if let Some(move_) = move_ {
+            format!("bestmove {}\n", move_.to_string())
+        } else {
+            String::from("bestmove none\n")
+        };
+
+        (self.message_writer)(buffer)?;
+
+        Ok(())
     }
 }
