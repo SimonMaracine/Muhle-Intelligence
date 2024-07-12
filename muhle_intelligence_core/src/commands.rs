@@ -8,7 +8,7 @@ pub fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Resu
             init(engine, tokens);
         }
         "newgame" => {
-            newgame(engine, tokens);
+            newgame(engine, tokens)?;
         }
         "move" => {
             move_(engine, tokens)?;
@@ -41,10 +41,12 @@ fn init(engine: &mut engine::Engine, _tokens: Vec<String>) {
     engine.init();
 }
 
-fn newgame(engine: &mut engine::Engine, tokens: Vec<String>) {
+fn newgame(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
     let position = tokens.get(1);
 
-    engine.newgame(position.cloned());
+    engine.newgame(position.cloned())?;
+
+    Ok(())
 }
 
 fn move_(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {

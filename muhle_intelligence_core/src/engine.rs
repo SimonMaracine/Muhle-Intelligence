@@ -38,10 +38,14 @@ impl Engine {
 
     }
 
-    pub fn newgame(&mut self, position: Option<String>) {
-        // TODO parameter
+    pub fn newgame(&mut self, position: Option<String>) -> Result<(), String> {
+        if let Some(position) = position {
+            self.game.position = game::Position::from_str(&position)?;  // TODO test
+        }
 
         self.game.position = game::Position::default();
+
+        Ok(())
     }
 
     pub fn move_(&mut self, move_: String) -> Result<(), String> {

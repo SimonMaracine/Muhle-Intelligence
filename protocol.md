@@ -8,6 +8,8 @@ Initialize the engine and prepare it to play the first game.
 
 ### newgame [`start position`]
 
+<!-- TODO how positions look -->
+
 Prepare the engine for a new game. Optionally set a start position.
 
 ### move `move`

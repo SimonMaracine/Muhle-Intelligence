@@ -1,4 +1,7 @@
 use std::str::FromStr;
+use std::num::ParseIntError;
+
+use regex::Regex;
 
 use crate::various;
 
@@ -251,5 +254,135 @@ impl Position {
 
         self.player = various::opponent(self.player);
         self.plies += 1;
+    }
+
+    fn parse_pieces(string: &str, i: &mut usize) -> (Vec<Idx>, Player) {
+        let mut pieces = Vec::new();
+        let player;
+
+        match string.chars().nth(*i) {
+            Some('w') => player = Player::White,
+            Some('b') => player = Player::Black,
+            _ => panic!("Invalid position string"),
+        }
+
+        *i += 2;
+
+        loop {
+            let piece = Self::parse_piece(string, i);
+
+            if let Some(index) = piece {
+                pieces.push(index);
+            } else {
+                break;
+            }
+        }
+
+        (pieces, player)
+    }
+
+    fn parse_piece(string: &str, i: &mut usize) -> Option<Idx> {
+        let index = Self::parse_integer::<Idx>(string, i);
+
+        if let Some(',') = string.chars().nth(*i) {
+            *i += 1;
+        }
+
+        if let Ok(index) = index {
+            return Some(index);
+        }
+
+        None
+    }
+
+    fn parse_integer<T>(string: &str, i: &mut usize) -> Result<T, String>
+        where T: FromStr<Err = ParseIntError> + ToString {
+        let mut integer = String::new();
+
+        let mut characters = string.chars();
+
+        loop {
+            let character = characters.next();
+
+            if let Some(character) = character {
+                if character.is_numeric() {
+                    *i += 1;
+                    integer.push(character);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        match T::from_str(&integer) {
+            Ok(integer) => Ok(integer),
+            Err(err) => Err(err.to_string()),
+        }
+    }
+}
+
+impl FromStr for Position {
+    type Err = String;
+
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
+        if !string.is_ascii() {
+            return Err(String::from("Invalid position string"));
+        }
+
+        let re = Regex::new(
+            r"^(w|b):[0-9]{1,2}(,[0-9]{1,2})*;(w|b):[0-9]{1,2}(,[0-9]{1,2})*;(w|b);[0-9]+;[0-9]+$"
+        );
+
+        if !re.unwrap().is_match(string) {
+            return Err(String::from("Invalid position string"));
+        }
+
+        let mut position = Self::default();
+
+        let mut i = 0;
+
+        let (pieces1, player1) = Self::parse_pieces(string, &mut i);
+        i += 1;
+
+        let (pieces2, player2) = Self::parse_pieces(string, &mut i);
+        i += 1;
+
+        if player1 == player2 {
+            panic!("Invalid position string");
+        }
+
+        for index in pieces1 {
+            position.board[index as usize] = various::player_piece(player1);
+        }
+
+        for index in pieces2 {
+            position.board[index as usize] = various::player_piece(player2);
+        }
+
+        match string.chars().nth(i) {
+            Some('w') => position.player = Player::White,
+            Some('b') => position.player = Player::Black,
+            _ => panic!("Invalid position string"),
+        }
+        i += 1;
+
+        let plies = Self::parse_integer::<u32>(string, &mut i);
+        i += 1;
+
+        if let Ok(plies) = plies {
+            position.plies = plies;
+        } else {
+            panic!("Invalid position string");
+        }
+
+        let plies_without_advancement = Self::parse_integer::<u32>(string, &mut i);
+
+        if let Ok(plies_without_advancement) = plies_without_advancement {
+            position.plies_without_advancement = plies_without_advancement
+        } else {
+            panic!("Invalid position string");
+        }
+
+        Ok(position)
     }
 }
