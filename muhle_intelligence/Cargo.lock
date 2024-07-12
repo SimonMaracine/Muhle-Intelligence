@@ -5,3 +5,10 @@ version = 3
 [[package]]
 name = "muhle_intelligence"
 version = "0.1.0"
+dependencies = [
+ "muhle_intelligence_core",
+]
+
+[[package]]
+name = "muhle_intelligence_core"
+version = "0.1.0"

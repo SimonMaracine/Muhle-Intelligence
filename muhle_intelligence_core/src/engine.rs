@@ -62,15 +62,15 @@ impl Engine {
     }
 
     pub fn go(&mut self, no_play: bool) -> Result<(), String> {
-        // TODO parameter
-
         let search = search::Search::new();
         let ctx = search::SearchContext::new();
 
         let best_move = search.search(ctx, &self.game.position);  // FIXME returned default (invalid) move
 
         if let Some(best_move) = &best_move {
-            self.game.position.play_move(best_move);
+            if !no_play {
+                self.game.position.play_move(best_move);
+            }
         }
 
         messages::bestmove(self, best_move.as_ref())?;

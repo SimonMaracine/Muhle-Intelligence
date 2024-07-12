@@ -9,7 +9,7 @@ fn main() -> ExitCode {
     let result = main_loop(&mut engine);
 
     if let Err(err) = result {
-        eprintln!("An error occurred: {}", err);
+        eprintln!("A critical error occurred: {}", err);
         return ExitCode::from(1);
     }
 
@@ -51,7 +51,7 @@ fn write_to_stdout(buffer: String) -> Result<(), String> {
     let mut lock = io::stdout().lock();
 
     if let Err(err) = lock.write_all(buffer.as_bytes()) {
-        return Err(format!("Could not write to stdout: {}", err.to_string()));
+        return Err(format!("Could not write to stdout: {}", err));
     }
 
     Ok(())

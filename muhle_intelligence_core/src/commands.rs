@@ -43,9 +43,8 @@ fn init(engine: &mut engine::Engine, _tokens: Vec<String>) {
 
 fn newgame(engine: &mut engine::Engine, tokens: Vec<String>) {
     let position = tokens.get(1);
-    let position = position.cloned();
 
-    engine.newgame(position);
+    engine.newgame(position.cloned());
 }
 
 fn move_(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {

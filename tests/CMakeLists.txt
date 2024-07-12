@@ -17,7 +17,7 @@ add_executable(muhle_intelligence_test "main.cpp")
 
 add_custom_command(TARGET muhle_intelligence_test PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${CMAKE_CURRENT_SOURCE_DIR}/../muhle_intelligence/target/debug/libmuhle_intelligence_core.so"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../muhle_intelligence/target/debug/libmuhle_intelligence.so"
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
@@ -26,7 +26,7 @@ target_include_directories(muhle_intelligence_test PRIVATE "${CMAKE_CURRENT_BINA
 target_link_directories(muhle_intelligence_test PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(muhle_intelligence_test PRIVATE GTest::gtest_main)
-target_link_libraries(muhle_intelligence_test PRIVATE muhle_intelligence_core)
+target_link_libraries(muhle_intelligence_test PRIVATE muhle_intelligence)
 
 if(UNIX)
     target_compile_options(muhle_intelligence_test PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-Wconversion")

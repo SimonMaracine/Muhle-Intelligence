@@ -1,16 +1,10 @@
-pub mod commands;
-pub mod engine;
-pub mod game;
-pub mod search;
-pub mod evaluation;
-pub mod move_generation;
-pub mod various;
-pub mod messages;
-
 use std::ffi::{c_char, c_int, c_uint, CStr};
 use std::ptr;
 use std::sync::Mutex;
 use std::collections::VecDeque;
+
+use muhle_intelligence_core::engine;
+use muhle_intelligence_core::commands;
 
 struct MuhleIntelligence {
     engine: engine::Engine,
