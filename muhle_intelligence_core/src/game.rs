@@ -1,14 +1,14 @@
 use std::str::FromStr;
 use std::num::ParseIntError;
 
-use regex::Regex;
+use regex;
 
 use crate::various;
 
 pub type Idx = i32;
 pub static INVALID_INDEX: Idx = -1;
 
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum Player {
     #[default]
@@ -16,7 +16,7 @@ pub enum Player {
     Black = 2,
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum Piece {
     #[default]
@@ -205,7 +205,7 @@ impl ToString for Move {
 
 pub type Board = [Piece; 24];
 
-#[derive(Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Position {
     pub board: Board,
     pub player: Player,
@@ -288,18 +288,14 @@ impl Position {
             *i += 1;
         }
 
-        if let Ok(index) = index {
-            return Some(index);
-        }
-
-        None
+        index
     }
 
-    fn parse_integer<T>(string: &str, i: &mut usize) -> Result<T, String>
-        where T: FromStr<Err = ParseIntError> + ToString {
-        let mut integer = String::new();
+    fn parse_integer<T>(string: &str, i: &mut usize) -> Option<T>
+        where T: FromStr<Err = ParseIntError> {
+        let mut result = String::new();
 
-        let mut characters = string.chars();
+        let mut characters = string.chars().skip(*i);
 
         loop {
             let character = characters.next();
@@ -307,17 +303,20 @@ impl Position {
             if let Some(character) = character {
                 if character.is_numeric() {
                     *i += 1;
-                    integer.push(character);
+                    result.push(character);
                 } else {
                     break;
                 }
+            } else {
+                break;
             }
         }
 
-        match T::from_str(&integer) {
-            Ok(integer) => Ok(integer),
-            Err(err) => Err(err.to_string()),
+        if result.is_empty() {
+            return None;
         }
+
+        Some(T::from_str(&result).unwrap())
     }
 }
 
@@ -329,8 +328,8 @@ impl FromStr for Position {
             return Err(String::from("Invalid position string"));
         }
 
-        let re = Regex::new(
-            r"^(w|b):[0-9]{1,2}(,[0-9]{1,2})*;(w|b):[0-9]{1,2}(,[0-9]{1,2})*;(w|b);[0-9]+;[0-9]+$"
+        let re = regex::Regex::new(
+            r"^(w|b):([0-9]{1,2})?(,[0-9]{1,2})*;(w|b):([0-9]{1,2})?(,[0-9]{1,2})*;(w|b);[0-9]{1,4};[0-9]{1,4}$"
         );
 
         if !re.unwrap().is_match(string) {
@@ -342,9 +341,11 @@ impl FromStr for Position {
         let mut i = 0;
 
         let (pieces1, player1) = Self::parse_pieces(string, &mut i);
+
         i += 1;
 
         let (pieces2, player2) = Self::parse_pieces(string, &mut i);
+
         i += 1;
 
         if player1 == player2 {
@@ -352,10 +353,18 @@ impl FromStr for Position {
         }
 
         for index in pieces1 {
+            if !(index >= 0 && index < 24) {
+                return Err(String::from("Invalid position string"));
+            }
+
             position.board[index as usize] = various::player_piece(player1);
         }
 
         for index in pieces2 {
+            if !(index >= 0 && index < 24) {
+                return Err(String::from("Invalid position string"));
+            }
+
             position.board[index as usize] = various::player_piece(player2);
         }
 
@@ -364,24 +373,17 @@ impl FromStr for Position {
             Some('b') => position.player = Player::Black,
             _ => panic!("Invalid position string"),
         }
-        i += 1;
+
+        i += 2;
 
         let plies = Self::parse_integer::<u32>(string, &mut i);
-        i += 1;
 
-        if let Ok(plies) = plies {
-            position.plies = plies;
-        } else {
-            panic!("Invalid position string");
-        }
+        i += 1;
 
         let plies_without_advancement = Self::parse_integer::<u32>(string, &mut i);
 
-        if let Ok(plies_without_advancement) = plies_without_advancement {
-            position.plies_without_advancement = plies_without_advancement
-        } else {
-            panic!("Invalid position string");
-        }
+        position.plies = plies.unwrap();
+        position.plies_without_advancement = plies_without_advancement.unwrap();
 
         Ok(position)
     }

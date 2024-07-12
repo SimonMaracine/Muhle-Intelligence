@@ -40,7 +40,7 @@ impl Engine {
 
     pub fn newgame(&mut self, position: Option<String>) -> Result<(), String> {
         if let Some(position) = position {
-            self.game.position = game::Position::from_str(&position)?;  // TODO test
+            self.game.position = game::Position::from_str(&position)?;
         }
 
         self.game.position = game::Position::default();
