@@ -256,53 +256,54 @@ impl Position {
         self.plies += 1;
     }
 
-    fn parse_pieces(string: &str, i: &mut usize) -> (Vec<Idx>, Player) {
+    fn parse_pieces(string: &str) -> (Vec<Idx>, Player) {
         let mut pieces = Vec::new();
         let player;
 
-        match string.chars().nth(*i) {
-            Some('w') => player = Player::White,
-            Some('b') => player = Player::Black,
+        match string.chars().nth(0).unwrap() {
+            'w' => player = Player::White,
+            'b' => player = Player::Black,
             _ => panic!("Invalid position string"),
         }
 
-        *i += 2;
+        let mut i = 2;
 
-        loop {
-            let piece = Self::parse_piece(string, i);
-
-            if let Some(index) = piece {
-                pieces.push(index);
-            } else {
-                break;
-            }
+        while let Some(index) = Self::parse_piece(string, &mut i) {
+            pieces.push(index);
         }
 
         (pieces, player)
     }
 
     fn parse_piece(string: &str, i: &mut usize) -> Option<Idx> {
-        let index = Self::parse_integer::<Idx>(string, i);
+        let result = Self::parse_integer::<Idx>(&string[*i..]);
 
-        if let Some(',') = string.chars().nth(*i) {
-            *i += 1;
+        if let Some((index, advance)) = result {
+            *i += advance;
+
+            if let Some(',') = string.chars().nth(*i) {
+                *i += 1;
+            }
+
+            return Some(index);
         }
 
-        index
+        None
     }
 
-    fn parse_integer<T>(string: &str, i: &mut usize) -> Option<T>
+    fn parse_integer<T>(string: &str) -> Option<(T, usize)>
         where T: FromStr<Err = ParseIntError> {
         let mut result = String::new();
+        let mut advance = 0;
 
-        let mut characters = string.chars().skip(*i);
+        let mut characters = string.chars();
 
         loop {
             let character = characters.next();
 
             if let Some(character) = character {
                 if character.is_numeric() {
-                    *i += 1;
+                    advance += 1;
                     result.push(character);
                 } else {
                     break;
@@ -316,7 +317,7 @@ impl Position {
             return None;
         }
 
-        Some(T::from_str(&result).unwrap())
+        Some((T::from_str(&result).unwrap(), advance))
     }
 }
 
@@ -337,22 +338,17 @@ impl FromStr for Position {
         }
 
         let mut position = Self::default();
+        let mut tokens = string.split(";");
 
-        let mut i = 0;
+        let pieces1 = tokens.next().unwrap();
+        let pieces2 = tokens.next().unwrap();
+        let turn = tokens.next().unwrap();
+        let plies = tokens.next().unwrap();
+        let plies_without_advancement = tokens.next().unwrap();
 
-        let (pieces1, player1) = Self::parse_pieces(string, &mut i);
+        let (pieces, player1) = Self::parse_pieces(pieces1);
 
-        i += 1;
-
-        let (pieces2, player2) = Self::parse_pieces(string, &mut i);
-
-        i += 1;
-
-        if player1 == player2 {
-            panic!("Invalid position string");
-        }
-
-        for index in pieces1 {
+        for index in pieces {
             if !(index >= 0 && index < 24) {
                 return Err(String::from("Invalid position string"));
             }
@@ -360,7 +356,9 @@ impl FromStr for Position {
             position.board[index as usize] = various::player_piece(player1);
         }
 
-        for index in pieces2 {
+        let (pieces, player2) = Self::parse_pieces(pieces2);
+
+        for index in pieces {
             if !(index >= 0 && index < 24) {
                 return Err(String::from("Invalid position string"));
             }
@@ -368,22 +366,18 @@ impl FromStr for Position {
             position.board[index as usize] = various::player_piece(player2);
         }
 
-        match string.chars().nth(i) {
-            Some('w') => position.player = Player::White,
-            Some('b') => position.player = Player::Black,
+        if player1 == player2 {
+            return Err(String::from("Invalid position string"));
+        }
+
+        match turn {
+            "w" => position.player = Player::White,
+            "b" => position.player = Player::Black,
             _ => panic!("Invalid position string"),
         }
 
-        i += 2;
-
-        let plies = Self::parse_integer::<u32>(string, &mut i);
-
-        i += 1;
-
-        let plies_without_advancement = Self::parse_integer::<u32>(string, &mut i);
-
-        position.plies = plies.unwrap();
-        position.plies_without_advancement = plies_without_advancement.unwrap();
+        position.plies = Self::parse_integer::<u32>(plies).unwrap().0;
+        position.plies_without_advancement = Self::parse_integer::<u32>(plies_without_advancement).unwrap().0;
 
         Ok(position)
     }
