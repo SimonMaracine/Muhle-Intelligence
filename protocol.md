@@ -43,6 +43,6 @@ Sent at the beginning, as a signal for the GUI that the engine has started.
 
 The response after a `go` command.
 
-### info [nodes `value`] [eval `value`] time `value`
+### info time `value` [eval `value`] [nodes `value`]
 
 General information about the thinking algorithm.

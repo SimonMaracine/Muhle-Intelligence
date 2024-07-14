@@ -1,7 +1,10 @@
+use std::time;
+
 use crate::game;
 use crate::evaluation;
 use crate::move_generation;
 use crate::various;
+use crate::engine;
 
 pub struct SearchNode<'a> {
     pub board: game::Board,
@@ -15,6 +18,7 @@ pub struct SearchNode<'a> {
 
 pub struct Search<'a> {
     nodes: Vec<SearchNode<'a>>,
+    engine: &'a engine::Engine,
 }
 
 pub struct SearchContext {
@@ -22,20 +26,27 @@ pub struct SearchContext {
 }
 
 impl<'a> Search<'a> {
-    pub fn new() -> Self {
+    pub fn new(engine: &'a engine::Engine) -> Self {
         Self {
             nodes: Vec::new(),
+            engine,
         }
     }
 
     pub fn search(mut self, mut ctx: SearchContext, position: &game::Position) -> Option<game::Move> {
         let current_node = self.setup(position);
 
-        let evalation = ctx.minimax(
+        let begin = time::Instant::now();
+
+        let eval = ctx.minimax(
             4,
             0,
             current_node,
         );
+
+        let end = time::Instant::now();
+
+        self.engine.info((end - begin).as_secs_f64(), eval);
 
         if ctx.best_move == game::Move::default() {
             return None;

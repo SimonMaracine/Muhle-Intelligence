@@ -6,7 +6,7 @@ use regex;
 use crate::various;
 
 pub type Idx = i32;
-pub static INVALID_INDEX: Idx = -1;
+pub const INVALID_INDEX: Idx = -1;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -25,7 +25,7 @@ pub enum Piece {
     Black,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Move {
     Place {
         place_index: Idx,
@@ -205,7 +205,7 @@ impl ToString for Move {
 
 pub type Board = [Piece; 24];
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Position {
     pub board: Board,
     pub player: Player,

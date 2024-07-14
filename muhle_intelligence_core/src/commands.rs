@@ -1,6 +1,8 @@
 use crate::engine;
 
 pub fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
+    assert!(!tokens.is_empty());
+
     let command = tokens[0].as_str();
 
     match command {
