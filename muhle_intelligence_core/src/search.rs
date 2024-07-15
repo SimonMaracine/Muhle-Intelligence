@@ -33,7 +33,7 @@ impl<'a> Search<'a> {
         }
     }
 
-    pub fn search(mut self, mut ctx: SearchContext, position: &game::Position) -> Option<game::Move> {
+    pub fn search(mut self, mut ctx: SearchContext, position: &game::Position) -> Result<Option<game::Move>, String> {
         let current_node = self.setup(position);
 
         let begin = time::Instant::now();
@@ -46,13 +46,13 @@ impl<'a> Search<'a> {
 
         let end = time::Instant::now();
 
-        self.engine.info((end - begin).as_secs_f64(), eval);
+        self.engine.info((end - begin).as_secs_f64(), eval)?;
 
         if ctx.best_move == game::Move::default() {
-            return None;
+            return Ok(None);
         }
 
-        Some(ctx.best_move)
+        Ok(Some(ctx.best_move))
     }
 
     fn setup(&mut self, position: &game::Position) -> &SearchNode<'a> {

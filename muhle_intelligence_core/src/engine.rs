@@ -38,7 +38,7 @@ impl Engine {
     }
 
     pub fn init(&mut self) {
-
+        // TODO parameters
     }
 
     pub fn newgame(&mut self, position: Option<String>) -> Result<(), String> {
@@ -74,7 +74,7 @@ impl Engine {
         let search = search::Search::new(&self);
         let ctx = search::SearchContext::new();
 
-        let best_move = search.search(ctx, &self.game.position);  // FIXME returned default (invalid) move
+        let best_move = search.search(ctx, &self.game.position)?;  // FIXME returned default (invalid) move
 
         if let Some(best_move) = &best_move {
             if !no_play {
