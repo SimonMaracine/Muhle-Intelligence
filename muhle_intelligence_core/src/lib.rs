@@ -16,7 +16,7 @@ mod test {
     fn parse_position() {
         assert_eq!(
             game::Position::default(),
-            game::Position::from_str("w:;b:;w;0;0").unwrap()
+            game::Position::from_str("w:;b:;w;0;0").unwrap(),
         );
 
         let position = game::Position {
@@ -53,13 +53,13 @@ mod test {
 
         assert_eq!(
             position,
-            game::Position::from_str("w:2,21,23;b:0,1,22;b;6;0").unwrap()
+            game::Position::from_str("w:g7,a1,g1;b:a7,d7,d1;b;6;0").unwrap(),
         );
 
         assert!(game::Position::from_str("ofh3c;2bv73").is_err());
         assert!(game::Position::from_str("  w:;b:;w;0;0  ").is_err());
-        assert!(game::Position::from_str("w:30;b:;w;0;0").is_err());
-        assert!(game::Position::from_str("w:;b:30;w;0;0").is_err());
+        assert!(game::Position::from_str("w:y9;b:;w;0;0").is_err());
+        assert!(game::Position::from_str("w:;b:j8;w;0;0").is_err());
         assert!(game::Position::from_str("w:;b:;a;0;0").is_err());
         assert!(game::Position::from_str("w:;b:;w;99999;0").is_err());
         assert!(game::Position::from_str("w:;b:;w;0;99999").is_err());

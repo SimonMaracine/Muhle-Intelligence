@@ -45,6 +45,66 @@ pub enum Move {
     },
 }
 
+fn index_from_string(string: &str) -> Result<Idx, String> {
+    match string {
+        "a7" => Ok(0),
+        "d7" => Ok(1),
+        "g7" => Ok(2),
+        "b6" => Ok(3),
+        "d6" => Ok(4),
+        "f6" => Ok(5),
+        "c5" => Ok(6),
+        "d5" => Ok(7),
+        "e5" => Ok(8),
+        "a4" => Ok(9),
+        "b4" => Ok(10),
+        "c4" => Ok(11),
+        "e4" => Ok(12),
+        "f4" => Ok(13),
+        "g4" => Ok(14),
+        "c3" => Ok(15),
+        "d3" => Ok(16),
+        "e3" => Ok(17),
+        "b2" => Ok(18),
+        "d2" => Ok(19),
+        "f2" => Ok(20),
+        "a1" => Ok(21),
+        "d1" => Ok(22),
+        "g1" => Ok(23),
+        _ => Err(String::from("Invalid index string")),
+    }
+}
+
+fn string_from_index(index: Idx) -> Result<&'static str, String> {
+    match index {
+        0 => Ok("a7"),
+        1 => Ok("d7"),
+        2 => Ok("g7"),
+        3 => Ok("b6"),
+        4 => Ok("d6"),
+        5 => Ok("f6"),
+        6 => Ok("c5"),
+        7 => Ok("d5"),
+        8 => Ok("e5"),
+        9 => Ok("a4"),
+        10 => Ok("b4"),
+        11 => Ok("c4"),
+        12 => Ok("e4"),
+        13 => Ok("f4"),
+        14 => Ok("g4"),
+        15 => Ok("c3"),
+        16 => Ok("d3"),
+        17 => Ok("e3"),
+        18 => Ok("b2"),
+        19 => Ok("d2"),
+        20 => Ok("f2"),
+        21 => Ok("a1"),
+        22 => Ok("d1"),
+        23 => Ok("g1"),
+        _ => Err(String::from("Invalid index number")),
+    }
+}
+
 impl Move {
     pub fn new_place(place_index: Idx) -> Self {
         Self::Place { place_index }
@@ -61,66 +121,6 @@ impl Move {
     pub fn new_move_take(source_index: Idx, destination_index: Idx, take_index: Idx) -> Self {
         Self::MoveTake { source_index, destination_index, take_index }
     }
-
-    fn index_from_string(string: &str) -> Result<Idx, String> {
-        match string {
-            "a7" => Ok(0),
-            "d7" => Ok(1),
-            "g7" => Ok(2),
-            "b6" => Ok(3),
-            "d6" => Ok(4),
-            "f6" => Ok(5),
-            "c5" => Ok(6),
-            "d5" => Ok(7),
-            "e5" => Ok(8),
-            "a4" => Ok(9),
-            "b4" => Ok(10),
-            "c4" => Ok(11),
-            "e4" => Ok(12),
-            "f4" => Ok(13),
-            "g4" => Ok(14),
-            "c3" => Ok(15),
-            "d3" => Ok(16),
-            "e3" => Ok(17),
-            "b2" => Ok(18),
-            "d2" => Ok(19),
-            "f2" => Ok(20),
-            "a1" => Ok(21),
-            "d1" => Ok(22),
-            "g1" => Ok(23),
-            _ => Err(String::from("Invalid index string")),
-        }
-    }
-
-    fn string_from_index(index: Idx) -> Result<&'static str, String> {
-        match index {
-            0 => Ok("a7"),
-            1 => Ok("d7"),
-            2 => Ok("g7"),
-            3 => Ok("b6"),
-            4 => Ok("d6"),
-            5 => Ok("f6"),
-            6 => Ok("c5"),
-            7 => Ok("d5"),
-            8 => Ok("e5"),
-            9 => Ok("a4"),
-            10 => Ok("b4"),
-            11 => Ok("c4"),
-            12 => Ok("e4"),
-            13 => Ok("f4"),
-            14 => Ok("g4"),
-            15 => Ok("c3"),
-            16 => Ok("d3"),
-            17 => Ok("e3"),
-            18 => Ok("b2"),
-            19 => Ok("d2"),
-            20 => Ok("f2"),
-            21 => Ok("a1"),
-            22 => Ok("d1"),
-            23 => Ok("g1"),
-            _ => Err(String::from("Invalid index number")),
-        }
-    }
 }
 
 impl Default for Move {
@@ -135,11 +135,11 @@ impl FromStr for Move {
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         match &string[0..1] {
             "P" => {
-                let place_index = Self::index_from_string(&string[1..3])?;
+                let place_index = index_from_string(&string[1..3])?;
 
                 match string.get(3..4) {
                     Some(_) => {
-                        let take_index = Self::index_from_string(&string[4..6])?;
+                        let take_index = index_from_string(&string[4..6])?;
 
                         Ok(Self::new_place_take(place_index, take_index))
                     }
@@ -149,12 +149,12 @@ impl FromStr for Move {
                 }
             }
             "M" => {
-                let source_index = Self::index_from_string(&string[1..3])?;
-                let destination_index = Self::index_from_string(&string[4..6])?;
+                let source_index = index_from_string(&string[1..3])?;
+                let destination_index = index_from_string(&string[4..6])?;
 
                 match string.get(6..7) {
                     Some(_) => {
-                        let take_index = Self::index_from_string(&string[7..9])?;
+                        let take_index = index_from_string(&string[7..9])?;
 
                         Ok(Self::new_move_take(source_index, destination_index, take_index))
                     }
@@ -175,27 +175,27 @@ impl ToString for Move {
         match *self {
             Self::Place { place_index } => {
                 result.push('P');
-                result.push_str(Self::string_from_index(place_index).unwrap());
+                result.push_str(string_from_index(place_index).unwrap());
             }
             Self::PlaceTake { place_index, take_index } => {
                 result.push('P');
-                result.push_str(Self::string_from_index(place_index).unwrap());
+                result.push_str(string_from_index(place_index).unwrap());
                 result.push('T');
-                result.push_str(Self::string_from_index(take_index).unwrap());
+                result.push_str(string_from_index(take_index).unwrap());
             }
             Self::Move { source_index, destination_index } => {
                 result.push('M');
-                result.push_str(Self::string_from_index(source_index).unwrap());
+                result.push_str(string_from_index(source_index).unwrap());
                 result.push('-');
-                result.push_str(Self::string_from_index(destination_index).unwrap());
+                result.push_str(string_from_index(destination_index).unwrap());
             }
             Self::MoveTake { source_index, destination_index, take_index } => {
                 result.push('M');
-                result.push_str(Self::string_from_index(source_index).unwrap());
+                result.push_str(string_from_index(source_index).unwrap());
                 result.push('-');
-                result.push_str(Self::string_from_index(destination_index).unwrap());
+                result.push_str(string_from_index(destination_index).unwrap());
                 result.push('T');
-                result.push_str(Self::string_from_index(take_index).unwrap());
+                result.push_str(string_from_index(take_index).unwrap());
             }
         }
 
@@ -260,41 +260,28 @@ impl Position {
         let mut pieces = Vec::new();
         let player;
 
-        match string.chars().nth(0).unwrap() {
-            'w' => player = Player::White,
-            'b' => player = Player::Black,
+        let mut tokens = string.split([':', ',']);
+
+        match tokens.next().unwrap() {
+            "w" => player = Player::White,
+            "b" => player = Player::Black,
             _ => panic!("Invalid position string"),
         }
 
-        let mut i = 2;
+        for token in tokens {
+            if token.is_empty() {
+                continue;
+            }
 
-        while let Some(index) = Self::parse_piece(string, &mut i) {
-            pieces.push(index);
+            pieces.push(index_from_string(token).unwrap());
         }
 
         (pieces, player)
     }
 
-    fn parse_piece(string: &str, i: &mut usize) -> Option<Idx> {
-        let result = Self::parse_integer::<Idx>(&string[*i..]);
-
-        if let Some((index, advance)) = result {
-            *i += advance;
-
-            if let Some(',') = string.chars().nth(*i) {
-                *i += 1;
-            }
-
-            return Some(index);
-        }
-
-        None
-    }
-
-    fn parse_integer<T>(string: &str) -> Option<(T, usize)>
+    fn parse_integer<T>(string: &str) -> Option<T>
         where T: FromStr<Err = ParseIntError> {
         let mut result = String::new();
-        let mut advance = 0;
 
         let mut characters = string.chars();
 
@@ -303,7 +290,6 @@ impl Position {
 
             if let Some(character) = character {
                 if character.is_numeric() {
-                    advance += 1;
                     result.push(character);
                 } else {
                     break;
@@ -317,7 +303,7 @@ impl Position {
             return None;
         }
 
-        Some((T::from_str(&result).unwrap(), advance))
+        Some(T::from_str(&result).unwrap())
     }
 }
 
@@ -330,7 +316,7 @@ impl FromStr for Position {
         }
 
         let re = regex::Regex::new(
-            r"^(w|b):([0-9]{1,2})?(,[0-9]{1,2})*;(w|b):([0-9]{1,2})?(,[0-9]{1,2})*;(w|b);[0-9]{1,4};[0-9]{1,4}$"
+            r"^(w|b):([a-g][1-7])?(,[a-g][1-7])*;(w|b):([a-g][1-7])?(,[a-g][1-7])*;(w|b);[0-9]{1,4};[0-9]{1,4}$"
         );
 
         if !re.unwrap().is_match(string) {
@@ -376,8 +362,8 @@ impl FromStr for Position {
             _ => panic!("Invalid position string"),
         }
 
-        position.plies = Self::parse_integer::<u32>(plies).unwrap().0;
-        position.plies_without_advancement = Self::parse_integer::<u32>(plies_without_advancement).unwrap().0;
+        position.plies = Self::parse_integer::<u32>(plies).unwrap();
+        position.plies_without_advancement = Self::parse_integer::<u32>(plies_without_advancement).unwrap();
 
         Ok(position)
     }
