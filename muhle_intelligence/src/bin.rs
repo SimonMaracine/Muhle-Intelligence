@@ -25,13 +25,10 @@ fn main() -> ExitCode {
 
 fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
     loop {
-        let input = read_from_stdin();
-
-        if let Err(err) = input {
-            return Err(format!("Could not read input: {}", err));
-        }
-
-        let tokens = commands::tokenize_command_input(input.unwrap());
+        let tokens = match read_from_stdin() {
+            Ok(input) => commands::tokenize_command_input(input),
+            Err(err) => return Err(format!("Could not read input: {}", err)),
+        };
 
         if tokens.is_empty() {
             continue;

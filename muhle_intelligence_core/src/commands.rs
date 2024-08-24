@@ -54,11 +54,11 @@ fn newgame(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), Strin
 fn move_(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
     let move_ = tokens.get(1);
 
-    if let None = move_ {
+    let Some(move_) = move_ else {
         return Err(String::from("Expected second token to be a move string"));
-    }
+    };
 
-    engine.move_(move_.unwrap().to_owned())?;
+    engine.move_(move_.to_owned())?;
 
     Ok(())
 }
