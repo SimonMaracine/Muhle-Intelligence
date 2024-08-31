@@ -1,4 +1,4 @@
-# The CMake system in this project is only for testng purposes.
+# The CMake system in this project is only for testing purposes.
 # You can either use it to build the tests or to link your client CMake target to the library version of the engine.
 
 cmake_minimum_required(VERSION 3.20)

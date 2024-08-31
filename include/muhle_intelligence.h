@@ -9,11 +9,11 @@ extern "C" {
 #define MUHLE_INTELLIGENCE_SUCCESS 0
 #define MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE 1
 
-extern int muhle_intelligence_initialize();
-extern int muhle_intelligence_uninitialize();
-extern int muhle_intelligence_send(const char* string);
-extern int muhle_intelligence_receive_size(unsigned int* size);
-extern int muhle_intelligence_receive(char* string);
+int muhle_intelligence_initialize();
+int muhle_intelligence_uninitialize();
+int muhle_intelligence_send(const char* string);
+int muhle_intelligence_receive_size(unsigned int* size);
+int muhle_intelligence_receive(char* string);
 
 #ifdef __cplusplus
 }
