@@ -160,131 +160,37 @@ fn unmake_move_move(board: &mut game::Board, source_index: game::Idx, destinatio
 fn is_mill(board: &game::Board, player: game::Player, index: game::Idx) -> bool {
     let piece = various::player_piece(player);
 
+    assert!(board[index as usize] == piece);
+
     match index {
-        0 => {
-            if board[1] == piece && board[2] == piece || board[9] == piece && board[21] == piece {
-                return true;
-            }
-        }
-        1 => {
-            if board[0] == piece && board[2] == piece || board[4] == piece && board[7] == piece {
-                return true;
-            }
-        }
-        2 => {
-            if board[0] == piece && board[1] == piece || board[14] == piece && board[23] == piece {
-                return true;
-            }
-        }
-        3 => {
-            if board[4] == piece && board[5] == piece || board[10] == piece && board[18] == piece {
-                return true;
-            }
-        }
-        4 => {
-            if board[3] == piece && board[5] == piece || board[1] == piece && board[7] == piece {
-                return true;
-            }
-        }
-        5 => {
-            if board[3] == piece && board[4] == piece || board[13] == piece && board[20] == piece {
-                return true;
-            }
-        }
-        6 => {
-            if board[7] == piece && board[8] == piece || board[11] == piece && board[15] == piece {
-                return true;
-            }
-        }
-        7 => {
-            if board[6] == piece && board[8] == piece || board[1] == piece && board[4] == piece {
-                return true;
-            }
-        }
-        8 => {
-            if board[6] == piece && board[7] == piece || board[12] == piece && board[17] == piece {
-                return true;
-            }
-        }
-        9 => {
-            if board[0] == piece && board[21] == piece || board[10] == piece && board[11] == piece {
-                return true;
-            }
-        }
-        10 => {
-            if board[9] == piece && board[11] == piece || board[3] == piece && board[18] == piece {
-                return true;
-            }
-        }
-        11 => {
-            if board[9] == piece && board[10] == piece || board[6] == piece && board[15] == piece {
-                return true;
-            }
-        }
-        12 => {
-            if board[13] == piece && board[14] == piece || board[8] == piece && board[17] == piece {
-                return true;
-            }
-        }
-        13 => {
-            if board[12] == piece && board[14] == piece || board[5] == piece && board[20] == piece {
-                return true;
-            }
-        }
-        14 => {
-            if board[12] == piece && board[13] == piece || board[2] == piece && board[23] == piece {
-                return true;
-            }
-        }
-        15 => {
-            if board[16] == piece && board[17] == piece || board[6] == piece && board[11] == piece {
-                return true;
-            }
-        }
-        16 => {
-            if board[15] == piece && board[17] == piece || board[19] == piece && board[22] == piece {
-                return true;
-            }
-        }
-        17 => {
-            if board[15] == piece && board[16] == piece || board[8] == piece && board[12] == piece {
-                return true;
-            }
-        }
-        18 => {
-            if board[19] == piece && board[20] == piece || board[3] == piece && board[10] == piece {
-                return true;
-            }
-        }
-        19 => {
-            if board[18] == piece && board[20] == piece || board[16] == piece && board[22] == piece {
-                return true;
-            }
-        }
-        20 => {
-            if board[18] == piece && board[19] == piece || board[5] == piece && board[13] == piece {
-                return true;
-            }
-        }
-        21 => {
-            if board[22] == piece && board[23] == piece || board[0] == piece && board[9] == piece {
-                return true;
-            }
-        }
-        22 => {
-            if board[21] == piece && board[23] == piece || board[16] == piece && board[19] == piece {
-                return true;
-            }
-        }
-        23 => {
-            if board[21] == piece && board[22] == piece || board[2] == piece && board[14] == piece {
-                return true;
-            }
-        }
+        0 => return board[1] == piece && board[2] == piece || board[9] == piece && board[21] == piece,
+        1 => return board[0] == piece && board[2] == piece || board[4] == piece && board[7] == piece,
+        2 => return board[0] == piece && board[1] == piece || board[14] == piece && board[23] == piece,
+        3 => return board[4] == piece && board[5] == piece || board[10] == piece && board[18] == piece,
+        4 => return board[3] == piece && board[5] == piece || board[1] == piece && board[7] == piece,
+        5 => return board[3] == piece && board[4] == piece || board[13] == piece && board[20] == piece,
+        6 => return board[7] == piece && board[8] == piece || board[11] == piece && board[15] == piece,
+        7 => return board[6] == piece && board[8] == piece || board[1] == piece && board[4] == piece,
+        8 => return board[6] == piece && board[7] == piece || board[12] == piece && board[17] == piece,
+        9 => return board[0] == piece && board[21] == piece || board[10] == piece && board[11] == piece,
+        10 => return board[9] == piece && board[11] == piece || board[3] == piece && board[18] == piece,
+        11 => return board[9] == piece && board[10] == piece || board[6] == piece && board[15] == piece,
+        12 => return board[13] == piece && board[14] == piece || board[8] == piece && board[17] == piece,
+        13 => return board[12] == piece && board[14] == piece || board[5] == piece && board[20] == piece,
+        14 => return board[12] == piece && board[13] == piece || board[2] == piece && board[23] == piece,
+        15 => return board[16] == piece && board[17] == piece || board[6] == piece && board[11] == piece,
+        16 => return board[15] == piece && board[17] == piece || board[19] == piece && board[22] == piece,
+        17 => return board[15] == piece && board[16] == piece || board[8] == piece && board[12] == piece,
+        18 => return board[19] == piece && board[20] == piece || board[3] == piece && board[10] == piece,
+        19 => return board[18] == piece && board[20] == piece || board[16] == piece && board[22] == piece,
+        20 => return board[18] == piece && board[19] == piece || board[5] == piece && board[13] == piece,
+        21 => return board[22] == piece && board[23] == piece || board[0] == piece && board[9] == piece,
+        22 => return board[21] == piece && board[23] == piece || board[16] == piece && board[19] == piece,
+        23 => return board[21] == piece && board[22] == piece || board[2] == piece && board[14] == piece,
         _ => ()
     }
 
-    false
+    unreachable!();
 }
 
 fn all_pieces_in_mills(board: &game::Board, player: game::Player) -> bool {
