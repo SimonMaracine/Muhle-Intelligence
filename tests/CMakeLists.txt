@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(INSTALL_GTEST OFF)
-set(BUILD_GMOCK OFF)
-
-add_subdirectory(extern/googletest)
+include(cmake/googletest.cmake)
 
 add_executable(muhle_intelligence_test "main.cpp")
 
