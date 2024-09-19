@@ -1,6 +1,5 @@
 use std::ffi::{c_char, c_int, c_uint, CStr};
 use std::ptr;
-use std::sync::Mutex;
 use std::collections::VecDeque;
 
 use muhle_intelligence_core::engine;
@@ -8,7 +7,7 @@ use muhle_intelligence_core::commands;
 
 struct MuhleIntelligence {
     engine: engine::Engine,
-    messages: Mutex<VecDeque<String>>,
+    messages: VecDeque<String>,
 }
 
 static mut CONTEXT: Option<MuhleIntelligence> = None;
@@ -25,21 +24,19 @@ pub extern "C" fn muhle_intelligence_initialize() -> c_int {
         }
     }
 
-    unsafe {
-        CONTEXT = Some(MuhleIntelligence {
-            engine: engine::Engine::new(write_message),
-            messages: Mutex::new(VecDeque::new())
-        });
-    }
-
-    let ctx = unsafe {
-        CONTEXT.as_mut().unwrap()
+    let ctx = MuhleIntelligence {
+        engine: engine::Engine::new(write_message),
+        messages: VecDeque::new(),
     };
 
     // Do this even though it's not that necessary for a library
     if let Err(_err) = ctx.engine.ready() {
         return MUHLE_INTELLIGENCE_ERROR;
     }
+
+    unsafe {
+        CONTEXT = Some(ctx);
+    };
 
     MUHLE_INTELLIGENCE_SUCCESS
 }
@@ -65,9 +62,10 @@ pub extern "C" fn muhle_intelligence_send(string: *const c_char) -> c_int {
         CONTEXT.as_mut()
     };
 
-    if let None = ctx {
-        return MUHLE_INTELLIGENCE_ERROR;
-    }
+    let engine = match ctx {
+        Some(ctx) => &mut ctx.engine,
+        None => return MUHLE_INTELLIGENCE_ERROR,
+    };
 
     let input = unsafe {
         CStr::from_ptr(string).to_string_lossy().into_owned()
@@ -80,11 +78,11 @@ pub extern "C" fn muhle_intelligence_send(string: *const c_char) -> c_int {
     }
 
     if tokens[0] == "quit" {
-        commands::quit(&mut ctx.unwrap().engine, tokens);
+        commands::quit(engine, tokens);
         return MUHLE_INTELLIGENCE_SUCCESS;
     }
 
-    if let Err(_err) = commands::execute_command(&mut ctx.unwrap().engine, tokens) {
+    if let Err(_err) = commands::execute_command(engine, tokens) {
         return MUHLE_INTELLIGENCE_ERROR;
     }
 
@@ -97,28 +95,23 @@ pub extern "C" fn muhle_intelligence_receive_size(size: *mut c_uint) -> c_int {
         CONTEXT.as_mut()
     };
 
-    if let None = ctx {
-        return MUHLE_INTELLIGENCE_ERROR;
-    }
+    let message = match ctx {
+        Some(ctx) => ctx.messages.pop_front(),
+        None => return MUHLE_INTELLIGENCE_ERROR,
+    };
 
-    match ctx.unwrap().messages.lock() {
-        Ok(messages) => {
-            let message = messages.front();
-
-            if let None = message {
-                unsafe {
-                    *size = 0;
-                }
-
-                return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
-            }
-
+    match message {
+        Some(message) => {
             unsafe {
-                *size = message.unwrap().len() as u32;
+                *size = message.len() as u32;
             }
         }
-        Err(_err) => {
-            return MUHLE_INTELLIGENCE_ERROR;
+        None => {
+            unsafe {
+                *size = 0;
+            }
+
+            return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
         }
     }
 
@@ -131,27 +124,18 @@ pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
         CONTEXT.as_mut()
     };
 
-    if let None = ctx {
-        return MUHLE_INTELLIGENCE_ERROR;
-    }
+    let message = match ctx {
+        Some(ctx) => ctx.messages.pop_front(),
+        None => return MUHLE_INTELLIGENCE_ERROR,
+    };
 
-    match ctx.unwrap().messages.lock() {
-        Ok(mut messages) => {
-            let message = messages.pop_front();
-
-            if let None = message {
-                return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
-            }
-
-            let length = message.as_ref().unwrap().len();
-
+    match message {
+        Some(message) => {
             unsafe {
-                ptr::copy(message.unwrap().as_ptr(), string as *mut u8, length);
+                ptr::copy(message.as_ptr(), string as *mut u8, message.len());
             }
         }
-        Err(_err) => {
-            return MUHLE_INTELLIGENCE_ERROR;
-        }
+        None => return MUHLE_INTELLIGENCE_ERROR  // Users must not call muhle_intelligence_receive willy-nilly
     }
 
     MUHLE_INTELLIGENCE_SUCCESS
@@ -162,17 +146,9 @@ fn write_message(buffer: String) -> Result<(), String> {
         CONTEXT.as_mut()
     };
 
-    if let None = ctx {
-        return Err(String::from("Context is not created"));
-    }
-
-    match ctx.unwrap().messages.lock() {
-        Ok(mut messages) => {
-            messages.push_back(buffer);
-        }
-        Err(err) => {
-            return Err(format!("Could not lock the messages mutex: {}", err));
-        }
+    match ctx {
+        Some(ctx) => ctx.messages.push_back(buffer),
+        None => return Err(String::from("Context is not created")),
     }
 
     Ok(())
