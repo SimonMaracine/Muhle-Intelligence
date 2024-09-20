@@ -8,6 +8,7 @@ use muhle_intelligence_core::commands;
 
 struct MuhleIntelligence {
     engine: engine::Engine,
+    // The engine is free to send messages from multiple threads, hence the mutex
     messages: Mutex<VecDeque<String>>,
 }
 
@@ -37,6 +38,11 @@ pub extern "C" fn muhle_intelligence_initialize() -> c_int {
 
     // Do this even though it's not that necessary for a library
     if let Err(_err) = ctx.engine.ready() {
+        // Don't forget to reset
+        unsafe {
+            CONTEXT = None;
+        }
+
         return MUHLE_INTELLIGENCE_ERROR;
     }
 
