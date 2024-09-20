@@ -1,5 +1,6 @@
 use std::ffi::{c_char, c_int, c_uint, CStr};
 use std::ptr;
+use std::sync::Mutex;
 use std::collections::VecDeque;
 
 use muhle_intelligence_core::engine;
@@ -7,7 +8,7 @@ use muhle_intelligence_core::commands;
 
 struct MuhleIntelligence {
     engine: engine::Engine,
-    messages: VecDeque<String>,
+    messages: Mutex<VecDeque<String>>,
 }
 
 static mut CONTEXT: Option<MuhleIntelligence> = None;
@@ -25,18 +26,19 @@ pub extern "C" fn muhle_intelligence_initialize() -> c_int {
     }
 
     let ctx = MuhleIntelligence {
-        engine: engine::Engine::new(write_message),
-        messages: VecDeque::new(),
+        engine: engine::Engine::new(write_to_queue),
+        messages: Mutex::new(VecDeque::new()),
+    };
+
+    let ctx = unsafe {
+        CONTEXT = Some(ctx);
+        CONTEXT.as_ref().unwrap()
     };
 
     // Do this even though it's not that necessary for a library
     if let Err(_err) = ctx.engine.ready() {
         return MUHLE_INTELLIGENCE_ERROR;
     }
-
-    unsafe {
-        CONTEXT = Some(ctx);
-    };
 
     MUHLE_INTELLIGENCE_SUCCESS
 }
@@ -95,24 +97,29 @@ pub extern "C" fn muhle_intelligence_receive_size(size: *mut c_uint) -> c_int {
         CONTEXT.as_mut()
     };
 
-    let message = match ctx {
-        Some(ctx) => ctx.messages.pop_front(),
+    let messages = match ctx {
+        Some(ctx) => &ctx.messages,
         None => return MUHLE_INTELLIGENCE_ERROR,
     };
 
-    match message {
-        Some(message) => {
-            unsafe {
-                *size = message.len() as u32;
-            }
-        }
-        None => {
-            unsafe {
-                *size = 0;
-            }
+    match messages.lock() {
+        Ok(messages) => {
+            match messages.front() {
+                Some(message) => {
+                    unsafe {
+                        *size = message.len() as u32;
+                    }
+                }
+                None => {
+                    unsafe {
+                        *size = 0;
+                    }
 
-            return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
+                    return MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE;
+                }
+            }
         }
+        Err(_err) => return MUHLE_INTELLIGENCE_ERROR,
     }
 
     MUHLE_INTELLIGENCE_SUCCESS
@@ -125,8 +132,13 @@ pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
     };
 
     let message = match ctx {
-        Some(ctx) => ctx.messages.pop_front(),
+        Some(ctx) => read_from_queue(ctx),
         None => return MUHLE_INTELLIGENCE_ERROR,
+    };
+
+    let message = match message {
+        Ok(message) => message,
+        Err(_err) => return MUHLE_INTELLIGENCE_ERROR,
     };
 
     match message {
@@ -141,15 +153,27 @@ pub extern "C" fn muhle_intelligence_receive(string: *mut c_char) -> c_int {
     MUHLE_INTELLIGENCE_SUCCESS
 }
 
-fn write_message(buffer: String) -> Result<(), String> {
+fn write_to_queue(buffer: String) -> Result<(), String> {
     let ctx = unsafe {
         CONTEXT.as_mut()
     };
 
     match ctx {
-        Some(ctx) => ctx.messages.push_back(buffer),
-        None => return Err(String::from("Context is not created")),
+        Some(ctx) => {
+            match ctx.messages.lock() {
+                Ok(mut messages) => messages.push_back(buffer),
+                Err(err) => return Err(format!("Could not lock the messages mutex: {}", err)),
+            }
+        }
+        None => return Err(String::from("Context is not created"))
     }
 
     Ok(())
+}
+
+fn read_from_queue(ctx: &mut MuhleIntelligence) -> Result<Option<String>, String> {
+    match ctx.messages.lock() {
+        Ok(mut messages) => Ok(messages.pop_front()),
+        Err(err) => Err(format!("Could not lock the messages mutex: {}", err)),
+    }
 }

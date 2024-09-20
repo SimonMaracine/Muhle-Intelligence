@@ -63,7 +63,7 @@ TEST(muhle_intelligence, receive) {
     ASSERT_EQ(muhle_intelligence_receive_size(&size), MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE);
 
     char buffer[8];
-    ASSERT_EQ(muhle_intelligence_receive(buffer), MUHLE_INTELLIGENCE_MESSAGE_UNAVAILABLE);
+    ASSERT_EQ(muhle_intelligence_receive(buffer), MUHLE_INTELLIGENCE_ERROR);  // Users must not do this
 
     ASSERT_EQ(muhle_intelligence_uninitialize(), MUHLE_INTELLIGENCE_SUCCESS);
 
