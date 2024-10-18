@@ -37,13 +37,7 @@ impl<'a> Search<'a> {
         let current_node = self.setup(position);
 
         let begin = time::Instant::now();
-
-        let eval = ctx.minimax(
-            4,
-            0,
-            current_node,
-        );
-
+        let eval = ctx.minimax(4, 0, current_node);
         let end = time::Instant::now();
 
         self.engine.info((end - begin).as_secs_f64(), eval)?;

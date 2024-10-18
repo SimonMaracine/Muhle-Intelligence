@@ -113,14 +113,14 @@ Sent at the beginning, as a signal for the GUI that the engine has started.
 
 ### bestmove (`move` | none)
 
-Responds with the best move calculated after a `go` command, or with *none*, if the game is over
+Responds with the best move calculated after a `go` command, or with *none*, if the game is over.
 
 ### info time `value` [eval `value`] [nodes `value`]
 
 Informs the GUI about its progress in calculating the best move. Can be sent at any time between the **go**
 command and the **bestmove** response.
 
-*time* represents the total elapsed time since the thinking algorithm started
+*time* represents the total elapsed time since the thinking algorithm started.
 
 *eval* represents how much advantage does the current player have. It is implementation defined and optional.
 

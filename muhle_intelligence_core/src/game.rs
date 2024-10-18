@@ -129,7 +129,7 @@ impl Default for Move {
     }
 }
 
-impl FromStr for Move {
+impl FromStr for Move {  // TODO could be improved (use split)
     type Err = String;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
@@ -217,7 +217,7 @@ impl Position {
     pub fn play_move(&mut self, move_: &Move) {
         match *move_ {
             Move::Place { place_index } => {
-                assert!(self.board[place_index as usize] == Piece::None);
+                assert!(self.board[place_index as usize] == Piece::None);  // TODO use debug asserts
 
                 self.board[place_index as usize] = various::player_piece(self.player);
 
@@ -279,7 +279,7 @@ impl Position {
         (pieces, player)
     }
 
-    fn parse_integer<T>(string: &str) -> Option<T>
+    fn parse_integer<T>(string: &str) -> Option<T>  // FIXME don't know if it's really needed
         where T: FromStr<Err = ParseIntError> {
         let mut result = String::new();
 
@@ -307,7 +307,7 @@ impl Position {
     }
 }
 
-impl FromStr for Position {
+impl FromStr for Position {  // TODO looks like it could be improved
     type Err = String;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
@@ -326,7 +326,7 @@ impl FromStr for Position {
         let mut position = Self::default();
         let mut tokens = string.split(";");
 
-        let pieces1 = tokens.next().unwrap();
+        let pieces1 = tokens.next().unwrap();  // FIXME use expect instead
         let pieces2 = tokens.next().unwrap();
         let turn = tokens.next().unwrap();
         let plies = tokens.next().unwrap();
