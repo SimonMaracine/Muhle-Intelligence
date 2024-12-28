@@ -1,21 +1,16 @@
-# Nine men's morris Protocol
+# Generic Board Game Protocol
 
 Communication is done through ASCII text messages.
 
-All messages must end with the new line character: *\n*.
+All messages must end with a UNIX new line character.
 
 Messages from GUI to engine are also called *commands*.
 
-The message string may contain any number of characters (or tokens).
+Messages may contain arbitrary whitespace around tokens.
 
-The message string can contain arbitrary whitespace around tokens.
-
-Both the engine and the GUI should try their best to understand and execute a command or parse a message.
-Any extra invalid tokens should be ignored.
+Invalid tokens or messages should be ignored.
 
 The engine must process the commands synchronously, in the order that they are received.
-
-The engine should not send messages at inappropriate times.
 
 ## Notation
 
@@ -63,66 +58,76 @@ Examples:
 
 ## Messages From GUI To Engine
 
-### init
+### gbgp
 
-Tells the engine to initialize itself and get ready to play.
+Tell the engine to use the Generic Board Game Protocol. The engine must respond with its identity and its settings.
+Lastly, it should send the **gbgpok** message, to confirm that it's up and running and that it speaks the protocol.
 
-Should be sent once at the beginning, after the **ready** message.
+Should be sent once at the very beginning.
 
-### newgame [`start position`]
+### debug (on | off)
 
-Tells the engine to prepare for a new game. It is not necessary to send this command right before the first game
-(right after **init**). Optionally tells it to start from a
-specific position.
+Tell the engine to switch the debug mode.
 
-### move `move`
+### isready
 
-Tells the engine to play the move on the internal board.
+Tell the engine to respond with the **readyok** as soon as it has done processing all commnads, if any. It is
+used for synchronization.
 
-If the current internal position is a game over, then the engine should do nothing.
+### setoption name `identifier` [value `x`]
 
-It is GUI's responsability to send correct move commands.
+Tell the engine to set the option to the corresponding value.
 
-### go [noplay]
+### newgame
 
-Tells the engine to think, play and return the best move of its current internal position. Optionally don't play
-the move on the internal board, if the second token is *noplay*.
+Tell the engine that the next position will come from a new game.
 
-If the current internal position is a game over, then the engine should respond with the best move as *none*.
+### position (pos `position` | startpos) [moves `move1` `move2` ...]
 
-The GUI is not permitted to send the **go** command while the engine is still thinking. It can only send another
-**go** command after it received a **bestmove** message from the engine.
+Tell the engine to set the position and play the corresponding moves.
+
+### go [ponder] [wtime `x`] [btime `x`] [winc `x`] [binc `x`] [movestogo `x`] [maxdepth `x`] [maxtime `x`]
+
+Tells the engine to think and respond with the best move of its current internal position.
 
 ### stop
 
-Tells the engine to stop from thinking and return a valid best move as quickly as possible.
+Tell the engine to stop thinking and respond with a valid best move as quickly as possible.
 
-This command should do nothing, if the engine is not in the process of thinking.
+This command should do nothing, if the engine is not thinking.
 
-The engine must have a valid result even if it was stopped from thinking very early.
+### ponderhit
+
+Tell the engine that the opponent has played the expected move.
 
 ### quit
 
-Tells the engine to shut down and exit gracefully.
+Tell the engine to shut down and exit gracefully.
 
 ## Messages From Engine To GUI
 
-### ready
+### id (name `x` | author `x`)
 
-Sent at the beginning, as a signal for the GUI that the engine has started.
+Inform the GUI about the engine's identity.
 
-### bestmove (`move` | none)
+### gbgpok
 
-Responds with the best move calculated after a `go` command, or with *none*, if the game is over.
+Confirm the GUI that the engine speaks the Generic Board Game Protocol.
 
-### info time `value` [eval `value`] [nodes `value`]
+### readyok
 
-Informs the GUI about its progress in calculating the best move. Can be sent at any time between the **go**
+Tell the GUI that the engine has done processing commands and is ready to think again.
+
+### bestmove (`move` | none) [ponder `move`]
+
+Tell the GUI that it has done thinking after a **go** command. If, the game is already over, then the move should
+be *none*
+
+### info [depth `x`] [time `x`] [nodes `x`] [score (eval `x` | win `x`)] [currmove `move`] [currmovenumber `x`] [hashfull `x`] [nps `x`] [pv `move1` `move2` ...]
+
+Inform the GUI about its progress in calculating the best move. Can be sent at any time between the **go**
 command and the **bestmove** response.
 
-*time* represents the total elapsed time since the thinking algorithm started.
+### option name `identifier` type `t` default `x` [min `x`] [max `x`] [var `x`]
 
-*eval* represents how much advantage does the current player have. It is implementation defined and optional.
-
-*nodes* represents the number of leaf nodes processed in the minimax algorithm. This value is optional,
-as the engine may not use the minimax algorithm.
+Tell the GUI about a setting that the engine supports.
