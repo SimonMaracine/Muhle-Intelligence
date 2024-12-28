@@ -3,13 +3,5 @@ name = "muhle_intelligence"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib"]
-path = "src/lib.rs"
-
-[[bin]]
-name = "muhle_intelligence"
-path = "src/bin.rs"
-
 [dependencies]
-muhle_intelligence_core = { path = "../muhle_intelligence_core" }
+regex = "1.10.5"
