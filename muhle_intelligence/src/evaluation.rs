@@ -1,9 +1,8 @@
 use crate::game;
-use crate::search;
 
 pub type Eval = i32;
 
-pub fn static_evaluation(node: &search::SearchNode) -> Eval {
+pub fn static_evaluation(node: &game::SearchNode) -> Eval {
     let mut evaluation: Eval = 0;
 
     for piece in node.board {

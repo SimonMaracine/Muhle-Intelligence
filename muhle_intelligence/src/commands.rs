@@ -1,77 +1,42 @@
-use crate::engine;
+// use crate::engine;
 
-pub fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
-    assert!(!tokens.is_empty());
+// pub fn quit(engine: &mut engine::Engine, _tokens: Vec<String>) {
+//     engine.quit();
+// }
 
-    let command = tokens[0].as_str();
+// fn init(engine: &mut engine::Engine, _tokens: Vec<String>) {
+//     engine.init();
+// }
 
-    match command {
-        "init" => {
-            init(engine, tokens);
-        }
-        "newgame" => {
-            newgame(engine, tokens)?;
-        }
-        "move" => {
-            move_(engine, tokens)?;
-        }
-        "go" => {
-            go(engine, tokens)?;
-        }
-        "stop" => {
-            stop(engine, tokens);
-        }
-        _ => return Err(format!("Invalid command: `{}`", command))
-    }
+// fn newgame(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
+//     let position = tokens.get(1);
 
-    Ok(())
-}
+//     engine.newgame(position.cloned())?;
 
-pub fn tokenize_command_input(input: String) -> Vec<String> {
-    input.split([' ', '\t']).filter(|token| {
-        !token.trim().is_empty()
-    }).map(|token| {
-        String::from(token.trim())
-    }).collect::<Vec<_>>()
-}
+//     Ok(())
+// }
 
-pub fn quit(engine: &mut engine::Engine, _tokens: Vec<String>) {
-    engine.quit();
-}
+// fn move_(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
+//     let move_ = tokens.get(1);
 
-fn init(engine: &mut engine::Engine, _tokens: Vec<String>) {
-    engine.init();
-}
+//     let Some(move_) = move_ else {
+//         return Err(String::from("Expected second token to be a move string"));
+//     };
 
-fn newgame(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
-    let position = tokens.get(1);
+//     engine.move_(move_.to_owned())?;
 
-    engine.newgame(position.cloned())?;
+//     Ok(())
+// }
 
-    Ok(())
-}
+// fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
+//     let noplay = tokens.get(1);
+//     let noplay = noplay.map_or(false, |noplay| { noplay == "noplay" });
 
-fn move_(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
-    let move_ = tokens.get(1);
+//     engine.go(noplay)?;
 
-    let Some(move_) = move_ else {
-        return Err(String::from("Expected second token to be a move string"));
-    };
+//     Ok(())
+// }
 
-    engine.move_(move_.to_owned())?;
-
-    Ok(())
-}
-
-fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
-    let noplay = tokens.get(1);
-    let noplay = noplay.map_or(false, |noplay| { noplay == "noplay" });
-
-    engine.go(noplay)?;
-
-    Ok(())
-}
-
-fn stop(engine: &mut engine::Engine, _tokens: Vec<String>) {
-    engine.stop();
-}
+// fn stop(engine: &mut engine::Engine, _tokens: Vec<String>) {
+//     engine.stop();
+// }

@@ -1,16 +1,16 @@
-mod commands;
 mod engine;
 mod evaluation;
 mod game;
 mod move_generation;
+mod options;
 mod search;
-mod various;
+mod think;
 
 use std::io::{self, Write};
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
-    let mut engine = engine::Engine::new(write_to_stdout);
+    let mut engine = engine::Engine::new();
 
     // First send a message for the parent process to know if we at least started
     if let Err(err) = engine.ready() {
@@ -31,7 +31,7 @@ fn main() -> ExitCode {
 fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
     loop {
         let tokens = match read_from_stdin() {
-            Ok(input) => commands::tokenize_command_input(input),
+            Ok(input) => tokenize_command_input(input),
             Err(err) => return Err(format!("Could not read input: {}", err)),
         };
 
@@ -40,11 +40,11 @@ fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
         }
 
         if tokens[0] == "quit" {
-            commands::quit(engine, tokens);
+            // quit(engine, tokens);
             return Ok(());
         }
 
-        if let Err(err) = commands::execute_command(engine, tokens) {
+        if let Err(err) = execute_command(engine, tokens) {
             eprintln!("{}", err);
         }
     }
@@ -65,6 +65,42 @@ fn write_to_stdout(buffer: String) -> Result<(), String> {
 
     Ok(())
 }
+
+fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
+    assert!(!tokens.is_empty());
+
+    let command = tokens[0].as_str();
+
+    match command {
+        // "init" => {
+        //     init(engine, tokens);
+        // }
+        // "newgame" => {
+        //     newgame(engine, tokens)?;
+        // }
+        // "move" => {
+        //     move_(engine, tokens)?;
+        // }
+        // "go" => {
+        //     go(engine, tokens)?;
+        // }
+        // "stop" => {
+        //     stop(engine, tokens);
+        // }
+        _ => return Err(format!("Invalid command: `{}`", command))
+    }
+
+    Ok(())
+}
+
+fn tokenize_command_input(input: String) -> Vec<String> {
+    input.split([' ', '\t']).filter(|token| {
+        !token.trim().is_empty()
+    }).map(|token| {
+        String::from(token.trim())
+    }).collect::<Vec<_>>()
+}
+
 
 #[cfg(test)]
 mod test {

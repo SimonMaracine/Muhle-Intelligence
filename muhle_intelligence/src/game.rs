@@ -1,9 +1,10 @@
+use std::mem;
 use std::str::FromStr;
 use std::num::ParseIntError;
 
 use regex;
 
-use crate::various;
+use crate::move_generation;
 
 pub type Idx = i32;
 pub const INVALID_INDEX: Idx = -1;
@@ -219,7 +220,7 @@ impl Position {
             Move::Place { place_index } => {
                 assert!(self.board[place_index as usize] == Piece::None);  // TODO use debug asserts
 
-                self.board[place_index as usize] = various::player_piece(self.player);
+                self.board[place_index as usize] = player_piece(self.player);
 
                 self.plies_without_advancement += 1;
             }
@@ -227,7 +228,7 @@ impl Position {
                 assert!(self.board[place_index as usize] == Piece::None);
                 assert!(self.board[take_index as usize] != Piece::None);
 
-                self.board[place_index as usize] = various::player_piece(self.player);
+                self.board[place_index as usize] = player_piece(self.player);
                 self.board[take_index as usize] = Piece::None;
 
                 self.plies_without_advancement = 0;
@@ -252,7 +253,7 @@ impl Position {
             }
         }
 
-        self.player = various::opponent(self.player);
+        self.player = opponent(self.player);
         self.plies += 1;
     }
 
@@ -339,7 +340,7 @@ impl FromStr for Position {  // TODO looks like it could be improved
                 return Err(String::from("Invalid position string"));
             }
 
-            position.board[index as usize] = various::player_piece(player1);
+            position.board[index as usize] = player_piece(player1);
         }
 
         let (pieces, player2) = Self::parse_pieces(pieces2);
@@ -349,7 +350,7 @@ impl FromStr for Position {  // TODO looks like it could be improved
                 return Err(String::from("Invalid position string"));
             }
 
-            position.board[index as usize] = various::player_piece(player2);
+            position.board[index as usize] = player_piece(player2);
         }
 
         if player1 == player2 {
@@ -366,5 +367,68 @@ impl FromStr for Position {  // TODO looks like it could be improved
         position.plies_without_advancement = Self::parse_integer::<u32>(plies_without_advancement).unwrap();
 
         Ok(position)
+    }
+}
+
+pub struct SearchNode<'a> {
+    pub board: Board,
+    pub player: Player,
+    pub plies: u32,
+    pub plies_without_advancement: u32,
+    // TODO repetition
+
+    pub previous: Option<&'a SearchNode<'a>>,
+}
+
+pub fn is_game_over_winner_material(node: &SearchNode) -> bool {
+    if node.plies < 18 {
+        return false;
+    }
+
+    let white_pieces = count_pieces(node, Piece::White);
+    let black_pieces = count_pieces(node, Piece::Black);
+
+    if white_pieces < 3 || black_pieces < 3 {
+        return true;
+    }
+
+    false
+}
+
+pub fn is_game_over(position: &Position) -> bool {
+    let node = SearchNode::from_position(position);
+
+    if is_game_over_winner_material(&node) {
+        return true;
+    }
+
+    if move_generation::generate_moves(&node).is_empty() {
+        return true;
+    }
+
+    // FIXME repetition and 50-move rule
+
+    false
+}
+
+pub fn count_pieces(node: &SearchNode, piece: Piece) -> u32 {
+    let mut result = 0;
+
+    for p in node.board {
+        result += (p == piece) as u32;
+    }
+
+    result
+}
+
+pub fn player_piece(player: Player) -> Piece {
+    let integer = player as u32;
+    unsafe { mem::transmute(integer) }
+}
+
+pub fn opponent(player: Player) -> Player {
+    match player {
+        Player::White => Player::Black,
+        Player::Black => Player::White,
     }
 }
