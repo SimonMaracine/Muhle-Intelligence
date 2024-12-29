@@ -3,21 +3,10 @@ use std::time;
 use crate::game;
 use crate::evaluation;
 use crate::move_generation;
-use crate::various;
 use crate::engine;
 
-pub struct SearchNode<'a> {
-    pub board: game::Board,
-    pub player: game::Player,
-    pub plies: u32,
-    pub plies_without_advancement: u32,
-    // TODO repetition
-
-    previous: Option<&'a SearchNode<'a>>,
-}
-
 pub struct Search<'a> {
-    nodes: Vec<SearchNode<'a>>,
+    nodes: Vec<game::SearchNode<'a>>,
     engine: &'a engine::Engine,
 }
 
@@ -49,8 +38,8 @@ impl<'a> Search<'a> {
         Ok(Some(ctx.best_move))
     }
 
-    fn setup(&mut self, position: &game::Position) -> &SearchNode<'a> {
-        self.nodes.push(SearchNode::from_position(position));
+    fn setup(&mut self, position: &game::Position) -> &game::SearchNode<'a> {
+        self.nodes.push(game::SearchNode::from_position(position));
 
         self.nodes.last().unwrap()
     }
@@ -67,9 +56,9 @@ impl SearchContext {
         &mut self,
         depth: u32,
         plies_from_root: u32,
-        current_node: &SearchNode,
+        current_node: &game::SearchNode,
     ) -> evaluation::Eval {
-        if depth == 0 || various::is_game_over_winner_material(current_node) {
+        if depth == 0 || game::is_game_over_winner_material(current_node) {
             return evaluation::static_evaluation(current_node);
         }
 
@@ -82,7 +71,7 @@ impl SearchContext {
         }
 
         for move_ in moves {
-            let mut new_node = SearchNode::from_node(current_node);
+            let mut new_node = game::SearchNode::from_node(current_node);
 
             new_node.play_move(&move_);
 
@@ -101,7 +90,7 @@ impl SearchContext {
     }
 }
 
-impl<'a> SearchNode<'a> {
+impl<'a> game::SearchNode<'a> {
     pub fn from_position(position: &game::Position) -> Self {
         Self {
             board: position.board,
@@ -112,7 +101,7 @@ impl<'a> SearchNode<'a> {
         }
     }
 
-    fn from_node(node: &'a SearchNode) -> Self {
+    fn from_node(node: &'a game::SearchNode) -> Self {
         Self {
             board: node.board,
             player: node.player,
@@ -127,7 +116,7 @@ impl<'a> SearchNode<'a> {
             game::Move::Place { place_index } => {
                 assert!(self.board[place_index as usize] == game::Piece::None);
 
-                self.board[place_index as usize] = various::player_piece(self.player);
+                self.board[place_index as usize] = game::player_piece(self.player);
 
                 self.plies_without_advancement += 1;
             }
@@ -135,7 +124,7 @@ impl<'a> SearchNode<'a> {
                 assert!(self.board[place_index as usize] == game::Piece::None);
                 assert!(self.board[take_index as usize] != game::Piece::None);
 
-                self.board[place_index as usize] = various::player_piece(self.player);
+                self.board[place_index as usize] = game::player_piece(self.player);
                 self.board[take_index as usize] = game::Piece::None;
 
                 self.plies_without_advancement = 0;
@@ -162,7 +151,7 @@ impl<'a> SearchNode<'a> {
             }
         }
 
-        self.player = various::opponent(self.player);
+        self.player = game::opponent(self.player);
         self.plies += 1;
     }
 }
