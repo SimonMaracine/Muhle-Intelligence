@@ -1,7 +1,19 @@
-pub enum Option {
+pub struct Option {
+    name: String,
+    value: Value,
+}
+
+pub enum Value {
     Check(bool),
-    Spin(i32),
-    Combo(String),
+    Spin {
+        default: i32,
+        min: i32,
+        max: i32,
+    },
+    Combo {
+        default: String,
+        var: Vec<String>,
+    },
     Button,
     String(String),
 }

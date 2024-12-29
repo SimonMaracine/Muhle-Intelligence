@@ -1,27 +1,23 @@
+mod commands;
 mod engine;
 mod evaluation;
 mod game;
+mod messages;
 mod move_generation;
 mod options;
 mod search;
 mod think;
 
-use std::io::{self, Write};
+use std::io;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
     let mut engine = engine::Engine::new();
 
-    // First send a message for the parent process to know if we at least started
-    if let Err(err) = engine.ready() {
-        eprintln!("Could not send ready signal: {}", err);
-        return ExitCode::from(1);
-    }
-
     let result = main_loop(&mut engine);
 
     if let Err(err) = result {
-        eprintln!("A critical error occurred: {}", err);
+        // eprintln!("A critical error occurred: {}", err);  // TODO write to log if debug
         return ExitCode::from(1);
     }
 
@@ -40,12 +36,12 @@ fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
         }
 
         if tokens[0] == "quit" {
-            // quit(engine, tokens);
+            commands::quit(engine, tokens);
             return Ok(());
         }
 
         if let Err(err) = execute_command(engine, tokens) {
-            eprintln!("{}", err);
+            // eprintln!("{}", err);  // TODO write to log if debug
         }
     }
 }
@@ -56,38 +52,46 @@ fn read_from_stdin() -> Result<String, io::Error> {
     Ok(buffer)
 }
 
-fn write_to_stdout(buffer: String) -> Result<(), String> {
-    let mut lock = io::stdout().lock();
-
-    if let Err(err) = lock.write_all(buffer.as_bytes()) {
-        return Err(format!("Could not write to stdout: {}", err));
-    }
-
-    Ok(())
-}
-
 fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
     assert!(!tokens.is_empty());
 
     let command = tokens[0].as_str();
 
-    match command {
-        // "init" => {
-        //     init(engine, tokens);
-        // }
-        // "newgame" => {
-        //     newgame(engine, tokens)?;
-        // }
-        // "move" => {
-        //     move_(engine, tokens)?;
-        // }
-        // "go" => {
-        //     go(engine, tokens)?;
-        // }
-        // "stop" => {
-        //     stop(engine, tokens);
-        // }
-        _ => return Err(format!("Invalid command: `{}`", command))
+    if !engine.is_gbgp_mode() {
+        if command == "gbgp" {
+            commands::gbgp(engine, tokens);
+        }
+    } else {
+        match command {
+            "gbgp" => {
+                commands::gbgp(engine, tokens);
+            }
+            "debug" => {
+                commands::debug(engine, tokens);
+            }
+            "isready" => {
+                commands::isready(engine, tokens);
+            }
+            "setoption" => {
+                commands::setoption(engine, tokens);
+            }
+            "newgame" => {
+                commands::newgame(engine, tokens);
+            }
+            "position" => {
+                commands::position(engine, tokens);
+            }
+            "go" => {
+                commands::go(engine, tokens);
+            }
+            "stop" => {
+                commands::stop(engine, tokens);
+            }
+            "ponderhit" => {
+                commands::ponderhit(engine, tokens);
+            }
+            _ => return Err(format!("Invalid command: `{}`", command))
+        }
     }
 
     Ok(())
@@ -100,7 +104,6 @@ fn tokenize_command_input(input: String) -> Vec<String> {
         String::from(token.trim())
     }).collect::<Vec<_>>()
 }
-
 
 #[cfg(test)]
 mod test {

@@ -380,6 +380,72 @@ pub struct SearchNode<'a> {
     pub previous: Option<&'a SearchNode<'a>>,
 }
 
+impl<'a> SearchNode<'a> {
+    pub fn from_position(position: &Position) -> Self {
+        Self {
+            board: position.board,
+            player: position.player,
+            plies: position.plies,
+            plies_without_advancement: position.plies_without_advancement,
+            previous: None,
+        }
+    }
+
+    pub fn from_node(node: &'a SearchNode) -> Self {
+        Self {
+            board: node.board,
+            player: node.player,
+            plies: node.plies,
+            plies_without_advancement: node.plies_without_advancement,
+            previous: Some(node),
+        }
+    }
+
+    pub fn play_move(&mut self, move_: &Move) {
+        match *move_ {
+            Move::Place { place_index } => {
+                assert!(self.board[place_index as usize] == Piece::None);
+
+                self.board[place_index as usize] = player_piece(self.player);
+
+                self.plies_without_advancement += 1;
+            }
+            Move::PlaceTake { place_index, take_index } => {
+                assert!(self.board[place_index as usize] == Piece::None);
+                assert!(self.board[take_index as usize] != Piece::None);
+
+                self.board[place_index as usize] = player_piece(self.player);
+                self.board[take_index as usize] = Piece::None;
+
+                self.plies_without_advancement = 0;
+                self.previous = None;
+            }
+            Move::Move { source_index, destination_index } => {
+                assert!(self.board[source_index as usize] != Piece::None);
+                assert!(self.board[destination_index as usize] == Piece::None);
+
+                self.board.swap(source_index as usize, destination_index as usize);
+
+                self.plies_without_advancement += 1;
+            }
+            Move::MoveTake { source_index, destination_index, take_index } => {
+                assert!(self.board[source_index as usize] != Piece::None);
+                assert!(self.board[destination_index as usize] == Piece::None);
+                assert!(self.board[take_index as usize] != Piece::None);
+
+                self.board.swap(source_index as usize, destination_index as usize);
+                self.board[take_index as usize] = Piece::None;
+
+                self.plies_without_advancement = 0;
+                self.previous = None;
+            }
+        }
+
+        self.player = opponent(self.player);
+        self.plies += 1;
+    }
+}
+
 pub fn is_game_over_winner_material(node: &SearchNode) -> bool {
     if node.plies < 18 {
         return false;

@@ -1,125 +1,157 @@
-use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::{self, JoinHandle};
+use std::sync::{Arc, Condvar, Mutex};
 use std::str::FromStr;
 
 use crate::evaluation;
 use crate::game;
 use crate::search;
 use crate::options;
+use crate::messages;
+
+const NAME: &str = "Muhle Intelligence 1.0";
+const AUTHOR: &str = "Simon Maracine";
+
+#[derive(Clone)]
+struct Game {
+    position: game::Position,
+    moves: Vec<game::Move>,
+}
+
+struct Sync {
+    mutex_go: Mutex<bool>,
+    cv: Condvar,
+}
 
 pub struct Engine {
-    options: HashMap<String, options::Option>,
-    position: game::Position,
-    previous_positions: Vec<game::Position>,
-    moves_played: Vec<game::Move>,
+    gbgp_mode: bool,
+    debug_mode: bool,
+    game: Arc<Mutex<Game>>,
+    handle: Option<JoinHandle<()>>,
+    sync: Arc<Sync>,
+    running: Arc<AtomicBool>,
 }
 
 impl Engine {
     pub fn new() -> Self {
         Self {
-            options: HashMap::new(),
-            position: game::Position::default(),
-            previous_positions: Vec::new(),
-            moves_played: Vec::new(),
+            gbgp_mode: false,
+            debug_mode: false,
+            game: Arc::new(Mutex::new(Game {
+                position: game::Position::default(),
+                moves: Vec::new()
+            })),
+            handle: None,
+            sync: Arc::new(Sync {
+                mutex_go: Mutex::new(false),
+                cv: Condvar::new()
+            }),
+            running: Arc::new(AtomicBool::new(false)),
         }
     }
 
-    pub fn gbgp(&mut self) {
+    pub fn is_gbgp_mode(&self) -> bool {
+        self.gbgp_mode
+    }
+
+    pub fn gbgp(&self) {
+        messages::id(messages::Identifier::Name(String::from(NAME)));
+        messages::id(messages::Identifier::Author(String::from(AUTHOR)));
+
+        messages::gbgpok();
+    }
+
+    pub fn debug(&mut self, active: bool) {
+        self.debug_mode = active;
+    }
+
+    pub fn isready(&self) {
+        messages::readyok();
+    }
+
+    pub fn setoption(&mut self, name: String, value: Option<String>) {
 
     }
 
-    pub fn newgame(&mut self, position: Option<String>) -> Result<(), String> {
-        // if let Some(position) = position {
-        //     self.game.position = game::Position::from_str(&position)?;
-        // } else {
-        //     self.game.position = game::Position::default();
-        // }
-
-        // self.game.previous_positions.clear();
-        // self.game.previous_positions.push(self.game.position.clone());
-
-        // self.game.moves_played.clear();
-
-        // Ok(())
-
-        todo!()
+    pub fn newgame(&mut self) {
+        self.initialize_once();
     }
 
-    pub fn move_(&mut self, move_: String) -> Result<(), String> {
-        // if various::is_game_over(&self.game.position) {
-        //     return Ok(());
-        // }
+    pub fn position(&mut self, position: game::Position, moves: Option<Vec<game::Move>>) -> Result<(), String> {
+        let mut game = self.game.lock().unwrap();
 
-        // let move_ = game::Move::from_str(&move_)?;
+        game.position = position;
 
-        // self.game.position.play_move(&move_);
-        // self.game.moves_played.push(move_);
-        // self.game.previous_positions.push(self.game.position.clone());
+        game.moves.clear();
 
-        // Ok(())
+        if let Some(moves) = moves {
+            for move_ in moves {
+                game.moves.push(move_);
+            }
+        }
 
-        todo!()
+        Ok(())
     }
 
-    pub fn go(&mut self, no_play: bool) -> Result<(), String> {
-        // let search = search::Search::new(&self);
-        // let ctx = search::SearchContext::new();
-
-        // let best_move = search.search(ctx, &self.game.position)?;  // FIXME returned default (invalid) move
-
-        // if let Some(best_move) = &best_move {
-        //     if !no_play {
-        //         self.game.position.play_move(best_move);
-        //         self.game.moves_played.push(best_move.clone());
-        //         self.game.previous_positions.push(self.game.position.clone());
-        //     }
-        // }
-
-        // self.bestmove(best_move.as_ref())?;
-
-        // Ok(())
-
-        todo!()
+    pub fn go(&mut self, ponder: bool, wtime: Option<i32>, btime: Option<i32>, maxdepth: Option<i32>, maxtime: Option<i32>) {
+        {
+            let mut guard = self.sync.mutex_go.lock().unwrap();
+            *guard = true;
+        }
+        self.sync.cv.notify_one();
     }
 
     pub fn stop(&mut self) {
 
     }
 
+    pub fn ponderhit(&mut self) {
+
+    }
+
     pub fn quit(&mut self) {
+        if !self.running.load(Ordering::SeqCst) {
+            return;
+        }
 
+        self.running.store(false, Ordering::SeqCst);
+
+        {
+            let mut guard = self.sync.mutex_go.lock().unwrap();
+            *guard = true;
+        }
+        self.sync.cv.notify_one();
+
+        self.handle.take().expect("The thread should have been created or this code skipped").join().unwrap();
     }
 
-    pub fn ready(&self) -> Result<(), String> {
-        // let buffer = String::from("ready\n");
+    fn initialize_once(&mut self) {
+        if self.running.load(Ordering::SeqCst) {
+            return;
+        }
 
-        // (self.message_writer)(buffer)?;
+        self.running.store(true, Ordering::SeqCst);
 
-        // Ok(())
+        let sync = self.sync.clone();
+        let game = self.game.clone();
+        let running = self.running.clone();
 
-        todo!()
+        self.handle = Some(thread::spawn(move || {
+            loop {
+                let _guard = sync.cv.wait_while(sync.mutex_go.lock().unwrap(), |go| *go).unwrap();
+
+                if !running.load(Ordering::SeqCst) {
+                    break;
+                }
+
+                let game = game.lock().unwrap();
+
+                Self::think(game.clone());
+            }
+        }));
     }
 
-    pub fn info(&self, time: f64, eval: evaluation::Eval) -> Result<(), String> {
-        // let buffer = format!("info time {} eval {}\n", time, eval);
+    fn think(game: Game) {
 
-        // (self.message_writer)(buffer)?;
-
-        // Ok(())
-
-        todo!()
-    }
-
-    fn bestmove(&self, move_: Option<&game::Move>) -> Result<(), String> {
-        // let buffer = if let Some(move_) = move_ {
-        //     format!("bestmove {}\n", move_.to_string())
-        // } else {
-        //     String::from("bestmove none\n")
-        // };
-
-        // (self.message_writer)(buffer)?;
-
-        // Ok(())
-
-        todo!()
     }
 }
