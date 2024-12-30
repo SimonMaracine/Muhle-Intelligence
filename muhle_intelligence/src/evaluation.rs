@@ -5,19 +5,17 @@ pub type Eval = i32;
 pub fn static_evaluation(node: &game::SearchNode) -> Eval {
     let mut evaluation: Eval = 0;
 
-    for piece in node.board {
-        match piece {
-            game::Piece::White => {
-                evaluation += 1;
-            }
-            game::Piece::Black => {
-                evaluation -= 1;
-            }
-            game::Piece::None => (),
+    for node in node.position.position.board {
+        match node {
+            game::Node::White => evaluation += 1,
+            game::Node::Black => evaluation -= 1,
+            game::Node::Empty => (),
         }
     }
 
-    let perspective = if node.player == game::Player::White { 1 } else { -1 };
+    evaluation
+}
 
-    evaluation * perspective
+pub fn perspective(position: &game::Position) -> Eval {
+    if position.player == game::Player::White { 1 } else { -1 }
 }

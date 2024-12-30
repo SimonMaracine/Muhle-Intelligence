@@ -133,56 +133,54 @@ mod test {
     use super::game;
 
     #[test]
-    fn parse_position() {
+    fn position() {
         assert_eq!(
             game::Position::default(),
-            game::Position::from_str("w:;b:;w;0;0").unwrap(),
+            game::Position::from_str("w:w:b:1").unwrap(),
         );
 
         let position = game::Position {
             board: [
-                game::Piece::Black,
-                game::Piece::Black,
-                game::Piece::White,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::None,
-                game::Piece::White,
-                game::Piece::Black,
-                game::Piece::White,
+                game::Node::Black,
+                game::Node::Black,
+                game::Node::White,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::Empty,
+                game::Node::White,
+                game::Node::Black,
+                game::Node::White,
             ],
             player: game::Player::Black,
-            plies: 6,
-            plies_without_advancement: 0,
+            plies: 5,
         };
 
         assert_eq!(
             position,
-            game::Position::from_str("w:g7,a1,g1;b:a7,d7,d1;b;6;0").unwrap(),
+            game::Position::from_str("b:wg7,a1,g1:ba7,d7,d1:3").unwrap(),
         );
 
-        assert!(game::Position::from_str("ofh3c;2bv73").is_err());
-        assert!(game::Position::from_str("  w:;b:;w;0;0  ").is_err());
-        assert!(game::Position::from_str("w:y9;b:;w;0;0").is_err());
-        assert!(game::Position::from_str("w:;b:j8;w;0;0").is_err());
-        assert!(game::Position::from_str("w:;b:;a;0;0").is_err());
-        assert!(game::Position::from_str("w:;b:;w;99999;0").is_err());
-        assert!(game::Position::from_str("w:;b:;w;0;99999").is_err());
-        assert!(game::Position::from_str("b:;b:;w;0;0").is_err());
+        assert!(game::Position::from_str("pwemo3icm 80").is_err());
+        assert!(game::Position::from_str("ofh3c:2bv73").is_err());
+        assert!(game::Position::from_str("  w:w:b:0  ").is_err());
+        assert!(game::Position::from_str("w:w:y9:b:0").is_err());
+        assert!(game::Position::from_str("w:w:bj8:0").is_err());
+        assert!(game::Position::from_str("a:w:b:0").is_err());
+        assert!(game::Position::from_str("w:b:b:0").is_err());
     }
 }

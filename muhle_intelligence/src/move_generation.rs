@@ -1,16 +1,15 @@
-use crate::search;
 use crate::game;
 
 pub fn generate_moves(node: &game::SearchNode) -> Vec<game::Move> {
-    let mut board = node.board.clone();
+    let mut board = node.position.position.board.clone();
 
-    if node.plies < 18 {
-        generate_moves_phase1(&mut board, node.player)
+    if node.position.position.plies < 18 {
+        generate_moves_phase1(&mut board, node.position.position.player)
     } else {
-        if game::count_pieces(node, game::player_piece(node.player)) == 3 {
-            generate_moves_phase3(&mut board, node.player)
+        if game::count_pieces(&node.position.position) == 3 {
+            generate_moves_phase3(&mut board, node.position.position.player)
         } else {
-            generate_moves_phase2(&mut board, node.player)
+            generate_moves_phase2(&mut board, node.position.position.player)
         }
     }
 }
@@ -19,7 +18,7 @@ fn generate_moves_phase1(board: &mut game::Board, player: game::Player) -> Vec<g
     let mut moves = Vec::new();
 
     for i in 0..24 as game::Idx {
-        if board[i as usize] != game::Piece::None {
+        if board[i as usize] != game::Node::Empty {
             continue;
         }
 
@@ -38,7 +37,7 @@ fn generate_moves_phase1(board: &mut game::Board, player: game::Player) -> Vec<g
                     continue;
                 }
 
-                moves.push(game::Move::new_place_take(i, j));
+                moves.push(game::Move::new_place_capture(i, j));
             }
         } else {
             moves.push(game::Move::new_place(i));
@@ -76,7 +75,7 @@ fn generate_moves_phase2(board: &mut game::Board, player: game::Player) -> Vec<g
                         continue;
                     }
 
-                    moves.push(game::Move::new_move_take(i, free_positions[j as usize], k));
+                    moves.push(game::Move::new_move_capture(i, free_positions[j as usize], k));
                 }
             } else {
                 moves.push(game::Move::new_move(i, free_positions[j as usize]));
@@ -98,7 +97,7 @@ fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<g
         }
 
         for j in 0..24 as game::Idx {
-            if board[j as usize] != game::Piece::None {
+            if board[j as usize] != game::Node::Empty {
                 continue;
             }
 
@@ -117,7 +116,7 @@ fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<g
                         continue;
                     }
 
-                    moves.push(game::Move::new_move_take(i, j, k));
+                    moves.push(game::Move::new_move_capture(i, j, k));
                 }
             } else {
                 moves.push(game::Move::new_move(i, j));
@@ -131,27 +130,27 @@ fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<g
 }
 
 fn make_place_move(board: &mut game::Board, player: game::Player, place_index: game::Idx) {
-    assert!(board[place_index as usize] == game::Piece::None);
+    assert!(board[place_index as usize] == game::Node::Empty);
 
     board[place_index as usize] = game::player_piece(player);
 }
 
 fn unmake_place_move(board: &mut game::Board, place_index: game::Idx) {
-    assert!(board[place_index as usize] != game::Piece::None);
+    assert!(board[place_index as usize] != game::Node::Empty);
 
-    board[place_index as usize] = game::Piece::None;
+    board[place_index as usize] = game::Node::Empty;
 }
 
 fn make_move_move(board: &mut game::Board, source_index: game::Idx, destination_index: game::Idx) {
-    assert!(board[source_index as usize] != game::Piece::None);
-    assert!(board[destination_index as usize] == game::Piece::None);
+    assert!(board[source_index as usize] != game::Node::Empty);
+    assert!(board[destination_index as usize] == game::Node::Empty);
 
     board.swap(source_index as usize, destination_index as usize);
 }
 
 fn unmake_move_move(board: &mut game::Board, source_index: game::Idx, destination_index: game::Idx) {
-    assert!(board[source_index as usize] == game::Piece::None);
-    assert!(board[destination_index as usize] != game::Piece::None);
+    assert!(board[source_index as usize] == game::Node::Empty);
+    assert!(board[destination_index as usize] != game::Node::Empty);
 
     board.swap(source_index as usize, destination_index as usize);
 }
@@ -212,242 +211,242 @@ fn neighbor_free_positions(board: &game::Board, index: game::Idx) -> Vec<game::I
 
     match index {
         0 => {
-            if board[1] == game::Piece::None {
+            if board[1] == game::Node::Empty {
                 result.push(1);
             }
-            if board[9] == game::Piece::None {
+            if board[9] == game::Node::Empty {
                 result.push(9);
             }
         }
         1 => {
-            if board[0] == game::Piece::None {
+            if board[0] == game::Node::Empty {
                 result.push(0);
             }
-            if board[2] == game::Piece::None {
+            if board[2] == game::Node::Empty {
                 result.push(2);
             }
-            if board[4] == game::Piece::None {
+            if board[4] == game::Node::Empty {
                 result.push(4);
             }
         }
         2 => {
-            if board[1] == game::Piece::None {
+            if board[1] == game::Node::Empty {
                 result.push(1);
             }
-            if board[14] == game::Piece::None {
+            if board[14] == game::Node::Empty {
                 result.push(14);
             }
         }
         3 => {
-            if board[4] == game::Piece::None {
+            if board[4] == game::Node::Empty {
                 result.push(4);
             }
-            if board[10] == game::Piece::None {
+            if board[10] == game::Node::Empty {
                 result.push(10);
             }
         }
         4 => {
-            if board[1] == game::Piece::None {
+            if board[1] == game::Node::Empty {
                 result.push(1);
             }
-            if board[3] == game::Piece::None {
+            if board[3] == game::Node::Empty {
                 result.push(3);
             }
-            if board[5] == game::Piece::None {
+            if board[5] == game::Node::Empty {
                 result.push(5);
             }
-            if board[7] == game::Piece::None {
+            if board[7] == game::Node::Empty {
                 result.push(7);
             }
         }
         5 => {
-            if board[4] == game::Piece::None {
+            if board[4] == game::Node::Empty {
                 result.push(4);
             }
-            if board[13] == game::Piece::None {
+            if board[13] == game::Node::Empty {
                 result.push(13);
             }
         }
         6 => {
-            if board[7] == game::Piece::None {
+            if board[7] == game::Node::Empty {
                 result.push(7);
             }
-            if board[11] == game::Piece::None {
+            if board[11] == game::Node::Empty {
                 result.push(11);
             }
         }
         7 => {
-            if board[4] == game::Piece::None {
+            if board[4] == game::Node::Empty {
                 result.push(4);
             }
-            if board[6] == game::Piece::None {
+            if board[6] == game::Node::Empty {
                 result.push(6);
             }
-            if board[8] == game::Piece::None {
+            if board[8] == game::Node::Empty {
                 result.push(8);
             }
         }
         8 => {
-            if board[7] == game::Piece::None {
+            if board[7] == game::Node::Empty {
                 result.push(7);
             }
-            if board[12] == game::Piece::None {
+            if board[12] == game::Node::Empty {
                 result.push(12);
             }
         }
         9 => {
-            if board[0] == game::Piece::None {
+            if board[0] == game::Node::Empty {
                 result.push(0);
             }
-            if board[10] == game::Piece::None {
+            if board[10] == game::Node::Empty {
                 result.push(10);
             }
-            if board[21] == game::Piece::None {
+            if board[21] == game::Node::Empty {
                 result.push(21);
             }
         }
         10 => {
-            if board[3] == game::Piece::None {
+            if board[3] == game::Node::Empty {
                 result.push(3);
             }
-            if board[9] == game::Piece::None {
+            if board[9] == game::Node::Empty {
                 result.push(9);
             }
-            if board[1] == game::Piece::None {
+            if board[1] == game::Node::Empty {
                 result.push(1);
             }
-            if board[18] == game::Piece::None {
+            if board[18] == game::Node::Empty {
                 result.push(18);
             }
         }
         11 => {
-            if board[6] == game::Piece::None {
+            if board[6] == game::Node::Empty {
                 result.push(6);
             }
-            if board[10] == game::Piece::None {
+            if board[10] == game::Node::Empty {
                 result.push(10);
             }
-            if board[15] == game::Piece::None {
+            if board[15] == game::Node::Empty {
                 result.push(15);
             }
         }
         12 => {
-            if board[8] == game::Piece::None {
+            if board[8] == game::Node::Empty {
                 result.push(8);
             }
-            if board[13] == game::Piece::None {
+            if board[13] == game::Node::Empty {
                 result.push(13);
             }
-            if board[17] == game::Piece::None {
+            if board[17] == game::Node::Empty {
                 result.push(17);
             }
         }
         13 => {
-            if board[5] == game::Piece::None {
+            if board[5] == game::Node::Empty {
                 result.push(5);
             }
-            if board[12] == game::Piece::None {
+            if board[12] == game::Node::Empty {
                 result.push(12);
             }
-            if board[14] == game::Piece::None {
+            if board[14] == game::Node::Empty {
                 result.push(14);
             }
-            if board[20] == game::Piece::None {
+            if board[20] == game::Node::Empty {
                 result.push(20);
             }
         }
         14 => {
-            if board[2] == game::Piece::None {
+            if board[2] == game::Node::Empty {
                 result.push(2);
             }
-            if board[13] == game::Piece::None {
+            if board[13] == game::Node::Empty {
                 result.push(13);
             }
-            if board[23] == game::Piece::None {
+            if board[23] == game::Node::Empty {
                 result.push(23);
             }
         }
         15 => {
-            if board[11] == game::Piece::None {
+            if board[11] == game::Node::Empty {
                 result.push(11);
             }
-            if board[16] == game::Piece::None {
+            if board[16] == game::Node::Empty {
                 result.push(16);
             }
         }
         16 => {
-            if board[15] == game::Piece::None {
+            if board[15] == game::Node::Empty {
                 result.push(15);
             }
-            if board[17] == game::Piece::None {
+            if board[17] == game::Node::Empty {
                 result.push(17);
             }
-            if board[19] == game::Piece::None {
+            if board[19] == game::Node::Empty {
                 result.push(19);
             }
         }
         17 => {
-            if board[12] == game::Piece::None {
+            if board[12] == game::Node::Empty {
                 result.push(12);
             }
-            if board[16] == game::Piece::None {
+            if board[16] == game::Node::Empty {
                 result.push(16);
             }
         }
         18 => {
-            if board[10] == game::Piece::None {
+            if board[10] == game::Node::Empty {
                 result.push(10);
             }
-            if board[19] == game::Piece::None {
+            if board[19] == game::Node::Empty {
                 result.push(19);
             }
         }
         19 => {
-            if board[16] == game::Piece::None {
+            if board[16] == game::Node::Empty {
                 result.push(16);
             }
-            if board[18] == game::Piece::None {
+            if board[18] == game::Node::Empty {
                 result.push(18);
             }
-            if board[20] == game::Piece::None {
+            if board[20] == game::Node::Empty {
                 result.push(20);
             }
-            if board[22] == game::Piece::None {
+            if board[22] == game::Node::Empty {
                 result.push(22);
             }
         }
         20 => {
-            if board[13] == game::Piece::None {
+            if board[13] == game::Node::Empty {
                 result.push(13);
             }
-            if board[19] == game::Piece::None {
+            if board[19] == game::Node::Empty {
                 result.push(19);
             }
         }
         21 => {
-            if board[9] == game::Piece::None {
+            if board[9] == game::Node::Empty {
                 result.push(9);
             }
-            if board[22] == game::Piece::None {
+            if board[22] == game::Node::Empty {
                 result.push(22);
             }
         }
         22 => {
-            if board[19] == game::Piece::None {
+            if board[19] == game::Node::Empty {
                 result.push(19);
             }
-            if board[21] == game::Piece::None {
+            if board[21] == game::Node::Empty {
                 result.push(21);
             }
-            if board[23] == game::Piece::None {
+            if board[23] == game::Node::Empty {
                 result.push(23);
             }
         }
         23 => {
-            if board[14] == game::Piece::None {
+            if board[14] == game::Node::Empty {
                 result.push(14);
             }
-            if board[22] == game::Piece::None {
+            if board[22] == game::Node::Empty {
                 result.push(22);
             }
         }

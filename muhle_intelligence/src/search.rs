@@ -39,9 +39,11 @@ impl<'a> Search<'a> {
     }
 
     fn setup(&mut self, position: &game::Position) -> &game::SearchNode<'a> {
-        self.nodes.push(game::SearchNode::from_position(position));
+        // self.nodes.push(game::SearchNode::from_position(position));
 
-        self.nodes.last().unwrap()
+        // self.nodes.last().unwrap()
+
+        todo!()
     }
 }
 
@@ -58,34 +60,36 @@ impl SearchContext {
         plies_from_root: u32,
         current_node: &game::SearchNode,
     ) -> evaluation::Eval {
-        if depth == 0 || game::is_game_over_winner_material(current_node) {
-            return evaluation::static_evaluation(current_node);
-        }
+        // if depth == 0 || game::is_game_over_winner_material(current_node) {
+        //     return evaluation::static_evaluation(current_node);
+        // }
 
-        let mut max_evaluation = evaluation::Eval::MIN;
+        // let mut max_evaluation = evaluation::Eval::MIN;
 
-        let moves = move_generation::generate_moves(&current_node);
+        // let moves = move_generation::generate_moves(&current_node);
 
-        if moves.is_empty() {  // Game over
-            return evaluation::static_evaluation(current_node);
-        }
+        // if moves.is_empty() {  // Game over
+        //     return evaluation::static_evaluation(current_node);
+        // }
 
-        for move_ in moves {
-            let mut new_node = game::SearchNode::from_node(current_node);
+        // for move_ in moves {
+        //     let mut new_node = game::SearchNode::from_node(current_node);
 
-            new_node.play_move(&move_);
+        //     new_node.play_move(&move_);
 
-            let evaluation = -self.minimax(depth - 1, plies_from_root + 1, &new_node);
+        //     let evaluation = -self.minimax(depth - 1, plies_from_root + 1, &new_node);
 
-            if evaluation > max_evaluation {
-                max_evaluation = evaluation;
+        //     if evaluation > max_evaluation {
+        //         max_evaluation = evaluation;
 
-                if plies_from_root == 0 {
-                    self.best_move = move_;
-                }
-            }
-        }
+        //         if plies_from_root == 0 {
+        //             self.best_move = move_;
+        //         }
+        //     }
+        // }
 
-        max_evaluation
+        // max_evaluation
+
+        todo!()
     }
 }

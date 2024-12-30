@@ -1,13 +1,10 @@
 use std::mem;
 use std::str::FromStr;
-use std::num::ParseIntError;
 
 use regex;
 
-use crate::move_generation;
-
 pub type Idx = i32;
-pub const INVALID_INDEX: Idx = -1;
+pub const NULL_INDEX: Idx = -1;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -19,31 +16,11 @@ pub enum Player {
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
-pub enum Piece {
+pub enum Node {
     #[default]
-    None,
-    White,
-    Black,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Move {
-    Place {
-        place_index: Idx,
-    },
-    PlaceTake {
-        place_index: Idx,
-        take_index: Idx,
-    },
-    Move {
-        source_index: Idx,
-        destination_index: Idx,
-    },
-    MoveTake {
-        source_index: Idx,
-        destination_index: Idx,
-        take_index: Idx,
-    },
+    Empty = 0,
+    White = 1,
+    Black = 2,
 }
 
 fn index_from_string(string: &str) -> Result<Idx, String> {
@@ -106,97 +83,113 @@ fn string_from_index(index: Idx) -> Result<&'static str, String> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Move {
+    Place {
+        place_index: Idx,
+    },
+    PlaceCapture {
+        place_index: Idx,
+        capture_index: Idx,
+    },
+    Move {
+        source_index: Idx,
+        destination_index: Idx,
+    },
+    MoveCapture {
+        source_index: Idx,
+        destination_index: Idx,
+        capture_index: Idx,
+    },
+}
+
 impl Move {
     pub fn new_place(place_index: Idx) -> Self {
         Self::Place { place_index }
     }
 
-    pub fn new_place_take(place_index: Idx, take_index: Idx) -> Self {
-        Self::PlaceTake { place_index, take_index }
+    pub fn new_place_capture(place_index: Idx, capture_index: Idx) -> Self {
+        Self::PlaceCapture { place_index, capture_index }
     }
 
     pub fn new_move(source_index: Idx, destination_index: Idx) -> Self {
         Self::Move { source_index, destination_index }
     }
 
-    pub fn new_move_take(source_index: Idx, destination_index: Idx, take_index: Idx) -> Self {
-        Self::MoveTake { source_index, destination_index, take_index }
+    pub fn new_move_capture(source_index: Idx, destination_index: Idx, capture_index: Idx) -> Self {
+        Self::MoveCapture { source_index, destination_index, capture_index }
     }
 }
 
 impl Default for Move {
     fn default() -> Self {
-        Move::Place { place_index: INVALID_INDEX }
+        Move::Place { place_index: NULL_INDEX }
     }
 }
 
-impl FromStr for Move {  // TODO could be improved (use split)
+impl FromStr for Move {
     type Err = String;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
-        match &string[0..1] {
-            "P" => {
-                let place_index = index_from_string(&string[1..3])?;
+        let tokens = string.split("-x").collect::<Vec<_>>();
 
-                match string.get(3..4) {
-                    Some(_) => {
-                        let take_index = index_from_string(&string[4..6])?;
+        match tokens.len() {
+            1 => {
+                let place_index = index_from_string(tokens[0])?;
 
-                        Ok(Self::new_place_take(place_index, take_index))
-                    }
-                    None => {
-                        Ok(Self::new_place(place_index))
-                    }
+                Ok(Self::new_place(place_index))
+            }
+            2 => {
+                if let None = string.find("-") {
+                    let place_index = index_from_string(tokens[0])?;
+                    let capture_index = index_from_string(tokens[1])?;
+
+                    Ok(Self::new_place_capture(place_index, capture_index))
+                } else {
+                    let source_index = index_from_string(tokens[0])?;
+                    let destination_index = index_from_string(tokens[1])?;
+
+                    Ok(Self::new_move(source_index, destination_index))
                 }
             }
-            "M" => {
-                let source_index = index_from_string(&string[1..3])?;
-                let destination_index = index_from_string(&string[4..6])?;
+            3 => {
+                let source_index = index_from_string(tokens[0])?;
+                let destination_index = index_from_string(tokens[1])?;
+                let capture_index = index_from_string(tokens[2])?;
 
-                match string.get(6..7) {
-                    Some(_) => {
-                        let take_index = index_from_string(&string[7..9])?;
-
-                        Ok(Self::new_move_take(source_index, destination_index, take_index))
-                    }
-                    None => {
-                        Ok(Self::new_move(source_index, destination_index))
-                    }
-                }
+                Ok(Self::new_move_capture(source_index, destination_index, capture_index))
             }
-            _ => return Err(String::from("Invalid move string")),
+            _ => Err(String::from("Invalid move string"))
         }
     }
 }
 
 impl ToString for Move {
     fn to_string(&self) -> String {
+        const ERR_MSG: &str = "An invalid move shouldn't be used";
+
         let mut result = String::new();
 
         match *self {
             Self::Place { place_index } => {
-                result.push('P');
-                result.push_str(string_from_index(place_index).unwrap());
+                result.push_str(string_from_index(place_index).expect(ERR_MSG));
             }
-            Self::PlaceTake { place_index, take_index } => {
-                result.push('P');
-                result.push_str(string_from_index(place_index).unwrap());
-                result.push('T');
-                result.push_str(string_from_index(take_index).unwrap());
+            Self::PlaceCapture { place_index, capture_index } => {
+                result.push_str(string_from_index(place_index).expect(ERR_MSG));
+                result.push('x');
+                result.push_str(string_from_index(capture_index).expect(ERR_MSG));
             }
             Self::Move { source_index, destination_index } => {
-                result.push('M');
-                result.push_str(string_from_index(source_index).unwrap());
+                result.push_str(string_from_index(source_index).expect(ERR_MSG));
                 result.push('-');
-                result.push_str(string_from_index(destination_index).unwrap());
+                result.push_str(string_from_index(destination_index).expect(ERR_MSG));
             }
-            Self::MoveTake { source_index, destination_index, take_index } => {
-                result.push('M');
-                result.push_str(string_from_index(source_index).unwrap());
+            Self::MoveCapture { source_index, destination_index, capture_index } => {
+                result.push_str(string_from_index(source_index).expect(ERR_MSG));
                 result.push('-');
-                result.push_str(string_from_index(destination_index).unwrap());
-                result.push('T');
-                result.push_str(string_from_index(take_index).unwrap());
+                result.push_str(string_from_index(destination_index).expect(ERR_MSG));
+                result.push('x');
+                result.push_str(string_from_index(capture_index).expect(ERR_MSG));
             }
         }
 
@@ -204,111 +197,39 @@ impl ToString for Move {
     }
 }
 
-pub type Board = [Piece; 24];
+pub type Board = [Node; 24];
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Position {
     pub board: Board,
     pub player: Player,
-    pub plies: u32,
-    pub plies_without_advancement: u32,
+    pub plies: i32,
 }
 
 impl Position {
-    pub fn play_move(&mut self, move_: &Move) {
-        match *move_ {
-            Move::Place { place_index } => {
-                assert!(self.board[place_index as usize] == Piece::None);  // TODO use debug asserts
-
-                self.board[place_index as usize] = player_piece(self.player);
-
-                self.plies_without_advancement += 1;
-            }
-            Move::PlaceTake { place_index, take_index } => {
-                assert!(self.board[place_index as usize] == Piece::None);
-                assert!(self.board[take_index as usize] != Piece::None);
-
-                self.board[place_index as usize] = player_piece(self.player);
-                self.board[take_index as usize] = Piece::None;
-
-                self.plies_without_advancement = 0;
-            }
-            Move::Move { source_index, destination_index } => {
-                assert!(self.board[source_index as usize] != Piece::None);
-                assert!(self.board[destination_index as usize] == Piece::None);
-
-                self.board.swap(source_index as usize, destination_index as usize);
-
-                self.plies_without_advancement += 1;
-            }
-            Move::MoveTake { source_index, destination_index, take_index } => {
-                assert!(self.board[source_index as usize] != Piece::None);
-                assert!(self.board[destination_index as usize] == Piece::None);
-                assert!(self.board[take_index as usize] != Piece::None);
-
-                self.board.swap(source_index as usize, destination_index as usize);
-                self.board[take_index as usize] = Piece::None;
-
-                self.plies_without_advancement = 0;
-            }
-        }
-
-        self.player = opponent(self.player);
-        self.plies += 1;
-    }
-
     fn parse_pieces(string: &str) -> (Vec<Idx>, Player) {
-        let mut pieces = Vec::new();
-        let player;
-
-        let mut tokens = string.split([':', ',']);
-
-        match tokens.next().unwrap() {
-            "w" => player = Player::White,
-            "b" => player = Player::Black,
+        let player = match &string[0..1] {
+            "w" => Player::White,
+            "b" => Player::Black,
             _ => panic!("Invalid position string"),
-        }
+        };
+
+        let tokens = string[1..].split(",");
+        let mut pieces = Vec::new();
 
         for token in tokens {
             if token.is_empty() {
                 continue;
             }
 
-            pieces.push(index_from_string(token).unwrap());
+            pieces.push(index_from_string(token).expect("Position string should be valid as per the regex"));
         }
 
         (pieces, player)
     }
-
-    fn parse_integer<T>(string: &str) -> Option<T>  // FIXME don't know if it's really needed
-        where T: FromStr<Err = ParseIntError> {
-        let mut result = String::new();
-
-        let mut characters = string.chars();
-
-        loop {
-            let character = characters.next();
-
-            if let Some(character) = character {
-                if character.is_numeric() {
-                    result.push(character);
-                } else {
-                    break;
-                }
-            } else {
-                break;
-            }
-        }
-
-        if result.is_empty() {
-            return None;
-        }
-
-        Some(T::from_str(&result).unwrap())
-    }
 }
 
-impl FromStr for Position {  // TODO looks like it could be improved
+impl FromStr for Position {
     type Err = String;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
@@ -317,86 +238,121 @@ impl FromStr for Position {  // TODO looks like it could be improved
         }
 
         let re = regex::Regex::new(
-            r"^(w|b):([a-g][1-7])?(,[a-g][1-7])*;(w|b):([a-g][1-7])?(,[a-g][1-7])*;(w|b);[0-9]{1,4};[0-9]{1,4}$"
+            r"^(w|b):(w|b)([a-g][1-7])?(,[a-g][1-7])*:(w|b)([a-g][1-7])?(,[a-g][1-7])*:[0-9]{1,3}$"
         );
 
-        if !re.unwrap().is_match(string) {
+        if !re.expect("The expression should be constant").is_match(string) {
             return Err(String::from("Invalid position string"));
         }
 
-        let mut position = Self::default();
-        let mut tokens = string.split(";");
+        let tokens = string.split(":").collect::<Vec<_>>();
 
-        let pieces1 = tokens.next().unwrap();  // FIXME use expect instead
-        let pieces2 = tokens.next().unwrap();
-        let turn = tokens.next().unwrap();
-        let plies = tokens.next().unwrap();
-        let plies_without_advancement = tokens.next().unwrap();
+        assert_eq!(tokens.len(), 4);
 
-        let (pieces, player1) = Self::parse_pieces(pieces1);
-
-        for index in pieces {
-            if !(index >= 0 && index < 24) {
-                return Err(String::from("Invalid position string"));
-            }
-
-            position.board[index as usize] = player_piece(player1);
-        }
-
-        let (pieces, player2) = Self::parse_pieces(pieces2);
-
-        for index in pieces {
-            if !(index >= 0 && index < 24) {
-                return Err(String::from("Invalid position string"));
-            }
-
-            position.board[index as usize] = player_piece(player2);
-        }
-
-        if player1 == player2 {
-            return Err(String::from("Invalid position string"));
-        }
-
-        match turn {
-            "w" => position.player = Player::White,
-            "b" => position.player = Player::Black,
+        let player = match tokens[0] {
+            "w" => Player::White,
+            "b" => Player::Black,
             _ => panic!("Invalid position string"),
+        };
+
+        let pieces1 = Self::parse_pieces(tokens[1]);
+        let pieces2 = Self::parse_pieces(tokens[2]);
+        let turns = tokens[3].parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?;
+
+        if pieces1.1 == pieces2.1 {
+            return Err(String::from("Invalid position string"));
         }
 
-        position.plies = Self::parse_integer::<u32>(plies).unwrap();
-        position.plies_without_advancement = Self::parse_integer::<u32>(plies_without_advancement).unwrap();
+        if turns < 1 {
+            return Err(String::from("Invalid position string"));
+        }
+
+        let mut position = Position::default();
+
+        position.player = player;
+
+        for index in pieces1.0 {
+            assert!(index >= 0 && index < 24);
+
+            position.board[index as usize] = player_piece(pieces1.1);
+        }
+
+        for index in pieces2.0 {
+            assert!(index >= 0 && index < 24);
+
+            position.board[index as usize] = player_piece(pieces2.1);
+        }
+
+        position.plies = (turns - 1) * 2 + (player == Player::Black) as i32;
 
         Ok(position)
     }
 }
 
-pub struct SearchNode<'a> {
-    pub board: Board,
-    pub player: Player,
-    pub plies: u32,
-    pub plies_without_advancement: u32,
-    // TODO repetition
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct GamePosition {
+    pub position: Position,
+    pub plies_no_advancement: i32,
+}
 
+impl GamePosition {
+    pub fn play_move(&mut self, move_: &Move) {
+        match *move_ {
+            Move::Place { place_index } => {
+                assert!(self.position.board[place_index as usize] == Node::Empty);  // TODO use debug asserts
+
+                self.position.board[place_index as usize] = player_piece(self.position.player);
+            }
+            Move::PlaceCapture { place_index, capture_index } => {
+                assert!(self.position.board[place_index as usize] == Node::Empty);
+                assert!(self.position.board[capture_index as usize] != Node::Empty);
+
+                self.position.board[place_index as usize] = player_piece(self.position.player);
+                self.position.board[capture_index as usize] = Node::Empty;
+
+                self.plies_no_advancement = 0;
+            }
+            Move::Move { source_index, destination_index } => {
+                assert!(self.position.board[source_index as usize] != Node::Empty);
+                assert!(self.position.board[destination_index as usize] == Node::Empty);
+
+                self.position.board.swap(source_index as usize, destination_index as usize);
+
+                self.plies_no_advancement += 1;
+            }
+            Move::MoveCapture { source_index, destination_index, capture_index } => {
+                assert!(self.position.board[source_index as usize] != Node::Empty);
+                assert!(self.position.board[destination_index as usize] == Node::Empty);
+                assert!(self.position.board[capture_index as usize] != Node::Empty);
+
+                self.position.board.swap(source_index as usize, destination_index as usize);
+                self.position.board[capture_index as usize] = Node::Empty;
+
+                self.plies_no_advancement = 0;
+            }
+        }
+
+        self.position.player = opponent(self.position.player);
+        self.position.plies += 1;
+    }
+}
+
+pub struct SearchNode<'a> {
+    pub position: GamePosition,
     pub previous: Option<&'a SearchNode<'a>>,
 }
 
 impl<'a> SearchNode<'a> {
-    pub fn from_position(position: &Position) -> Self {
+    pub fn from_position(position: &GamePosition) -> Self {
         Self {
-            board: position.board,
-            player: position.player,
-            plies: position.plies,
-            plies_without_advancement: position.plies_without_advancement,
+            position: position.clone(),
             previous: None,
         }
     }
 
     pub fn from_node(node: &'a SearchNode) -> Self {
         Self {
-            board: node.board,
-            player: node.player,
-            plies: node.plies,
-            plies_without_advancement: node.plies_without_advancement,
+            position: node.position.clone(),
             previous: Some(node),
         }
     }
@@ -404,90 +360,89 @@ impl<'a> SearchNode<'a> {
     pub fn play_move(&mut self, move_: &Move) {
         match *move_ {
             Move::Place { place_index } => {
-                assert!(self.board[place_index as usize] == Piece::None);
+                assert!(self.position.position.board[place_index as usize] == Node::Empty);  // TODO use debug asserts
 
-                self.board[place_index as usize] = player_piece(self.player);
-
-                self.plies_without_advancement += 1;
+                self.position.position.board[place_index as usize] = player_piece(self.position.position.player);
             }
-            Move::PlaceTake { place_index, take_index } => {
-                assert!(self.board[place_index as usize] == Piece::None);
-                assert!(self.board[take_index as usize] != Piece::None);
+            Move::PlaceCapture { place_index, capture_index } => {
+                assert!(self.position.position.board[place_index as usize] == Node::Empty);
+                assert!(self.position.position.board[capture_index as usize] != Node::Empty);
 
-                self.board[place_index as usize] = player_piece(self.player);
-                self.board[take_index as usize] = Piece::None;
+                self.position.position.board[place_index as usize] = player_piece(self.position.position.player);
+                self.position.position.board[capture_index as usize] = Node::Empty;
 
-                self.plies_without_advancement = 0;
+                self.position.plies_no_advancement = 0;
                 self.previous = None;
             }
             Move::Move { source_index, destination_index } => {
-                assert!(self.board[source_index as usize] != Piece::None);
-                assert!(self.board[destination_index as usize] == Piece::None);
+                assert!(self.position.position.board[source_index as usize] != Node::Empty);
+                assert!(self.position.position.board[destination_index as usize] == Node::Empty);
 
-                self.board.swap(source_index as usize, destination_index as usize);
+                self.position.position.board.swap(source_index as usize, destination_index as usize);
 
-                self.plies_without_advancement += 1;
+                self.position.plies_no_advancement += 1;
             }
-            Move::MoveTake { source_index, destination_index, take_index } => {
-                assert!(self.board[source_index as usize] != Piece::None);
-                assert!(self.board[destination_index as usize] == Piece::None);
-                assert!(self.board[take_index as usize] != Piece::None);
+            Move::MoveCapture { source_index, destination_index, capture_index } => {
+                assert!(self.position.position.board[source_index as usize] != Node::Empty);
+                assert!(self.position.position.board[destination_index as usize] == Node::Empty);
+                assert!(self.position.position.board[capture_index as usize] != Node::Empty);
 
-                self.board.swap(source_index as usize, destination_index as usize);
-                self.board[take_index as usize] = Piece::None;
+                self.position.position.board.swap(source_index as usize, destination_index as usize);
+                self.position.position.board[capture_index as usize] = Node::Empty;
 
-                self.plies_without_advancement = 0;
+                self.position.plies_no_advancement = 0;
                 self.previous = None;
             }
         }
 
-        self.player = opponent(self.player);
-        self.plies += 1;
+        self.position.position.player = opponent(self.position.position.player);
+        self.position.position.plies += 1;
     }
 }
 
-pub fn is_game_over_winner_material(node: &SearchNode) -> bool {
-    if node.plies < 18 {
-        return false;
-    }
+// pub fn is_game_over_winner_material(node: &SearchNode) -> bool {
+//     if node.plies < 18 {
+//         return false;
+//     }
 
-    let white_pieces = count_pieces(node, Piece::White);
-    let black_pieces = count_pieces(node, Piece::Black);
+//     let white_pieces = count_pieces(node, Piece::White);
+//     let black_pieces = count_pieces(node, Piece::Black);
 
-    if white_pieces < 3 || black_pieces < 3 {
-        return true;
-    }
+//     if white_pieces < 3 || black_pieces < 3 {
+//         return true;
+//     }
 
-    false
-}
+//     false
+// }
 
-pub fn is_game_over(position: &Position) -> bool {
-    let node = SearchNode::from_position(position);
+// pub fn is_game_over(position: &Position) -> bool {
+//     let node = SearchNode::from_position(position);
 
-    if is_game_over_winner_material(&node) {
-        return true;
-    }
+//     if is_game_over_winner_material(&node) {
+//         return true;
+//     }
 
-    if move_generation::generate_moves(&node).is_empty() {
-        return true;
-    }
+//     if move_generation::generate_moves(&node).is_empty() {
+//         return true;
+//     }
 
-    // FIXME repetition and 50-move rule
+//     // FIXME repetition and 50-move rule
 
-    false
-}
+//     false
+// }
 
-pub fn count_pieces(node: &SearchNode, piece: Piece) -> u32 {
+pub fn count_pieces(position: &Position) -> i32 {
+    let target = player_piece(position.player);
     let mut result = 0;
 
-    for p in node.board {
-        result += (p == piece) as u32;
+    for node in position.board {
+        result += (node == target) as i32;
     }
 
     result
 }
 
-pub fn player_piece(player: Player) -> Piece {
+pub fn player_piece(player: Player) -> Node {
     let integer = player as u32;
     unsafe { mem::transmute(integer) }
 }

@@ -14,47 +14,37 @@ The engine must process the commands synchronously, in the order that they are r
 
 ## Notation
 
-The board is represented by 24 nodes, each having an index from 0 to 23 from top to bottom and left to right.
+### Chess
 
-### Moves
+Moves are encoded as long [algebraic notation](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
+and positions as [FEN strings](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation).
 
-Moves are encoded like so:
+### Checkers
 
-```txt
-P INDEX [T INDEX]
-M INDEX-INDEX [T INDEX]
-```
+Moves are positions are formatted as per the [PDN format](https://en.wikipedia.org/wiki/Portable_Draughts_Notation).
 
-Where INDEX is a number between 0 and 23.
+### Nine men's morris
 
-*P* means *place*, *M* means *move* and *T* means *take*.
+Moves are encoded like so, like in chess algebraic notation:
 
-Examples:
+- place: `a7`
+- place + capture: `e4xg7`
+- move: `c4-c3`
+- move + capture: `d6-f6xa1`
 
-- `P0`
-- `P4T15`
-- `M0-1`
-- `M1-4T9`
+Positions are encoded like in checkers and a bit like in chess, where:
 
-### Positions
-
-Positions are encoded like so:
-
-```txt
-PLAYER_1:PLAYER_1_PIECE_POSITIONS;PLAYER_2:PLAYER_2_PIECE_POSITIONS;PLAYER_HAVING_THE_TURN;PLIES;PLIES_WITHOUT_ADVANCEMENT
-```
-
-Where:
-
-- PLAYER_X: either *w* or *b*
-- PLAYER_X_PIECE_POSITIONS: a comma separated list of positions, where a position is a number between 0 and 23
-- PLAYER_HAVING_THE_TURN: either *w* or *b*
-- PLIES + PLIES_WITHOUT_ADVANCEMENT: a number in the range [0, 9999]
+1. The side to move
+2. First player pieces separated by comma
+3. Second player pieces separated by comma
+4. Full move number
 
 Examples:
 
-- Initial position: `w:;b:;w;0;0`
-- Pieces one after the other: `w:0,2,4;b:1,3;b;4;0`
+- initial position: `w:w:b:1`
+- after white b4: `b:wb4:b:1`
+- after black d2: `w:wb4:bd2:2`
+- after white c4: `w:wb4,c4:bd2:2`
 
 ## Messages From GUI To Engine
 
