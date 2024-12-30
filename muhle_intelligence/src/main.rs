@@ -9,16 +9,19 @@ mod search;
 mod think;
 
 use std::io;
+use std::fs;
+use std::io::Write;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
     let mut engine = engine::Engine::new();
+    let mut log_file: Option<fs::File> = None;
 
-    let result = main_loop(&mut engine);
+    let result = main_loop(&mut engine, &mut log_file);
 
     if let Err(err) = result {
         if engine.is_debug_mode() {
-            eprintln!("A critical error occurred: {}", err);
+            let _ = write_to_log_file(&mut log_file, format!("A critical error occurred: {}\n", err));
         }
         return ExitCode::from(1);
     }
@@ -26,7 +29,7 @@ fn main() -> ExitCode {
     ExitCode::from(0)
 }
 
-fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
+fn main_loop(engine: &mut engine::Engine, log_file: &mut Option<fs::File>) -> Result<(), String> {
     loop {
         let tokens = match read_from_stdin() {
             Ok(input) => tokenize_command_input(input),
@@ -44,10 +47,24 @@ fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
 
         if let Err(err) = execute_command(engine, tokens) {
             if engine.is_debug_mode() {
-                eprintln!("{}", err);
+                let _ = write_to_log_file(log_file, format!("{}\n", err));
             }
         }
     }
+}
+
+fn write_to_log_file(log_file: &mut Option<fs::File>, buffer: String) -> Result<(), io::Error> {
+    if let None = log_file {
+        let mut file = fs::OpenOptions::new().append(true).create(true).open("muhle_intelligence.log")?;
+        file.write_all(format!("--- Log Begin ---\n").as_bytes())?;  // TODO time
+        *log_file = Some(file);
+    }
+
+    let log_file = log_file.as_mut().expect("The log file should be open");
+
+    log_file.write_all(buffer.as_bytes())?;
+
+    Ok(())
 }
 
 fn read_from_stdin() -> Result<String, io::Error> {

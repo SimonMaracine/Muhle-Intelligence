@@ -72,11 +72,13 @@ impl Engine {
         self.debug_mode
     }
 
-    pub fn gbgp(&self) -> Result<(), String> {
+    pub fn gbgp(&mut self) -> Result<(), String> {
         messages::id(messages::Identifier::Name(String::from(NAME)))?;
         messages::id(messages::Identifier::Author(String::from(AUTHOR)))?;
 
         messages::gbgpok()?;
+
+        self.gbgp_mode = true;
 
         Ok(())
     }
