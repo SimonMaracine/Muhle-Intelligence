@@ -1,7 +1,7 @@
+use std::fmt::format;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, JoinHandle};
 use std::sync::{Arc, Condvar, Mutex};
-use std::str::FromStr;
 
 use crate::evaluation;
 use crate::game;
@@ -23,10 +23,23 @@ struct Sync {
     cv: Condvar,
 }
 
+struct Options {
+    hash: options::Option,
+}
+
+impl Options {
+    fn new() -> Self {
+        Self {
+            hash: options::Option::Spin { value: 128, default: 128, min: 1, max: 1024 }
+        }
+    }
+}
+
 pub struct Engine {
     gbgp_mode: bool,
     debug_mode: bool,
     game: Arc<Mutex<Game>>,
+    options: Options,
     handle: Option<JoinHandle<()>>,
     sync: Arc<Sync>,
     running: Arc<AtomicBool>,
@@ -41,6 +54,7 @@ impl Engine {
                 position: game::Position::default(),
                 moves: Vec::new()
             })),
+            options: Options::new(),
             handle: None,
             sync: Arc::new(Sync {
                 mutex_go: Mutex::new(false),
@@ -54,30 +68,46 @@ impl Engine {
         self.gbgp_mode
     }
 
-    pub fn gbgp(&self) {
-        messages::id(messages::Identifier::Name(String::from(NAME)));
-        messages::id(messages::Identifier::Author(String::from(AUTHOR)));
+    pub fn is_debug_mode(&self) -> bool {
+        self.debug_mode
+    }
 
-        messages::gbgpok();
+    pub fn gbgp(&self) -> Result<(), String> {
+        messages::id(messages::Identifier::Name(String::from(NAME)))?;
+        messages::id(messages::Identifier::Author(String::from(AUTHOR)))?;
+
+        messages::gbgpok()?;
+
+        Ok(())
     }
 
     pub fn debug(&mut self, active: bool) {
         self.debug_mode = active;
     }
 
-    pub fn isready(&self) {
-        messages::readyok();
+    pub fn isready(&self) -> Result<(), String> {
+        messages::readyok()
     }
 
-    pub fn setoption(&mut self, name: String, value: Option<String>) {
+    pub fn setoption(&mut self, name: &String, value: Option<&String>) -> Result<(), String> {
+        match name.as_str() {
+            "hash" => {
+                match self.options.hash {
+                    options::Option::Button(func) => func(self),
+                    _ => Self::set_option_value(&mut self.options.hash, value)?,
+                }
+            }
+            invalid => return Err(format!("Invalid option: `{}`", invalid)),
+        }
 
+        Ok(())
     }
 
     pub fn newgame(&mut self) {
         self.initialize_once();
     }
 
-    pub fn position(&mut self, position: game::Position, moves: Option<Vec<game::Move>>) -> Result<(), String> {
+    pub fn position(&mut self, position: game::Position, moves: Option<Vec<game::Move>>) {
         let mut game = self.game.lock().unwrap();
 
         game.position = position;
@@ -89,8 +119,6 @@ impl Engine {
                 game.moves.push(move_);
             }
         }
-
-        Ok(())
     }
 
     pub fn go(&mut self, ponder: bool, wtime: Option<i32>, btime: Option<i32>, maxdepth: Option<i32>, maxtime: Option<i32>) {
@@ -153,5 +181,37 @@ impl Engine {
 
     fn think(game: Game) {
 
+    }
+
+    fn set_option_value(option: &mut options::Option, value_: Option<&String>) -> Result<(), String> {
+        let value_ = value_.ok_or(String::from("Expected option value"))?;
+
+        match option {
+            options::Option::Check { value, .. } => {
+                *value = value_.parse::<bool>().map_err(|err| format!("Could not parse value: {}", err))?;
+            }
+            options::Option::Spin { value, min, max, .. } => {
+                let new_value = value_.parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?;
+
+                if new_value < *min || new_value > *max {
+                    return Err(format!("Invalid option value: `{}`", new_value));
+                }
+
+                *value = new_value;
+            }
+            options::Option::Combo { value, vars, .. } => {
+                if let None = vars.iter().find(|item| *item == value_) {
+                    return Err(format!("Invalid option value: `{}`", value_));
+                }
+
+                *value = value_.clone();
+            }
+            options::Option::String { value, .. } => {
+                *value = value_.clone();
+            }
+            _ => assert!(false)
+        }
+
+        Ok(())
     }
 }

@@ -3,8 +3,8 @@ use std::str::FromStr;
 use crate::engine;
 use crate::game;
 
-pub fn gbgp(engine: &mut engine::Engine, _tokens: Vec<String>) {
-    engine.gbgp();
+pub fn gbgp(engine: &mut engine::Engine, _tokens: Vec<String>) -> Result<(), String> {
+    engine.gbgp()
 }
 
 pub fn debug(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
@@ -21,12 +21,32 @@ pub fn debug(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), Str
     Ok(())
 }
 
-pub fn isready(engine: &mut engine::Engine, _tokens: Vec<String>) {
-    engine.isready();
+pub fn isready(engine: &mut engine::Engine, _tokens: Vec<String>) -> Result<(), String> {
+    engine.isready()
 }
 
-pub fn setoption(engine: &mut engine::Engine, tokens: Vec<String>) {
+pub fn setoption(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {  // FIXME multi-token
+    let name = if let Some(index) = tokens.iter().position(|token| token.as_str() == "name") {
+        if let Some(name) = tokens.get(index + 1) {
+            name
+        } else {
+            return Err(String::from("Expected token after `name`"));
+        }
+    } else {
+        return Err(String::from("Expected token after `setoption`"));
+    };
 
+    let value = if let Some(index) = tokens.iter().position(|token| token.as_str() == "value") {
+        if let Some(value) = tokens.get(index + 1) {
+            Some(value)
+        } else {
+            return Err(String::from("Expected token after `value`"));
+        }
+    } else {
+        None
+    };
+
+    engine.setoption(name, value)
 }
 
 pub fn newgame(engine: &mut engine::Engine, _tokens: Vec<String>) {
@@ -62,7 +82,9 @@ pub fn position(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), 
         None
     };
 
-    engine.position(position, moves)
+    engine.position(position, moves);
+
+    Ok(())
 }
 
 pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {

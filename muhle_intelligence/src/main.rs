@@ -17,7 +17,9 @@ fn main() -> ExitCode {
     let result = main_loop(&mut engine);
 
     if let Err(err) = result {
-        // eprintln!("A critical error occurred: {}", err);  // TODO write to log if debug
+        if engine.is_debug_mode() {
+            eprintln!("A critical error occurred: {}", err);
+        }
         return ExitCode::from(1);
     }
 
@@ -41,7 +43,9 @@ fn main_loop(engine: &mut engine::Engine) -> Result<(), String> {
         }
 
         if let Err(err) = execute_command(engine, tokens) {
-            // eprintln!("{}", err);  // TODO write to log if debug
+            if engine.is_debug_mode() {
+                eprintln!("{}", err);
+            }
         }
     }
 }
@@ -59,30 +63,30 @@ fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(
 
     if !engine.is_gbgp_mode() {
         if command == "gbgp" {
-            commands::gbgp(engine, tokens);
+            commands::gbgp(engine, tokens)?;
         }
     } else {
         match command {
             "gbgp" => {
-                commands::gbgp(engine, tokens);
+                commands::gbgp(engine, tokens)?;
             }
             "debug" => {
-                commands::debug(engine, tokens);
+                commands::debug(engine, tokens)?;
             }
             "isready" => {
-                commands::isready(engine, tokens);
+                commands::isready(engine, tokens)?;
             }
             "setoption" => {
-                commands::setoption(engine, tokens);
+                commands::setoption(engine, tokens)?;
             }
             "newgame" => {
                 commands::newgame(engine, tokens);
             }
             "position" => {
-                commands::position(engine, tokens);
+                commands::position(engine, tokens)?;
             }
             "go" => {
-                commands::go(engine, tokens);
+                commands::go(engine, tokens)?;
             }
             "stop" => {
                 commands::stop(engine, tokens);
