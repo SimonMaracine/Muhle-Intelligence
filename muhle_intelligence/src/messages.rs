@@ -47,7 +47,7 @@ pub fn bestmove(best_move: Option<&game::Move>, ponder_move: Option<&game::Move>
 
 pub fn info(
     depth: Option<i32>,
-    time: Option<i32>,
+    time: Option<u32>,
     nodes: Option<i32>,
     score: Option<Score>,
     currmove: Option<game::Move>,

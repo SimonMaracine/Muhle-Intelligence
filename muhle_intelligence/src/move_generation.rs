@@ -6,7 +6,9 @@ pub fn generate_moves(node: &game::SearchNode) -> Vec<game::Move> {
     if node.position.position.plies < 18 {
         generate_moves_phase1(&mut board, node.position.position.player)
     } else {
-        if game::count_pieces(&node.position.position) == 3 {
+        assert!(game::count_player_pieces(&node.position.position) >= 3);
+
+        if game::count_player_pieces(&node.position.position) == 3 {
             generate_moves_phase3(&mut board, node.position.position.player)
         } else {
             generate_moves_phase2(&mut board, node.position.position.player)

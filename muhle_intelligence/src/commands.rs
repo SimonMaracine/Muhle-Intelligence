@@ -3,6 +3,8 @@ use std::str::FromStr;
 use crate::engine;
 use crate::game;
 
+const START_POSITION: &str = "w:w:b:1";
+
 pub fn gbgp(engine: &mut engine::Engine, _tokens: Vec<String>) -> Result<(), String> {
     engine.gbgp()
 }
@@ -12,7 +14,7 @@ pub fn debug(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), Str
         match active.as_str() {
             "on" => engine.debug(true),
             "off" => engine.debug(false),
-            invalid => return Err(format!("Invalid token: `{}`", invalid)),
+            invalid => return Err(format!("Invalid token after `debug`: `{}`", invalid)),
         }
     } else {
         return Err(String::from("Expected token after `debug`"));
@@ -63,8 +65,8 @@ pub fn position(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), 
                     return Err(String::from("Expected token after `pos`"));
                 }
             }
-            "startpos" => game::Position::from_str("")?,  // FIXME
-            invalid => return Err(format!("Invalid token: `{}`", invalid)),
+            "startpos" => game::Position::from_str(START_POSITION)?,
+            invalid => return Err(format!("Invalid token after `position`: `{}`", invalid)),
         }
     } else {
         return Err(String::from("Expected token after `position`"));
@@ -134,7 +136,7 @@ pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String
         None
     };
 
-    engine.go(ponder, wtime, btime, maxdepth, maxtime);
+    engine.go(ponder, wtime, btime, maxdepth, maxtime)?;
 
     Ok(())
 }

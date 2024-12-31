@@ -237,9 +237,7 @@ impl FromStr for Position {
             return Err(String::from("Invalid position string"));
         }
 
-        let re = regex::Regex::new(
-            r"^(w|b):(w|b)([a-g][1-7])?(,[a-g][1-7])*:(w|b)([a-g][1-7])?(,[a-g][1-7])*:[0-9]{1,3}$"
-        );
+        let re = regex::Regex::new(r"^(w|b):(w|b)([a-g][1-7])?(,[a-g][1-7])*:(w|b)([a-g][1-7])?(,[a-g][1-7])*:[0-9]{1,3}$");
 
         if !re.expect("The expression should be constant").is_match(string) {
             return Err(String::from("Invalid position string"));
@@ -400,38 +398,15 @@ impl<'a> SearchNode<'a> {
     }
 }
 
-// pub fn is_game_over_winner_material(node: &SearchNode) -> bool {
-//     if node.plies < 18 {
-//         return false;
-//     }
+pub fn is_game_over_material(node: &SearchNode) -> bool {
+    if node.position.position.plies < 18 {
+        return false;
+    }
 
-//     let white_pieces = count_pieces(node, Piece::White);
-//     let black_pieces = count_pieces(node, Piece::Black);
+    return count_player_pieces(&node.position.position) < 3;
+}
 
-//     if white_pieces < 3 || black_pieces < 3 {
-//         return true;
-//     }
-
-//     false
-// }
-
-// pub fn is_game_over(position: &Position) -> bool {
-//     let node = SearchNode::from_position(position);
-
-//     if is_game_over_winner_material(&node) {
-//         return true;
-//     }
-
-//     if move_generation::generate_moves(&node).is_empty() {
-//         return true;
-//     }
-
-//     // FIXME repetition and 50-move rule
-
-//     false
-// }
-
-pub fn count_pieces(position: &Position) -> i32 {
+pub fn count_player_pieces(position: &Position) -> i32 {
     let target = player_piece(position.player);
     let mut result = 0;
 

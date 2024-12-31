@@ -5,7 +5,6 @@ mod game;
 mod messages;
 mod move_generation;
 mod options;
-mod search;
 mod think;
 
 use std::io;
@@ -32,7 +31,7 @@ fn main() -> ExitCode {
 fn main_loop(engine: &mut engine::Engine, log_file: &mut Option<fs::File>) -> Result<(), String> {
     loop {
         let tokens = match read_from_stdin() {
-            Ok(input) => tokenize_command_input(input),
+            Ok(input) => tokenize_input(input),
             Err(err) => return Err(format!("Could not read input: {}", err)),
         };
 
@@ -118,7 +117,7 @@ fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(
     Ok(())
 }
 
-fn tokenize_command_input(input: String) -> Vec<String> {
+fn tokenize_input(input: String) -> Vec<String> {
     input.split([' ', '\t']).filter(|token| {
         !token.trim().is_empty()
     }).map(|token| {

@@ -1,11 +1,9 @@
-use std::fmt::format;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, JoinHandle};
 use std::sync::{Arc, Condvar, Mutex};
 
-use crate::evaluation;
+use crate::think;
 use crate::game;
-use crate::search;
 use crate::options;
 use crate::messages;
 
@@ -123,12 +121,25 @@ impl Engine {
         }
     }
 
-    pub fn go(&mut self, ponder: bool, wtime: Option<i32>, btime: Option<i32>, maxdepth: Option<i32>, maxtime: Option<i32>) {
+    pub fn go(
+        &mut self,
+        ponder: bool,
+        wtime: Option<i32>,
+        btime: Option<i32>,
+        maxdepth: Option<i32>,
+        maxtime: Option<i32>
+    ) -> Result<(), String> {
+        if !self.running.load(Ordering::SeqCst) {
+            return Err(String::from("The engine has not been initialized"));
+        }
+
         {
             let mut guard = self.sync.mutex_go.lock().unwrap();
             *guard = true;
         }
         self.sync.cv.notify_one();
+
+        Ok(())
     }
 
     pub fn stop(&mut self) {
@@ -168,7 +179,7 @@ impl Engine {
 
         self.handle = Some(thread::spawn(move || {
             loop {
-                let _guard = sync.cv.wait_while(sync.mutex_go.lock().unwrap(), |go| *go).unwrap();
+                let mut guard = sync.cv.wait_while(sync.mutex_go.lock().unwrap(), |go| !*go).unwrap();
 
                 if !running.load(Ordering::SeqCst) {
                     break;
@@ -176,13 +187,20 @@ impl Engine {
 
                 let game = game.lock().unwrap();
 
-                Self::think(game.clone());
+                let best_move = Self::think(game.clone());
+
+                messages::bestmove(best_move.as_ref(), None).expect("Should it fail, it's game over");
+
+                *guard = false;
             }
         }));
     }
 
-    fn think(game: Game) {
+    fn think(game: Game) -> Option<game::Move> {
+        let think = think::Think::new();
+        let ctx = think::ThinkContext::new();
 
+        think.think(&game.position, &game.moves, ctx)
     }
 
     fn set_option_value(option: &mut options::Option, value_: Option<&String>) -> Result<(), String> {

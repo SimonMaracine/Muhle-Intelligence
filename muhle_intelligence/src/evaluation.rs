@@ -2,6 +2,11 @@ use crate::game;
 
 pub type Eval = i32;
 
+pub const MAX: Eval = 1000;
+pub const MIN: Eval = -MAX;
+
+pub const UNKNOWN: Eval = Eval::MIN;
+
 pub fn static_evaluation(node: &game::SearchNode) -> Eval {
     let mut evaluation: Eval = 0;
 
