@@ -53,7 +53,7 @@ fn index_from_string(string: &str) -> Result<Idx, String> {
     }
 }
 
-fn string_from_index(index: Idx) -> Result<&'static str, String> {
+fn index_to_string(index: Idx) -> Result<&'static str, String> {
     match index {
         0 => Ok("a7"),
         1 => Ok("d7"),
@@ -131,7 +131,7 @@ impl FromStr for Move {
     type Err = String;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
-        let tokens = string.split("-x").collect::<Vec<_>>();
+        let tokens = string.split(['-', 'x']).collect::<Vec<_>>();
 
         match tokens.len() {
             1 => {
@@ -172,24 +172,24 @@ impl ToString for Move {
 
         match *self {
             Self::Place { place_index } => {
-                result.push_str(string_from_index(place_index).expect(ERR_MSG));
+                result.push_str(index_to_string(place_index).expect(ERR_MSG));
             }
             Self::PlaceCapture { place_index, capture_index } => {
-                result.push_str(string_from_index(place_index).expect(ERR_MSG));
+                result.push_str(index_to_string(place_index).expect(ERR_MSG));
                 result.push('x');
-                result.push_str(string_from_index(capture_index).expect(ERR_MSG));
+                result.push_str(index_to_string(capture_index).expect(ERR_MSG));
             }
             Self::Move { source_index, destination_index } => {
-                result.push_str(string_from_index(source_index).expect(ERR_MSG));
+                result.push_str(index_to_string(source_index).expect(ERR_MSG));
                 result.push('-');
-                result.push_str(string_from_index(destination_index).expect(ERR_MSG));
+                result.push_str(index_to_string(destination_index).expect(ERR_MSG));
             }
             Self::MoveCapture { source_index, destination_index, capture_index } => {
-                result.push_str(string_from_index(source_index).expect(ERR_MSG));
+                result.push_str(index_to_string(source_index).expect(ERR_MSG));
                 result.push('-');
-                result.push_str(string_from_index(destination_index).expect(ERR_MSG));
+                result.push_str(index_to_string(destination_index).expect(ERR_MSG));
                 result.push('x');
-                result.push_str(string_from_index(capture_index).expect(ERR_MSG));
+                result.push_str(index_to_string(capture_index).expect(ERR_MSG));
             }
         }
 

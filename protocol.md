@@ -61,7 +61,7 @@ Tell the engine to switch the debug mode.
 
 ### isready
 
-Tell the engine to respond with the **readyok** as soon as it has done processing all commnads, if any. It is
+Tell the engine to respond with the **readyok** as soon as it has done processing all commands, if any. It is
 used for synchronization.
 
 ### setoption name `identifier` [value `x`]
