@@ -49,7 +49,7 @@ fn index_from_string(string: &str) -> Result<Idx, String> {
         "a1" => Ok(21),
         "d1" => Ok(22),
         "g1" => Ok(23),
-        _ => Err(String::from("Invalid index string")),
+        _ => Err(format!("Invalid index string: `{}`", string)),
     }
 }
 
@@ -79,7 +79,7 @@ fn index_to_string(index: Idx) -> Result<&'static str, String> {
         21 => Ok("a1"),
         22 => Ok("d1"),
         23 => Ok("g1"),
-        _ => Err(String::from("Invalid index number")),
+        _ => Err(format!("Invalid index number: `{}`", index)),
     }
 }
 
@@ -159,7 +159,7 @@ impl FromStr for Move {
 
                 Ok(Self::new_move_capture(source_index, destination_index, capture_index))
             }
-            _ => Err(String::from("Invalid move string"))
+            _ => Err(format!("Invalid move string: `{}`", string))
         }
     }
 }
@@ -203,7 +203,7 @@ pub type Board = [Node; 24];
 pub struct Position {
     pub board: Board,
     pub player: Player,
-    pub plies: i32,
+    pub plies: i32,  // FIXME
 }
 
 impl Position {
@@ -234,13 +234,13 @@ impl FromStr for Position {
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         if !string.is_ascii() {
-            return Err(String::from("Invalid position string"));
+            return Err(format!("Invalid position string: `{}`", string));
         }
 
         let re = regex::Regex::new(r"^(w|b):(w|b)([a-g][1-7])?(,[a-g][1-7])*:(w|b)([a-g][1-7])?(,[a-g][1-7])*:[0-9]{1,3}$");
 
         if !re.expect("The expression should be constant").is_match(string) {
-            return Err(String::from("Invalid position string"));
+            return Err(format!("Invalid position string: `{}`", string));
         }
 
         let tokens = string.split(":").collect::<Vec<_>>();
@@ -258,11 +258,11 @@ impl FromStr for Position {
         let turns = tokens[3].parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?;
 
         if pieces1.1 == pieces2.1 {
-            return Err(String::from("Invalid position string"));
+            return Err(format!("Invalid position string: `{}`", string));
         }
 
         if turns < 1 {
-            return Err(String::from("Invalid position string"));
+            return Err(format!("Invalid position string: `{}`", string));
         }
 
         let mut position = Position::default();

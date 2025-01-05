@@ -75,7 +75,7 @@ pub fn position(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), 
     let moves = if let Some(index) = tokens.iter().position(|token| token.as_str() == "moves") {
         let mut moves = Vec::new();
 
-        for move_ in tokens.iter().skip(index) {
+        for move_ in tokens.iter().skip(index + 1) {
             moves.push(game::Move::from_str(move_)?);
         }
 

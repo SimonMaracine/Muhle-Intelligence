@@ -20,7 +20,7 @@ fn main() -> ExitCode {
 
     if let Err(err) = result {
         if engine.is_debug_mode() {
-            let _ = write_to_log_file(&mut log_file, format!("A critical error occurred: {}\n", err));
+            let _ = write_to_log_file(&mut log_file, format!("[Critical error]  {}\n", err));
         }
         return ExitCode::from(1);
     }
@@ -39,6 +39,10 @@ fn main_loop(engine: &mut engine::Engine, log_file: &mut Option<fs::File>) -> Re
             continue;
         }
 
+        if engine.is_debug_mode() {
+            let _ = write_to_log_file(log_file, format!("[Command]  {:?}\n", tokens));
+        }
+
         if tokens[0] == "quit" {
             commands::quit(engine, tokens);
             return Ok(());
@@ -46,7 +50,7 @@ fn main_loop(engine: &mut engine::Engine, log_file: &mut Option<fs::File>) -> Re
 
         if let Err(err) = execute_command(engine, tokens) {
             if engine.is_debug_mode() {
-                let _ = write_to_log_file(log_file, format!("{}\n", err));
+                let _ = write_to_log_file(log_file, format!("[Error]  {}\n", err));
             }
         }
     }
