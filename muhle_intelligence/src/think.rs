@@ -32,7 +32,7 @@ impl<'a> Think<'a> {
         mut self,
         position: &game::Position,
         moves: &Vec<game::Move>,
-        mut ctx: ThinkContext
+        mut ctx: ThinkContext,
     ) -> Option<game::Move> {
         let current_node = self.setup(position, moves);
 

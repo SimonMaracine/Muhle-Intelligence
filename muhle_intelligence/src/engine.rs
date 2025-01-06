@@ -112,12 +112,10 @@ impl Engine {
 
         game.position = position;
 
-        game.moves.clear();
-
         if let Some(moves) = moves {
-            for move_ in moves {
-                game.moves.push(move_);
-            }
+            game.moves = moves;
+        } else {
+            game.moves.clear();
         }
     }
 

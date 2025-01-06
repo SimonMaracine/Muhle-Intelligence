@@ -222,7 +222,7 @@ impl Position {
                 continue;
             }
 
-            pieces.push(index_from_string(token).expect("Position string should be valid as per the regex"));
+            pieces.push(index_from_string(token).expect("Should be valid as per the regex"));
         }
 
         (pieces, player)
@@ -272,13 +272,13 @@ impl FromStr for Position {
         for index in pieces1.0 {
             assert!(index >= 0 && index < 24);
 
-            position.board[index as usize] = player_piece(pieces1.1);
+            position.board[index as usize] = as_node(pieces1.1);
         }
 
         for index in pieces2.0 {
             assert!(index >= 0 && index < 24);
 
-            position.board[index as usize] = player_piece(pieces2.1);
+            position.board[index as usize] = as_node(pieces2.1);
         }
 
         position.plies = (turns - 1) * 2 + (player == Player::Black) as i32;
@@ -299,13 +299,15 @@ impl GamePosition {
             Move::Place { place_index } => {
                 assert!(self.position.board[place_index as usize] == Node::Empty);  // TODO use debug asserts
 
-                self.position.board[place_index as usize] = player_piece(self.position.player);
+                self.position.board[place_index as usize] = as_node(self.position.player);
+
+                self.plies_no_advancement = 0;
             }
             Move::PlaceCapture { place_index, capture_index } => {
                 assert!(self.position.board[place_index as usize] == Node::Empty);
                 assert!(self.position.board[capture_index as usize] != Node::Empty);
 
-                self.position.board[place_index as usize] = player_piece(self.position.player);
+                self.position.board[place_index as usize] = as_node(self.position.player);
                 self.position.board[capture_index as usize] = Node::Empty;
 
                 self.plies_no_advancement = 0;
@@ -360,13 +362,16 @@ impl<'a> SearchNode<'a> {
             Move::Place { place_index } => {
                 assert!(self.position.position.board[place_index as usize] == Node::Empty);  // TODO use debug asserts
 
-                self.position.position.board[place_index as usize] = player_piece(self.position.position.player);
+                self.position.position.board[place_index as usize] = as_node(self.position.position.player);
+
+                self.position.plies_no_advancement = 0;
+                self.previous = None;
             }
             Move::PlaceCapture { place_index, capture_index } => {
                 assert!(self.position.position.board[place_index as usize] == Node::Empty);
                 assert!(self.position.position.board[capture_index as usize] != Node::Empty);
 
-                self.position.position.board[place_index as usize] = player_piece(self.position.position.player);
+                self.position.position.board[place_index as usize] = as_node(self.position.position.player);
                 self.position.position.board[capture_index as usize] = Node::Empty;
 
                 self.position.plies_no_advancement = 0;
@@ -407,7 +412,7 @@ pub fn is_game_over_material(node: &SearchNode) -> bool {
 }
 
 pub fn count_player_pieces(position: &Position) -> i32 {
-    let target = player_piece(position.player);
+    let target = as_node(position.player);
     let mut result = 0;
 
     for node in position.board {
@@ -417,7 +422,7 @@ pub fn count_player_pieces(position: &Position) -> i32 {
     result
 }
 
-pub fn player_piece(player: Player) -> Node {
+pub fn as_node(player: Player) -> Node {
     let integer = player as u32;
     unsafe { mem::transmute(integer) }
 }

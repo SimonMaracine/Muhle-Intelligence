@@ -1,22 +1,20 @@
 use crate::game;
 
 pub fn generate_moves(node: &game::SearchNode) -> Vec<game::Move> {
-    let mut board = node.position.position.board.clone();
-
     if node.position.position.plies < 18 {
-        generate_moves_phase1(&mut board, node.position.position.player)
+        generate_moves_phase1(node.position.position.board.clone(), node.position.position.player)
     } else {
         assert!(game::count_player_pieces(&node.position.position) >= 3);
 
         if game::count_player_pieces(&node.position.position) == 3 {
-            generate_moves_phase3(&mut board, node.position.position.player)
+            generate_moves_phase3(node.position.position.board.clone(), node.position.position.player)
         } else {
-            generate_moves_phase2(&mut board, node.position.position.player)
+            generate_moves_phase2(node.position.position.board.clone(), node.position.position.player)
         }
     }
 }
 
-fn generate_moves_phase1(board: &mut game::Board, player: game::Player) -> Vec<game::Move> {
+fn generate_moves_phase1(mut board: game::Board, player: game::Player) -> Vec<game::Move> {
     let mut moves = Vec::new();
 
     for i in 0..24 as game::Idx {
@@ -24,18 +22,18 @@ fn generate_moves_phase1(board: &mut game::Board, player: game::Player) -> Vec<g
             continue;
         }
 
-        make_place_move(board, player, i);
+        make_place_move(&mut board, player, i);
 
-        if is_mill(board, player, i) {
+        if is_mill(&board, player, i) {
             let opponent_player = game::opponent(player);
-            let all_in_mills = all_pieces_in_mills(board, opponent_player);
+            let all_in_mills = all_pieces_in_mills(&board, opponent_player);
 
             for j in 0..24 as game::Idx {
-                if board[j as usize] != game::player_piece(opponent_player) {
+                if board[j as usize] != game::as_node(opponent_player) {
                     continue;
                 }
 
-                if is_mill(board, opponent_player, j) && !all_in_mills {
+                if is_mill(&board, opponent_player, j) && !all_in_mills {
                     continue;
                 }
 
@@ -45,35 +43,35 @@ fn generate_moves_phase1(board: &mut game::Board, player: game::Player) -> Vec<g
             moves.push(game::Move::new_place(i));
         }
 
-        unmake_place_move(board, i);
+        unmake_place_move(&mut board, i);
     }
 
     moves
 }
 
-fn generate_moves_phase2(board: &mut game::Board, player: game::Player) -> Vec<game::Move> {
+fn generate_moves_phase2(mut board: game::Board, player: game::Player) -> Vec<game::Move> {
     let mut moves = Vec::new();
 
     for i in 0..24 as game::Idx {
-        if board[i as usize] != game::player_piece(player) {
+        if board[i as usize] != game::as_node(player) {
             continue;
         }
 
-        let free_positions = neighbor_free_positions(board, i);
+        let free_positions = neighbor_free_positions(&board, i);
 
         for j in 0..free_positions.len() as game::Idx {
-            make_move_move(board, i, free_positions[j as usize]);
+            make_move_move(&mut board, i, free_positions[j as usize]);
 
-            if is_mill(board, player, free_positions[j as usize]) {
+            if is_mill(&board, player, free_positions[j as usize]) {
                 let opponent_player = game::opponent(player);
-                let all_in_mills = all_pieces_in_mills(board, opponent_player);
+                let all_in_mills = all_pieces_in_mills(&board, opponent_player);
 
                 for k in 0..24 as game::Idx {
-                    if board[k as usize] != game::player_piece(opponent_player) {
+                    if board[k as usize] != game::as_node(opponent_player) {
                         continue;
                     }
 
-                    if is_mill(board, opponent_player, k) && !all_in_mills {
+                    if is_mill(&board, opponent_player, k) && !all_in_mills {
                         continue;
                     }
 
@@ -83,18 +81,18 @@ fn generate_moves_phase2(board: &mut game::Board, player: game::Player) -> Vec<g
                 moves.push(game::Move::new_move(i, free_positions[j as usize]));
             }
 
-            unmake_move_move(board, i, free_positions[j as usize]);
+            unmake_move_move(&mut board, i, free_positions[j as usize]);
         }
     }
 
     moves
 }
 
-fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<game::Move> {
+fn generate_moves_phase3(mut board: game::Board, player: game::Player) -> Vec<game::Move> {
     let mut moves = Vec::new();
 
     for i in 0..24 as game::Idx {
-        if board[i as usize] != game::player_piece(player) {
+        if board[i as usize] != game::as_node(player) {
             continue;
         }
 
@@ -103,18 +101,18 @@ fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<g
                 continue;
             }
 
-            make_move_move(board, i, j);
+            make_move_move(&mut board, i, j);
 
-            if is_mill(board, player, j) {
+            if is_mill(&board, player, j) {
                 let opponent_player = game::opponent(player);
-                let all_in_mills = all_pieces_in_mills(board, opponent_player);
+                let all_in_mills = all_pieces_in_mills(&board, opponent_player);
 
                 for k in 0..24 as game::Idx {
-                    if board[k as usize] != game::player_piece(opponent_player) {
+                    if board[k as usize] != game::as_node(opponent_player) {
                         continue;
                     }
 
-                    if is_mill(board, opponent_player, k) && !all_in_mills {
+                    if is_mill(&board, opponent_player, k) && !all_in_mills {
                         continue;
                     }
 
@@ -124,7 +122,7 @@ fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<g
                 moves.push(game::Move::new_move(i, j));
             }
 
-            unmake_move_move(board, i, j);
+            unmake_move_move(&mut board, i, j);
         }
     }
 
@@ -134,7 +132,7 @@ fn generate_moves_phase3(board: &mut game::Board, player: game::Player) -> Vec<g
 fn make_place_move(board: &mut game::Board, player: game::Player, place_index: game::Idx) {
     assert!(board[place_index as usize] == game::Node::Empty);
 
-    board[place_index as usize] = game::player_piece(player);
+    board[place_index as usize] = game::as_node(player);
 }
 
 fn unmake_place_move(board: &mut game::Board, place_index: game::Idx) {
@@ -158,35 +156,35 @@ fn unmake_move_move(board: &mut game::Board, source_index: game::Idx, destinatio
 }
 
 fn is_mill(board: &game::Board, player: game::Player, index: game::Idx) -> bool {
-    let piece = game::player_piece(player);
+    let node = game::as_node(player);
 
-    assert!(board[index as usize] == piece);
+    assert!(board[index as usize] == node);
 
     match index {
-        0 => return board[1] == piece && board[2] == piece || board[9] == piece && board[21] == piece,
-        1 => return board[0] == piece && board[2] == piece || board[4] == piece && board[7] == piece,
-        2 => return board[0] == piece && board[1] == piece || board[14] == piece && board[23] == piece,
-        3 => return board[4] == piece && board[5] == piece || board[10] == piece && board[18] == piece,
-        4 => return board[3] == piece && board[5] == piece || board[1] == piece && board[7] == piece,
-        5 => return board[3] == piece && board[4] == piece || board[13] == piece && board[20] == piece,
-        6 => return board[7] == piece && board[8] == piece || board[11] == piece && board[15] == piece,
-        7 => return board[6] == piece && board[8] == piece || board[1] == piece && board[4] == piece,
-        8 => return board[6] == piece && board[7] == piece || board[12] == piece && board[17] == piece,
-        9 => return board[0] == piece && board[21] == piece || board[10] == piece && board[11] == piece,
-        10 => return board[9] == piece && board[11] == piece || board[3] == piece && board[18] == piece,
-        11 => return board[9] == piece && board[10] == piece || board[6] == piece && board[15] == piece,
-        12 => return board[13] == piece && board[14] == piece || board[8] == piece && board[17] == piece,
-        13 => return board[12] == piece && board[14] == piece || board[5] == piece && board[20] == piece,
-        14 => return board[12] == piece && board[13] == piece || board[2] == piece && board[23] == piece,
-        15 => return board[16] == piece && board[17] == piece || board[6] == piece && board[11] == piece,
-        16 => return board[15] == piece && board[17] == piece || board[19] == piece && board[22] == piece,
-        17 => return board[15] == piece && board[16] == piece || board[8] == piece && board[12] == piece,
-        18 => return board[19] == piece && board[20] == piece || board[3] == piece && board[10] == piece,
-        19 => return board[18] == piece && board[20] == piece || board[16] == piece && board[22] == piece,
-        20 => return board[18] == piece && board[19] == piece || board[5] == piece && board[13] == piece,
-        21 => return board[22] == piece && board[23] == piece || board[0] == piece && board[9] == piece,
-        22 => return board[21] == piece && board[23] == piece || board[16] == piece && board[19] == piece,
-        23 => return board[21] == piece && board[22] == piece || board[2] == piece && board[14] == piece,
+        0 => return board[1] == node && board[2] == node || board[9] == node && board[21] == node,
+        1 => return board[0] == node && board[2] == node || board[4] == node && board[7] == node,
+        2 => return board[0] == node && board[1] == node || board[14] == node && board[23] == node,
+        3 => return board[4] == node && board[5] == node || board[10] == node && board[18] == node,
+        4 => return board[3] == node && board[5] == node || board[1] == node && board[7] == node,
+        5 => return board[3] == node && board[4] == node || board[13] == node && board[20] == node,
+        6 => return board[7] == node && board[8] == node || board[11] == node && board[15] == node,
+        7 => return board[6] == node && board[8] == node || board[1] == node && board[4] == node,
+        8 => return board[6] == node && board[7] == node || board[12] == node && board[17] == node,
+        9 => return board[0] == node && board[21] == node || board[10] == node && board[11] == node,
+        10 => return board[9] == node && board[11] == node || board[3] == node && board[18] == node,
+        11 => return board[9] == node && board[10] == node || board[6] == node && board[15] == node,
+        12 => return board[13] == node && board[14] == node || board[8] == node && board[17] == node,
+        13 => return board[12] == node && board[14] == node || board[5] == node && board[20] == node,
+        14 => return board[12] == node && board[13] == node || board[2] == node && board[23] == node,
+        15 => return board[16] == node && board[17] == node || board[6] == node && board[11] == node,
+        16 => return board[15] == node && board[17] == node || board[19] == node && board[22] == node,
+        17 => return board[15] == node && board[16] == node || board[8] == node && board[12] == node,
+        18 => return board[19] == node && board[20] == node || board[3] == node && board[10] == node,
+        19 => return board[18] == node && board[20] == node || board[16] == node && board[22] == node,
+        20 => return board[18] == node && board[19] == node || board[5] == node && board[13] == node,
+        21 => return board[22] == node && board[23] == node || board[0] == node && board[9] == node,
+        22 => return board[21] == node && board[23] == node || board[16] == node && board[19] == node,
+        23 => return board[21] == node && board[22] == node || board[2] == node && board[14] == node,
         _ => ()
     }
 
@@ -195,7 +193,7 @@ fn is_mill(board: &game::Board, player: game::Player, index: game::Idx) -> bool 
 
 fn all_pieces_in_mills(board: &game::Board, player: game::Player) -> bool {
     for i in 0..24 as game::Idx {
-        if board[i as usize] != game::player_piece(player) {
+        if board[i as usize] != game::as_node(player) {
             continue;
         }
 
