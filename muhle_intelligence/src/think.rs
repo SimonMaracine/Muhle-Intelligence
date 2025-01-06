@@ -38,7 +38,7 @@ impl<'a> Think<'a> {
 
         let begin = time::Instant::now();
 
-        let eval = Self::alpha_beta(&mut ctx, 4, 0, evaluation::MIN, evaluation::MAX, current_node);
+        let eval = Self::alpha_beta(&mut ctx, 4, 0, evaluation::WINDOW_MIN, evaluation::WINDOW_MAX, current_node);
 
         let end = time::Instant::now();
 

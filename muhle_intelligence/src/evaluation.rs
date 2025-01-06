@@ -2,8 +2,11 @@ use crate::game;
 
 pub type Eval = i32;
 
-pub const MAX: Eval = 1000;
-pub const MIN: Eval = -MAX;
+pub const WINDOW_MAX: Eval = 1000;
+pub const WINDOW_MIN: Eval = -MAX;
+
+pub const MAX: Eval = WINDOW_MAX - 1;
+pub const MIN: Eval = WINDOW_MIN + 1;
 
 pub const UNKNOWN: Eval = Eval::MIN;
 

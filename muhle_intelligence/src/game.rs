@@ -199,11 +199,11 @@ impl ToString for Move {
 
 pub type Board = [Node; 24];
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone)]
 pub struct Position {
     pub board: Board,
     pub player: Player,
-    pub plies: i32,  // FIXME
+    pub plies: i32,
 }
 
 impl Position {
@@ -228,6 +228,14 @@ impl Position {
         (pieces, player)
     }
 }
+
+impl PartialEq for Position {
+    fn eq(&self, other: &Position) -> bool {
+        self.board == other.board && self.player == other.player && self.plies >= 18 && other.plies >= 18
+    }
+}
+
+impl Eq for Position {}
 
 impl FromStr for Position {
     type Err = String;
