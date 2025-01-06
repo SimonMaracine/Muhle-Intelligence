@@ -98,7 +98,9 @@ impl<'a> Think<'a> {
             if eval > alpha {
                 alpha = eval;
 
-                ctx.best_move = move_;
+                if depth_root == 0 {
+                    ctx.best_move = move_;
+                }
             }
         }
 

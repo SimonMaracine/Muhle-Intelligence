@@ -337,6 +337,7 @@ impl GamePosition {
     }
 }
 
+#[derive(Debug)]
 pub struct SearchNode<'a> {
     pub position: GamePosition,
     pub previous: Option<&'a SearchNode<'a>>,

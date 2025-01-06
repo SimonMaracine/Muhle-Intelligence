@@ -312,8 +312,8 @@ fn neighbor_free_positions(board: &game::Board, index: game::Idx) -> Vec<game::I
             if board[9] == game::Node::Empty {
                 result.push(9);
             }
-            if board[1] == game::Node::Empty {
-                result.push(1);
+            if board[11] == game::Node::Empty {
+                result.push(11);
             }
             if board[18] == game::Node::Empty {
                 result.push(18);
