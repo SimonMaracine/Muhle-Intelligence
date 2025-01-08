@@ -3,25 +3,36 @@ use std::str::FromStr;
 
 use regex;
 
+#[derive(Clone)]
+pub struct Game {
+    pub position: Position,
+    pub moves: Vec<Move>,
+    pub ponder: bool,
+    pub wtime: Option<i32>,
+    pub btime: Option<i32>,
+    pub max_depth: Option<i32>,
+    pub max_time: Option<i32>,
+}
+
+pub const MAX_DEPTH: i32 = 50;
+
+#[derive(Clone)]
+pub struct PvLine {
+    pub moves: [Move; MAX_DEPTH as usize],
+    pub size: usize,
+}
+
+impl PvLine {
+    pub fn new() -> Self {
+        Self {
+            moves: [Move::default(); MAX_DEPTH as usize],
+            size: 0,
+        }
+    }
+}
+
 pub type Idx = i32;
 pub const NULL_INDEX: Idx = -1;
-
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum Player {
-    #[default]
-    White = 1,
-    Black = 2,
-}
-
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum Node {
-    #[default]
-    Empty = 0,
-    White = 1,
-    Black = 2,
-}
 
 fn index_from_string(string: &str) -> Result<Idx, String> {
     match string {
@@ -83,7 +94,24 @@ fn index_to_string(index: Idx) -> Result<&'static str, String> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum Player {
+    #[default]
+    White = 1,
+    Black = 2,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum Node {
+    #[default]
+    Empty = 0,
+    White = 1,
+    Black = 2,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Move {
     Place {
         place_index: Idx,
@@ -207,6 +235,29 @@ pub struct Position {
 }
 
 impl Position {
+    pub fn count_player_pieces(&self) -> i32 {
+        let target = as_node(self.player);
+        let mut result = 0;
+
+        for node in self.board {
+            result += (node == target) as i32;
+        }
+
+        result
+    }
+
+    pub fn is_game_over_material(&self) -> bool {
+        if self.plies < 18 {
+            return false;
+        }
+
+        self.count_player_pieces() < 3
+    }
+
+    pub fn is_fifty_move_rule(&self) -> bool {
+        self.plies == 100
+    }
+
     fn parse_pieces(string: &str) -> (Vec<Idx>, Player) {
         let player = match &string[0..1] {
             "w" => Player::White,
@@ -410,25 +461,26 @@ impl<'a> SearchNode<'a> {
         self.position.position.player = opponent(self.position.position.player);
         self.position.position.plies += 1;
     }
-}
 
-pub fn is_game_over_material(node: &SearchNode) -> bool {
-    if node.position.position.plies < 18 {
-        return false;
+    pub fn is_threefold_repetition_rule(&self) -> bool {
+        let mut previous_node = self.previous;
+
+        let mut repetitions = 1;
+
+        while let Some(node) = previous_node {
+            if node.position == self.position {
+                repetitions += 1;
+
+                if repetitions == 3 {
+                    return true;
+                }
+            }
+
+            previous_node = node.previous;
+        }
+
+        false
     }
-
-    return count_player_pieces(&node.position.position) < 3;
-}
-
-pub fn count_player_pieces(position: &Position) -> i32 {
-    let target = as_node(position.player);
-    let mut result = 0;
-
-    for node in position.board {
-        result += (node == target) as i32;
-    }
-
-    result
 }
 
 pub fn as_node(player: Player) -> Node {

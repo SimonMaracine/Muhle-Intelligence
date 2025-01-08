@@ -54,7 +54,7 @@ pub fn info(
     currmovenumber: Option<i32>,
     hashfull: Option<i32>,
     nps: Option<i32>,
-    pv: Option<Vec<game::Move>>,
+    pv: Option<&game::PvLine>,
 ) -> Result<(), String> {
     let mut buffer = String::from("info");
 
@@ -96,8 +96,8 @@ pub fn info(
     if let Some(pv) = pv {
         buffer += " pv";
 
-        for move_ in pv {
-            buffer += format!(" {}", move_.to_string()).as_str();
+        for i in 0..pv.size {
+            buffer += format!(" {}", pv.moves[i].to_string()).as_str();
         }
     }
 

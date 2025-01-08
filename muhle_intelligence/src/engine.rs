@@ -10,12 +10,6 @@ use crate::messages;
 const NAME: &str = "Muhle Intelligence 1.0";
 const AUTHOR: &str = "Simon Maracine";
 
-#[derive(Clone)]
-struct Game {
-    position: game::Position,
-    moves: Vec<game::Move>,
-}
-
 struct Sync {
     mutex_go: Mutex<bool>,
     cv: Condvar,
@@ -36,7 +30,7 @@ impl Options {
 pub struct Engine {
     gbgp_mode: bool,
     debug_mode: bool,
-    game: Arc<Mutex<Game>>,
+    game: Arc<Mutex<game::Game>>,
     options: Options,
     handle: Option<JoinHandle<()>>,
     sync: Arc<Sync>,
@@ -48,15 +42,20 @@ impl Engine {
         Self {
             gbgp_mode: false,
             debug_mode: false,
-            game: Arc::new(Mutex::new(Game {
+            game: Arc::new(Mutex::new(game::Game {
                 position: game::Position::default(),
-                moves: Vec::new()
+                moves: Vec::new(),
+                ponder: false,
+                wtime: None,
+                btime: None,
+                max_depth: None,
+                max_time: None,
             })),
             options: Options::new(),
             handle: None,
             sync: Arc::new(Sync {
                 mutex_go: Mutex::new(false),
-                cv: Condvar::new()
+                cv: Condvar::new(),
             }),
             running: Arc::new(AtomicBool::new(false)),
         }
@@ -124,11 +123,21 @@ impl Engine {
         ponder: bool,
         wtime: Option<i32>,
         btime: Option<i32>,
-        maxdepth: Option<i32>,
-        maxtime: Option<i32>
+        max_depth: Option<i32>,
+        max_time: Option<i32>,
     ) -> Result<(), String> {
         if !self.running.load(Ordering::SeqCst) {
             return Err(String::from("The engine has not been initialized"));
+        }
+
+        {
+            let mut game = self.game.lock().unwrap();
+
+            game.ponder = ponder;
+            game.wtime = wtime;
+            game.btime = btime;
+            game.max_depth = max_depth;
+            game.max_time = max_time;
         }
 
         {
@@ -194,11 +203,11 @@ impl Engine {
         }));
     }
 
-    fn think(game: Game) -> Option<game::Move> {
+    fn think(game: game::Game) -> Option<game::Move> {
         let think = think::Think::new();
         let ctx = think::ThinkContext::new();
 
-        think.think(&game.position, &game.moves, ctx)
+        think.think(game, ctx)
     }
 
     fn set_option_value(option: &mut options::Option, value_: Option<&String>) -> Result<(), String> {
