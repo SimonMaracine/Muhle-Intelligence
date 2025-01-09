@@ -85,7 +85,7 @@ impl<'a> Think<'a> {
                 Some(depth),
                 Some((now - begin).as_millis().try_into().expect("Should fit")),
                 Some(ctx.nodes),
-                Some(messages::Score::Eval(eval)),
+                Some(Self::score(eval * evaluation::perspective(&current_node.position.position))),
                 None,
                 None,
                 None,
@@ -126,7 +126,7 @@ impl<'a> Think<'a> {
         if current_node.position.position.is_game_over_material() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;
-            return evaluation::MIN;
+            return evaluation::MIN + depth_root;  // Encourage winning earlier
         }
 
         let moves = move_generation::generate_moves(current_node);
@@ -134,7 +134,7 @@ impl<'a> Think<'a> {
         if moves.is_empty() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;
-            return evaluation::MIN;
+            return evaluation::MIN + depth_root;  // Encourage winning earlier
         }
 
         if current_node.is_threefold_repetition_rule() {  // Game over
@@ -192,7 +192,7 @@ impl<'a> Think<'a> {
 
         for move_ in moves {
             game_position.play_move(move_);
-            self.nodes.push(game::SearchNode::from_position(&game_position));
+            self.nodes.push(game::SearchNode::from_position(&game_position));  // FIXME
         }
 
         self.nodes.last().expect("There should be at least one node")
@@ -214,5 +214,19 @@ impl<'a> Think<'a> {
         }
 
         p_line.size = line.size + 1;
+    }
+
+    fn score(eval: evaluation::Eval) -> messages::Score {
+        assert!(eval <= evaluation::MAX && eval >= evaluation::MIN);
+
+        if eval >= evaluation::MAX - game::MAX_DEPTH {
+            let moves = (evaluation::MAX - eval) / 2;
+            messages::Score::Win(moves)
+        } else if eval <= evaluation::MIN + game::MAX_DEPTH {
+            let moves = (evaluation::MIN - eval) / 2;
+            messages::Score::Win(moves)
+        } else {
+            messages::Score::Eval(eval)
+        }
     }
 }

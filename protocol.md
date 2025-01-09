@@ -110,7 +110,7 @@ Tell the GUI that the engine has done processing commands and is ready to think 
 
 ### bestmove (`move` | none) [ponder `move`]
 
-Tell the GUI that it has done thinking after a **go** command. If, the game is already over, then the move should
+Tell the GUI that it has done thinking after a **go** command. If the game is already over, then the move should
 be *none*
 
 ### info [depth `x`] [time `x`] [nodes `x`] [score (eval `x` | win `x`)] [currmove `move`] [currmovenumber `x`] [hashfull `x`] [nps `x`] [pv `move1` `move2` ...]
