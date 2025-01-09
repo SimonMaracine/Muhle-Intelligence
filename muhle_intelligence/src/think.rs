@@ -1,20 +1,40 @@
-use std::time;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
 use std::cmp;
+use std::time::Instant;
 
 use crate::evaluation;
 use crate::game;
-use crate::game::PvLine;
 use crate::messages;
 use crate::move_generation;
 
 pub struct ThinkContext {
     nodes: i32,
+    should_stop: Arc<AtomicBool>,
+    can_stop: bool,
+    time_begin: Instant,
+    max_time: u32,
 }
 
 impl ThinkContext {
-    pub fn new() -> Self {
+    pub fn new(should_stop: Arc<AtomicBool>, max_time: u32) -> Self {
         Self {
             nodes: 0,
+            should_stop,
+            can_stop: false,
+            time_begin: Instant::now(),
+            max_time,
+        }
+    }
+
+    fn stop(&self) -> bool {
+        self.should_stop.load(Ordering::SeqCst) && self.can_stop
+    }
+
+    fn check_time(&self, time_now: Instant) {
+        if (time_now - self.time_begin).as_millis() >= self.max_time as u128 {
+            self.should_stop.store(true, Ordering::SeqCst);
         }
     }
 }
@@ -34,9 +54,9 @@ impl<'a> Think<'a> {
         let current_node = self.setup(&game.position, &game.moves);
         let mut last_pv_line = game::PvLine::new();
 
-        let begin = time::Instant::now();
+        let begin = Instant::now();
 
-        for depth in 1..Self::max_depth(&game) {
+        for depth in 1..=Self::max_depth(&game) {
             let mut line = game::PvLine::new();
 
             let eval = Self::alpha_beta(
@@ -49,7 +69,15 @@ impl<'a> Think<'a> {
                 &mut line,
             );
 
-            let now = time::Instant::now();
+            let now = Instant::now();
+
+            // Check the time here too
+            ctx.check_time(now);
+
+            if ctx.stop() {
+                // Discard the PV
+                break;
+            }
 
             last_pv_line = line.clone();
 
@@ -68,6 +96,9 @@ impl<'a> Think<'a> {
             if line.size == 0 {
                 return None;
             }
+
+            // There is a best move available only after the first iteration
+            ctx.can_stop = true;
         }
 
         assert!(last_pv_line.size > 0);
@@ -84,6 +115,14 @@ impl<'a> Think<'a> {
         current_node: &game::SearchNode,
         p_line: &mut game::PvLine,
     ) -> evaluation::Eval {
+        if ctx.nodes % 50_000 == 0 {
+            ctx.check_time(Instant::now());
+        }
+
+        if ctx.stop() {
+            return 0;
+        }
+
         if current_node.position.position.is_game_over_material() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;
@@ -117,13 +156,17 @@ impl<'a> Think<'a> {
             return evaluation::static_evaluation(current_node) * evaluation::perspective(&current_node.position.position);
         }
 
-        let mut line = PvLine::new();
+        let mut line = game::PvLine::new();
 
         for move_ in moves {
             let mut new_node = game::SearchNode::from_node(current_node);
             new_node.play_move(&move_);
 
             let eval = -Self::alpha_beta(ctx, depth - 1, depth_root + 1, -beta, -alpha, &new_node, &mut line);
+
+            if ctx.stop() {
+                return 0;
+            }
 
             if eval >= beta {
                 return beta;

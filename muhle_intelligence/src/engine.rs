@@ -1,6 +1,6 @@
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, JoinHandle};
 use std::sync::{Arc, Condvar, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::think;
 use crate::game;
@@ -35,6 +35,7 @@ pub struct Engine {
     handle: Option<JoinHandle<()>>,
     sync: Arc<Sync>,
     running: Arc<AtomicBool>,
+    should_stop: Arc<AtomicBool>,
 }
 
 impl Engine {
@@ -58,6 +59,7 @@ impl Engine {
                 cv: Condvar::new(),
             }),
             running: Arc::new(AtomicBool::new(false)),
+            should_stop: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -124,12 +126,13 @@ impl Engine {
         wtime: Option<i32>,
         btime: Option<i32>,
         max_depth: Option<i32>,
-        max_time: Option<i32>,
+        max_time: Option<u32>,
     ) -> Result<(), String> {
         if !self.running.load(Ordering::SeqCst) {
             return Err(String::from("The engine has not been initialized"));
         }
 
+        // Reset parameters
         {
             let mut game = self.game.lock().unwrap();
 
@@ -140,6 +143,10 @@ impl Engine {
             game.max_time = max_time;
         }
 
+        // Seems a good place to reset the stop flag
+        self.should_stop.store(false, Ordering::SeqCst);
+
+        // Trigger the think function
         {
             let mut guard = self.sync.mutex_go.lock().unwrap();
             *guard = true;
@@ -150,7 +157,7 @@ impl Engine {
     }
 
     pub fn stop(&mut self) {
-
+        self.should_stop.store(true, Ordering::SeqCst);
     }
 
     pub fn ponderhit(&mut self) {
@@ -183,6 +190,7 @@ impl Engine {
         let sync = self.sync.clone();
         let game = self.game.clone();
         let running = self.running.clone();
+        let should_stop = self.should_stop.clone();
 
         self.handle = Some(thread::spawn(move || {
             loop {
@@ -194,7 +202,7 @@ impl Engine {
 
                 let game = game.lock().unwrap();
 
-                let best_move = Self::think(game.clone());
+                let best_move = Self::think(game.clone(), should_stop.clone());
 
                 messages::bestmove(best_move.as_ref(), None).expect("Should it fail, it's game over");
 
@@ -203,9 +211,9 @@ impl Engine {
         }));
     }
 
-    fn think(game: game::Game) -> Option<game::Move> {
+    fn think(game: game::Game, should_stop: Arc<AtomicBool>) -> Option<game::Move> {
         let think = think::Think::new();
-        let ctx = think::ThinkContext::new();
+        let ctx = think::ThinkContext::new(should_stop, game.max_time.unwrap_or(u32::MAX));
 
         think.think(game, ctx)
     }

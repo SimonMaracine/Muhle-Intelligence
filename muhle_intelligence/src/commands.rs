@@ -128,7 +128,7 @@ pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String
 
     let maxtime = if let Some(index) = tokens.iter().position(|token| token.as_str() == "maxtime") {
         if let Some(maxtime) = tokens.get(index + 1) {
-            Some(maxtime.parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?)
+            Some(maxtime.parse::<u32>().map_err(|err| format!("Could not parse value: {}", err))?)
         } else {
             return Err(String::from("Expected token after `maxtime`"));
         }
