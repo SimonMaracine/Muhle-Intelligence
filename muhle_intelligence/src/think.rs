@@ -39,18 +39,18 @@ impl ThinkContext {
     }
 }
 
-pub struct Think<'a> {
-    nodes: Vec<game::SearchNode<'a>>,
+pub struct Think {
+    nodes: Vec<game::SearchNode>,
 }
 
-impl<'a> Think<'a> {
+impl Think {
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
         }
     }
 
-    pub fn think(mut self, game: game::Game, mut ctx: ThinkContext) -> Option<game::Move> {
+    pub fn think(&mut self, game: game::Game, mut ctx: ThinkContext) -> Option<game::Move> {
         let current_node = self.setup(&game.position, &game.moves);
         let mut last_pv_line = game::PvLine::new();
 
@@ -182,7 +182,7 @@ impl<'a> Think<'a> {
         return alpha;
     }
 
-    fn setup(&mut self, position: &game::Position, moves: &Vec<game::Move>) -> &game::SearchNode<'a> {
+    fn setup(&mut self, position: &game::Position, moves: &Vec<game::Move>) -> &game::SearchNode {
         let mut game_position = game::GamePosition {
             position: position.clone(),
             plies_no_advancement: 0,
@@ -190,9 +190,19 @@ impl<'a> Think<'a> {
 
         self.nodes.push(game::SearchNode::from_position(&game_position));
 
-        for move_ in moves {
+        for (i, move_) in moves.iter().enumerate() {
             game_position.play_move(move_);
-            self.nodes.push(game::SearchNode::from_position(&game_position));  // FIXME
+
+            // Guarantee that the last node is pushed
+            if move_.is_advancement() && i < moves.len() - 1 {
+                self.nodes.clear();
+            } else {
+                self.nodes.push(game::SearchNode::from_position(&game_position));
+            }
+        }
+
+        for i in (1..self.nodes.len()).rev() {
+            self.nodes.get_mut(i).expect("Should be").previous = self.nodes.get(i - 1).expect("Should be") as *const game::SearchNode;
         }
 
         self.nodes.last().expect("There should be at least one node")

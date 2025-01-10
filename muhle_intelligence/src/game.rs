@@ -1,5 +1,6 @@
 use std::mem;
 use std::str::FromStr;
+use std::ptr::null;
 
 use regex;
 
@@ -146,6 +147,13 @@ impl Move {
 
     pub fn new_move_capture(source_index: Idx, destination_index: Idx, capture_index: Idx) -> Self {
         Self::MoveCapture { source_index, destination_index, capture_index }
+    }
+
+    pub fn is_advancement(&self) -> bool {
+        match self {
+            Self::Move { .. } => false,
+            _ => true,
+        }
     }
 }
 
@@ -397,23 +405,23 @@ impl GamePosition {
 }
 
 #[derive(Debug)]
-pub struct SearchNode<'a> {
+pub struct SearchNode {
     pub position: GamePosition,
-    pub previous: Option<&'a SearchNode<'a>>,
+    pub previous: *const SearchNode,
 }
 
-impl<'a> SearchNode<'a> {
+impl SearchNode {
     pub fn from_position(position: &GamePosition) -> Self {
         Self {
             position: position.clone(),
-            previous: None,
+            previous: null(),
         }
     }
 
-    pub fn from_node(node: &'a SearchNode) -> Self {
+    pub fn from_node(node: &SearchNode) -> Self {
         Self {
             position: node.position.clone(),
-            previous: Some(node),
+            previous: node as *const SearchNode,
         }
     }
 
@@ -425,7 +433,7 @@ impl<'a> SearchNode<'a> {
                 self.position.position.board[place_index as usize] = as_node(self.position.position.player);
 
                 self.position.plies_no_advancement = 0;
-                self.previous = None;
+                self.previous = null();
             }
             Move::PlaceCapture { place_index, capture_index } => {
                 assert!(self.position.position.board[place_index as usize] == Node::Empty);
@@ -435,7 +443,7 @@ impl<'a> SearchNode<'a> {
                 self.position.position.board[capture_index as usize] = Node::Empty;
 
                 self.position.plies_no_advancement = 0;
-                self.previous = None;
+                self.previous = null();
             }
             Move::Move { source_index, destination_index } => {
                 assert!(self.position.position.board[source_index as usize] != Node::Empty);
@@ -454,7 +462,7 @@ impl<'a> SearchNode<'a> {
                 self.position.position.board[capture_index as usize] = Node::Empty;
 
                 self.position.plies_no_advancement = 0;
-                self.previous = None;
+                self.previous = null();
             }
         }
 
@@ -467,8 +475,12 @@ impl<'a> SearchNode<'a> {
 
         let mut repetitions = 1;
 
-        while let Some(node) = previous_node {
-            if node.position == self.position {
+        while previous_node != null() {
+            let position = unsafe {
+                &(*previous_node).position
+            };
+
+            if *position == self.position {
                 repetitions += 1;
 
                 if repetitions == 3 {
@@ -476,7 +488,9 @@ impl<'a> SearchNode<'a> {
                 }
             }
 
-            previous_node = node.previous;
+            unsafe {
+                previous_node = (*previous_node).previous;
+            }
         }
 
         false

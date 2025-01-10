@@ -212,7 +212,7 @@ impl Engine {
     }
 
     fn think(game: game::Game, should_stop: Arc<AtomicBool>) -> Option<game::Move> {
-        let think = think::Think::new();
+        let mut think = think::Think::new();
         let ctx = think::ThinkContext::new(should_stop, game.max_time.unwrap_or(u32::MAX));
 
         think.think(game, ctx)
