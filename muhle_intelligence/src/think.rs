@@ -8,23 +8,28 @@ use crate::evaluation;
 use crate::game;
 use crate::messages;
 use crate::move_generation;
+use crate::time;
+
+// https://web.archive.org/web/20071028092710/http://www.brucemo.com/compchess/programming/time.htm
 
 pub struct ThinkContext {
     nodes: i32,
     should_stop: Arc<AtomicBool>,
     can_stop: bool,
     time_begin: Instant,
-    max_time: u32,
+    max_time: u32,  // Constraint indicated by go
+    think_time: u32,  // Calculated based on remaining player time
 }
 
 impl ThinkContext {
-    pub fn new(should_stop: Arc<AtomicBool>, max_time: u32) -> Self {
+    pub fn new(should_stop: Arc<AtomicBool>) -> Self {
         Self {
             nodes: 0,
             should_stop,
             can_stop: false,
             time_begin: Instant::now(),
-            max_time,
+            max_time: u32::MAX,
+            think_time: u32::MAX,
         }
     }
 
@@ -33,7 +38,9 @@ impl ThinkContext {
     }
 
     fn check_time(&self, time_now: Instant) {
-        if (time_now - self.time_begin).as_millis() >= self.max_time as u128 {
+        let elapsed = (time_now - self.time_begin).as_millis();
+
+        if elapsed >= self.max_time as u128 || elapsed >= self.think_time as u128 {
             self.should_stop.store(true, Ordering::SeqCst);
         }
     }
@@ -54,7 +61,10 @@ impl Think {
         let current_node = self.setup(&game.position, &game.moves);
         let mut last_pv_line = game::PvLine::new();
 
-        let begin = Instant::now();
+        // Initialize time constraints
+        ctx.time_begin = Instant::now();
+        ctx.max_time = game.max_time.unwrap_or(u32::MAX);
+        ctx.think_time = time::sudden_death_time_control(game.wtime, game.btime, 50, &game.position);
 
         for depth in 1..=Self::max_depth(&game) {
             let mut line = game::PvLine::new();
@@ -83,7 +93,7 @@ impl Think {
 
             let _ = messages::info(
                 Some(depth),
-                Some((now - begin).as_millis().try_into().expect("Should fit")),
+                Some((now - ctx.time_begin).as_millis().try_into().expect("Should fit")),
                 Some(ctx.nodes),
                 Some(Self::score(eval * evaluation::perspective(&current_node.position.position))),
                 None,

@@ -98,7 +98,7 @@ pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String
 
     let wtime = if let Some(index) = tokens.iter().position(|token| token.as_str() == "wtime") {
         if let Some(wtime) = tokens.get(index + 1) {
-            Some(wtime.parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?)
+            Some(wtime.parse::<u32>().map_err(|err| format!("Could not parse value: {}", err))?)
         } else {
             return Err(String::from("Expected token after `wtime`"));
         }
@@ -108,7 +108,7 @@ pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String
 
     let btime = if let Some(index) = tokens.iter().position(|token| token.as_str() == "btime") {
         if let Some(btime) = tokens.get(index + 1) {
-            Some(btime.parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?)
+            Some(btime.parse::<u32>().map_err(|err| format!("Could not parse value: {}", err))?)
         } else {
             return Err(String::from("Expected token after `btime`"));
         }

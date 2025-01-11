@@ -6,6 +6,7 @@ mod messages;
 mod move_generation;
 mod options;
 mod think;
+mod time;
 
 use std::io;
 use std::fs;

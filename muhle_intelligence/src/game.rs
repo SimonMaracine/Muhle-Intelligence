@@ -1,6 +1,6 @@
 use std::mem;
 use std::str::FromStr;
-use std::ptr::null;
+use std::ptr;
 
 use regex;
 
@@ -9,8 +9,8 @@ pub struct Game {
     pub position: Position,
     pub moves: Vec<Move>,
     pub ponder: bool,
-    pub wtime: Option<i32>,
-    pub btime: Option<i32>,
+    pub wtime: Option<u32>,
+    pub btime: Option<u32>,
     pub max_depth: Option<i32>,
     pub max_time: Option<u32>,
 }
@@ -412,7 +412,7 @@ impl SearchNode {
     pub fn from_position(position: &GamePosition) -> Self {
         Self {
             position: position.clone(),
-            previous: null(),
+            previous: ptr::null(),
         }
     }
 
@@ -431,7 +431,7 @@ impl SearchNode {
                 self.position.position.board[place_index as usize] = as_node(self.position.position.player);
 
                 self.position.plies_no_advancement = 0;
-                self.previous = null();
+                self.previous = ptr::null();
             }
             Move::PlaceCapture { place_index, capture_index } => {
                 assert!(self.position.position.board[place_index as usize] == Node::Empty);
@@ -441,7 +441,7 @@ impl SearchNode {
                 self.position.position.board[capture_index as usize] = Node::Empty;
 
                 self.position.plies_no_advancement = 0;
-                self.previous = null();
+                self.previous = ptr::null();
             }
             Move::Move { source_index, destination_index } => {
                 assert!(self.position.position.board[source_index as usize] != Node::Empty);
@@ -460,7 +460,7 @@ impl SearchNode {
                 self.position.position.board[capture_index as usize] = Node::Empty;
 
                 self.position.plies_no_advancement = 0;
-                self.previous = null();
+                self.previous = ptr::null();
             }
         }
 
@@ -473,7 +473,7 @@ impl SearchNode {
 
         let mut repetitions = 1;
 
-        while previous_node != null() {
+        while previous_node != ptr::null() {
             let position = unsafe {
                 &(*previous_node).position.position
             };

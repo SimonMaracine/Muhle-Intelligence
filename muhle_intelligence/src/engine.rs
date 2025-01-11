@@ -123,8 +123,8 @@ impl Engine {
     pub fn go(
         &mut self,
         ponder: bool,
-        wtime: Option<i32>,
-        btime: Option<i32>,
+        wtime: Option<u32>,
+        btime: Option<u32>,
         max_depth: Option<i32>,
         max_time: Option<u32>,
     ) -> Result<(), String> {
@@ -213,7 +213,7 @@ impl Engine {
 
     fn think(game: game::Game, should_stop: Arc<AtomicBool>) -> Option<game::Move> {
         let mut think = think::Think::new();
-        let ctx = think::ThinkContext::new(should_stop, game.max_time.unwrap_or(u32::MAX));
+        let ctx = think::ThinkContext::new(should_stop);
 
         think.think(game, ctx)
     }
