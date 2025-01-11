@@ -194,8 +194,8 @@ impl Think {
         for move_ in moves.iter() {
             game_position.play_move(move_);
 
-            if move_.is_advancement() {  // FIXME threefold repetition doesn't work
-                // self.nodes.clear();
+            if move_.is_advancement() {
+                self.nodes.clear();
             }
 
             self.nodes.push(game::SearchNode::from_position(&game_position));

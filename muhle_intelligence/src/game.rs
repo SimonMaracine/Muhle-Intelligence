@@ -235,7 +235,7 @@ impl ToString for Move {
 
 pub type Board = [Node; 24];
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Eq)]
 pub struct Position {
     pub board: Board,
     pub player: Player,
@@ -289,8 +289,6 @@ impl PartialEq for Position {
         self.board == other.board && self.player == other.player && self.plies >= 18 && other.plies >= 18
     }
 }
-
-impl Eq for Position {}
 
 impl FromStr for Position {
     type Err = String;
@@ -350,7 +348,7 @@ impl FromStr for Position {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone)]
 pub struct GamePosition {
     pub position: Position,
     pub plies_no_advancement: i32,
@@ -477,10 +475,10 @@ impl SearchNode {
 
         while previous_node != null() {
             let position = unsafe {
-                &(*previous_node).position
+                &(*previous_node).position.position
             };
 
-            if *position == self.position {
+            if *position == self.position.position {
                 repetitions += 1;
 
                 if repetitions == 3 {
