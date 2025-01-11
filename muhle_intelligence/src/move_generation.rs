@@ -185,7 +185,7 @@ fn is_mill(board: &game::Board, player: game::Player, index: game::Idx) -> bool 
         21 => return board[22] == node && board[23] == node || board[0] == node && board[9] == node,
         22 => return board[21] == node && board[23] == node || board[16] == node && board[19] == node,
         23 => return board[21] == node && board[22] == node || board[2] == node && board[14] == node,
-        _ => ()
+        _ => (),
     }
 
     unreachable!();

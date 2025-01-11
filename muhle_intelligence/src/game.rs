@@ -262,10 +262,6 @@ impl Position {
         self.count_player_pieces() < 3
     }
 
-    pub fn is_fifty_move_rule(&self) -> bool {
-        self.plies == 100
-    }
-
     fn parse_pieces(string: &str) -> (Vec<Idx>, Player) {
         let player = match &string[0..1] {
             "w" => Player::White,
@@ -361,6 +357,10 @@ pub struct GamePosition {
 }
 
 impl GamePosition {
+    pub fn is_fifty_move_rule(&self) -> bool {
+        self.plies_no_advancement == 100
+    }
+
     pub fn play_move(&mut self, move_: &Move) {
         match *move_ {
             Move::Place { place_index } => {

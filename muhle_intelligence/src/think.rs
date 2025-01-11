@@ -123,6 +123,7 @@ impl Think {
             return 0;
         }
 
+        // FIXME didn't seem to work
         if current_node.position.position.is_game_over_material() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;
@@ -143,7 +144,7 @@ impl Think {
             return 0;
         }
 
-        if current_node.position.position.is_fifty_move_rule() {  // Game over
+        if current_node.position.is_fifty_move_rule() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;
             return 0;
@@ -190,15 +191,14 @@ impl Think {
 
         self.nodes.push(game::SearchNode::from_position(&game_position));
 
-        for (i, move_) in moves.iter().enumerate() {
+        for move_ in moves.iter() {
             game_position.play_move(move_);
 
-            // Guarantee that the last node is pushed
-            if move_.is_advancement() && i < moves.len() - 1 {
-                self.nodes.clear();
-            } else {
-                self.nodes.push(game::SearchNode::from_position(&game_position));
+            if move_.is_advancement() {  // FIXME threefold repetition doesn't work
+                // self.nodes.clear();
             }
+
+            self.nodes.push(game::SearchNode::from_position(&game_position));
         }
 
         for i in (1..self.nodes.len()).rev() {
