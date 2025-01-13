@@ -169,6 +169,7 @@ impl Engine {
             return;
         }
 
+        self.should_stop.store(true, Ordering::SeqCst);
         self.running.store(false, Ordering::SeqCst);
 
         {
