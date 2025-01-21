@@ -135,12 +135,18 @@ mod test {
     use std::str::FromStr;
 
     use super::game;
+    use super::evaluation;
 
     #[test]
     fn position() {
         assert_eq!(
-            game::Position::default(),
-            game::Position::from_str("w:w:b:1").unwrap(),
+            game::Position::default().board,
+            game::Position::from_str("w:w:b:1").unwrap().board,
+        );
+
+        assert_eq!(
+            game::Position::default().player,
+            game::Position::from_str("w:w:b:1").unwrap().player,
         );
 
         let position = game::Position {
@@ -175,8 +181,13 @@ mod test {
         };
 
         assert_eq!(
-            position,
-            game::Position::from_str("b:wg7,a1,g1:ba7,d7,d1:3").unwrap(),
+            position.board,
+            game::Position::from_str("b:wg7,a1,g1:ba7,d7,d1:3").unwrap().board,
+        );
+
+        assert_eq!(
+            position.player,
+            game::Position::from_str("b:wg7,a1,g1:ba7,d7,d1:3").unwrap().player,
         );
 
         assert!(game::Position::from_str("pwemo3icm 80").is_err());
@@ -186,5 +197,15 @@ mod test {
         assert!(game::Position::from_str("w:w:bj8:0").is_err());
         assert!(game::Position::from_str("a:w:b:0").is_err());
         assert!(game::Position::from_str("w:b:b:0").is_err());
+    }
+
+    #[test]
+    fn evaluation() {
+        let node = game::SearchNode::from_position(&game::GamePosition {
+            position: game::Position::from_str("w:wa7,d2:bf4:2").unwrap(),
+            plies_no_advancement: 0,
+        });
+
+        assert_eq!(evaluation::static_evaluation(&node), 12);
     }
 }

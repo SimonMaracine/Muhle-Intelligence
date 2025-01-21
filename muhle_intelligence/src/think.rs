@@ -10,8 +10,6 @@ use crate::messages;
 use crate::move_generation;
 use crate::time;
 
-// https://web.archive.org/web/20071028092710/http://www.brucemo.com/compchess/programming/time.htm
-
 pub struct ThinkContext {
     nodes: i32,
     should_stop: Arc<AtomicBool>,
@@ -133,7 +131,6 @@ impl Think {
             return 0;
         }
 
-        // FIXME didn't seem to work
         if current_node.position.position.is_game_over_material() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;

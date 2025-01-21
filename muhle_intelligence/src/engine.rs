@@ -98,7 +98,7 @@ impl Engine {
                     _ => Self::set_option_value(&mut self.options.hash, value)?,
                 }
             }
-            invalid => return Err(format!("Invalid option: `{}`", invalid)),
+            invalid => return Err(format!("Invalid option: `{}`", invalid))
         }
 
         Ok(())
