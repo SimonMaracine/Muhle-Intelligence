@@ -115,7 +115,7 @@ impl Think {
             ctx.reached_left_most_path = false;
         }
 
-        assert!(last_pv_line.size > 0);
+        debug_assert!(last_pv_line.size > 0);
 
         Some(last_pv_line.moves[0])
     }
@@ -256,7 +256,7 @@ impl Think {
     }
 
     fn score(eval: evaluation::Eval) -> messages::Score {
-        assert!(eval <= evaluation::MAX && eval >= evaluation::MIN);
+        debug_assert!(eval <= evaluation::MAX && eval >= evaluation::MIN);
 
         if eval >= evaluation::MAX - game::MAX_DEPTH {
             let moves = (evaluation::MAX - eval) / 2;

@@ -245,7 +245,7 @@ impl Engine {
             options::Option::String { value, .. } => {
                 *value = value_.clone();
             }
-            _ => assert!(false)
+            _ => debug_assert!(false)
         }
 
         Ok(())

@@ -331,13 +331,13 @@ impl FromStr for Position {
         position.player = player;
 
         for index in pieces1.0 {
-            assert!(index >= 0 && index < 24);
+            debug_assert!(index >= 0 && index < 24);
 
             position.board[index as usize] = as_node(pieces1.1);
         }
 
         for index in pieces2.0 {
-            assert!(index >= 0 && index < 24);
+            debug_assert!(index >= 0 && index < 24);
 
             position.board[index as usize] = as_node(pieces2.1);
         }
@@ -362,15 +362,15 @@ impl GamePosition {
     pub fn play_move(&mut self, move_: &Move) {
         match *move_ {
             Move::Place { place_index } => {
-                assert!(self.position.board[place_index as usize] == Node::Empty);  // TODO use debug asserts
+                debug_assert_eq!(self.position.board[place_index as usize], Node::Empty);
 
                 self.position.board[place_index as usize] = as_node(self.position.player);
 
                 self.plies_no_advancement = 0;
             }
             Move::PlaceCapture { place_index, capture_index } => {
-                assert!(self.position.board[place_index as usize] == Node::Empty);
-                assert!(self.position.board[capture_index as usize] != Node::Empty);
+                debug_assert_eq!(self.position.board[place_index as usize], Node::Empty);
+                debug_assert_ne!(self.position.board[capture_index as usize], Node::Empty);
 
                 self.position.board[place_index as usize] = as_node(self.position.player);
                 self.position.board[capture_index as usize] = Node::Empty;
@@ -378,17 +378,17 @@ impl GamePosition {
                 self.plies_no_advancement = 0;
             }
             Move::Move { source_index, destination_index } => {
-                assert!(self.position.board[source_index as usize] != Node::Empty);
-                assert!(self.position.board[destination_index as usize] == Node::Empty);
+                debug_assert_ne!(self.position.board[source_index as usize], Node::Empty);
+                debug_assert_eq!(self.position.board[destination_index as usize], Node::Empty);
 
                 self.position.board.swap(source_index as usize, destination_index as usize);
 
                 self.plies_no_advancement += 1;
             }
             Move::MoveCapture { source_index, destination_index, capture_index } => {
-                assert!(self.position.board[source_index as usize] != Node::Empty);
-                assert!(self.position.board[destination_index as usize] == Node::Empty);
-                assert!(self.position.board[capture_index as usize] != Node::Empty);
+                debug_assert_ne!(self.position.board[source_index as usize], Node::Empty);
+                debug_assert_eq!(self.position.board[destination_index as usize], Node::Empty);
+                debug_assert_ne!(self.position.board[capture_index as usize], Node::Empty);
 
                 self.position.board.swap(source_index as usize, destination_index as usize);
                 self.position.board[capture_index as usize] = Node::Empty;
@@ -426,7 +426,7 @@ impl SearchNode {
     pub fn play_move(&mut self, move_: &Move) {
         match *move_ {
             Move::Place { place_index } => {
-                assert!(self.position.position.board[place_index as usize] == Node::Empty);  // TODO use debug asserts
+                debug_assert_eq!(self.position.position.board[place_index as usize], Node::Empty);
 
                 self.position.position.board[place_index as usize] = as_node(self.position.position.player);
 
@@ -434,8 +434,8 @@ impl SearchNode {
                 self.previous = ptr::null();
             }
             Move::PlaceCapture { place_index, capture_index } => {
-                assert!(self.position.position.board[place_index as usize] == Node::Empty);
-                assert!(self.position.position.board[capture_index as usize] != Node::Empty);
+                debug_assert_eq!(self.position.position.board[place_index as usize], Node::Empty);
+                debug_assert_ne!(self.position.position.board[capture_index as usize], Node::Empty);
 
                 self.position.position.board[place_index as usize] = as_node(self.position.position.player);
                 self.position.position.board[capture_index as usize] = Node::Empty;
@@ -444,17 +444,18 @@ impl SearchNode {
                 self.previous = ptr::null();
             }
             Move::Move { source_index, destination_index } => {
-                assert!(self.position.position.board[source_index as usize] != Node::Empty);
-                assert!(self.position.position.board[destination_index as usize] == Node::Empty);
+                debug_assert_ne!(self.position.position.board[source_index as usize], Node::Empty);
+                debug_assert_eq!(self.position.position.board[destination_index as usize], Node::Empty);
 
                 self.position.position.board.swap(source_index as usize, destination_index as usize);
 
                 self.position.plies_no_advancement += 1;
             }
             Move::MoveCapture { source_index, destination_index, capture_index } => {
-                assert!(self.position.position.board[source_index as usize] != Node::Empty);
-                assert!(self.position.position.board[destination_index as usize] == Node::Empty);
-                assert!(self.position.position.board[capture_index as usize] != Node::Empty);
+                debug_assert_ne!(self.position.position.board[source_index as usize], Node::Empty);
+                debug_assert_eq!(self.position.position.board[destination_index as usize], Node::Empty);
+                debug_assert_ne!(self.position.position.board[capture_index as usize], Node::Empty);
+
 
                 self.position.position.board.swap(source_index as usize, destination_index as usize);
                 self.position.position.board[capture_index as usize] = Node::Empty;

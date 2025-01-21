@@ -4,7 +4,7 @@ pub fn generate_moves(node: &game::SearchNode) -> Vec<game::Move> {
     if node.position.position.plies < 18 {
         generate_moves_phase1(node.position.position.board.clone(), node.position.position.player)
     } else {
-        assert!(node.position.position.count_player_pieces() >= 3);
+        debug_assert!(node.position.position.count_player_pieces() >= 3);
 
         if node.position.position.count_player_pieces() == 3 {
             generate_moves_phase3(node.position.position.board.clone(), node.position.position.player)
@@ -130,27 +130,27 @@ fn generate_moves_phase3(mut board: game::Board, player: game::Player) -> Vec<ga
 }
 
 fn make_place_move(board: &mut game::Board, player: game::Player, place_index: game::Idx) {
-    assert!(board[place_index as usize] == game::Node::Empty);
+    debug_assert!(board[place_index as usize] == game::Node::Empty);
 
     board[place_index as usize] = game::as_node(player);
 }
 
 fn unmake_place_move(board: &mut game::Board, place_index: game::Idx) {
-    assert!(board[place_index as usize] != game::Node::Empty);
+    debug_assert!(board[place_index as usize] != game::Node::Empty);
 
     board[place_index as usize] = game::Node::Empty;
 }
 
 fn make_move_move(board: &mut game::Board, source_index: game::Idx, destination_index: game::Idx) {
-    assert!(board[source_index as usize] != game::Node::Empty);
-    assert!(board[destination_index as usize] == game::Node::Empty);
+    debug_assert!(board[source_index as usize] != game::Node::Empty);
+    debug_assert!(board[destination_index as usize] == game::Node::Empty);
 
     board.swap(source_index as usize, destination_index as usize);
 }
 
 fn unmake_move_move(board: &mut game::Board, source_index: game::Idx, destination_index: game::Idx) {
-    assert!(board[source_index as usize] == game::Node::Empty);
-    assert!(board[destination_index as usize] != game::Node::Empty);
+    debug_assert!(board[source_index as usize] == game::Node::Empty);
+    debug_assert!(board[destination_index as usize] != game::Node::Empty);
 
     board.swap(source_index as usize, destination_index as usize);
 }
@@ -158,7 +158,7 @@ fn unmake_move_move(board: &mut game::Board, source_index: game::Idx, destinatio
 fn is_mill(board: &game::Board, player: game::Player, index: game::Idx) -> bool {
     let node = game::as_node(player);
 
-    assert!(board[index as usize] == node);
+    debug_assert!(board[index as usize] == node);
 
     match index {
         0 => return board[1] == node && board[2] == node || board[9] == node && board[21] == node,

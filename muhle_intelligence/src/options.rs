@@ -1,5 +1,6 @@
 use crate::engine;
 
+#[allow(unused)]
 pub enum Option {
     Check {
         value: bool,

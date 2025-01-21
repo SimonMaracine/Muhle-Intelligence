@@ -78,7 +78,7 @@ fn read_from_stdin() -> Result<String, io::Error> {
 }
 
 fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
-    assert!(!tokens.is_empty());
+    debug_assert!(!tokens.is_empty());
 
     let command = tokens[0].as_str();
 
