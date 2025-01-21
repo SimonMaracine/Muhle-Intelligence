@@ -116,27 +116,27 @@ pub fn go(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String
         None
     };
 
-    let maxdepth = if let Some(index) = tokens.iter().position(|token| token.as_str() == "maxdepth") {
-        if let Some(maxdepth) = tokens.get(index + 1) {
-            Some(maxdepth.parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?)
+    let depth = if let Some(index) = tokens.iter().position(|token| token.as_str() == "depth") {
+        if let Some(depth) = tokens.get(index + 1) {
+            Some(depth.parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?)
         } else {
-            return Err(String::from("Expected token after `maxdepth`"));
+            return Err(String::from("Expected token after `depth`"));
         }
     } else {
         None
     };
 
-    let maxtime = if let Some(index) = tokens.iter().position(|token| token.as_str() == "maxtime") {
-        if let Some(maxtime) = tokens.get(index + 1) {
-            Some(maxtime.parse::<u32>().map_err(|err| format!("Could not parse value: {}", err))?)
+    let movetime = if let Some(index) = tokens.iter().position(|token| token.as_str() == "movetime") {
+        if let Some(movetime) = tokens.get(index + 1) {
+            Some(movetime.parse::<u32>().map_err(|err| format!("Could not parse value: {}", err))?)
         } else {
-            return Err(String::from("Expected token after `maxtime`"));
+            return Err(String::from("Expected token after `movetime`"));
         }
     } else {
         None
     };
 
-    engine.go(ponder, wtime, btime, maxdepth, maxtime)?;
+    engine.go(ponder, wtime, btime, depth, movetime)?;
 
     Ok(())
 }

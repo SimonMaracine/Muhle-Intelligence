@@ -63,7 +63,7 @@ impl Think {
 
         // Initialize time constraints
         ctx.time_begin = Instant::now();
-        ctx.max_time = game.max_time.unwrap_or(u32::MAX);
+        ctx.max_time = game.movetime.unwrap_or(u32::MAX);
         ctx.think_time = time::sudden_death_time_control(game.wtime, game.btime, 50, &game.position);
 
         for depth in 1..=Self::max_depth(&game) {
@@ -228,8 +228,8 @@ impl Think {
     }
 
     fn max_depth(game: &game::Game) -> i32 {
-        if let Some(max_depth) = game.max_depth {
-            return cmp::min(max_depth, game::MAX_DEPTH);
+        if let Some(depth) = game.depth {
+            return cmp::min(depth, game::MAX_DEPTH);
         }
 
         game::MAX_DEPTH

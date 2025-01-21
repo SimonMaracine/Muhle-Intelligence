@@ -11,8 +11,8 @@ pub struct Game {
     pub ponder: bool,
     pub wtime: Option<u32>,
     pub btime: Option<u32>,
-    pub max_depth: Option<i32>,
-    pub max_time: Option<u32>,
+    pub depth: Option<i32>,
+    pub movetime: Option<u32>,
 }
 
 pub const MAX_DEPTH: i32 = 50;

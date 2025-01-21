@@ -49,8 +49,8 @@ impl Engine {
                 ponder: false,
                 wtime: None,
                 btime: None,
-                max_depth: None,
-                max_time: None,
+                depth: None,
+                movetime: None,
             })),
             options: Options::new(),
             handle: None,
@@ -125,8 +125,8 @@ impl Engine {
         ponder: bool,
         wtime: Option<u32>,
         btime: Option<u32>,
-        max_depth: Option<i32>,
-        max_time: Option<u32>,
+        depth: Option<i32>,
+        movetime: Option<u32>,
     ) -> Result<(), String> {
         if !self.running.load(Ordering::SeqCst) {
             return Err(String::from("The engine has not been initialized"));
@@ -139,8 +139,8 @@ impl Engine {
             game.ponder = ponder;
             game.wtime = wtime;
             game.btime = btime;
-            game.max_depth = max_depth;
-            game.max_time = max_time;
+            game.depth = depth;
+            game.movetime = movetime;
         }
 
         // Seems a good place to reset the stop flag
