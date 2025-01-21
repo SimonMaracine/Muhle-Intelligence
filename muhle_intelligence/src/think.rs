@@ -14,6 +14,7 @@ pub struct ThinkContext {
     nodes: i32,
     should_stop: Arc<AtomicBool>,
     can_stop: bool,
+    reached_left_most_path: bool,
     time_begin: Instant,
     max_time: u32,  // Constraint indicated by go
     think_time: u32,  // Calculated based on remaining player time
@@ -25,6 +26,7 @@ impl ThinkContext {
             nodes: 0,
             should_stop,
             can_stop: false,
+            reached_left_most_path: false,
             time_begin: Instant::now(),
             max_time: u32::MAX,
             think_time: u32::MAX,
@@ -75,6 +77,7 @@ impl Think {
                 evaluation::WINDOW_MAX,
                 current_node,
                 &mut line,
+                &last_pv_line,
             );
 
             let now = Instant::now();
@@ -107,6 +110,9 @@ impl Think {
 
             // There is a best move available only after the first iteration
             ctx.can_stop = true;
+
+            // This flag is for each iteration
+            ctx.reached_left_most_path = false;
         }
 
         assert!(last_pv_line.size > 0);
@@ -122,6 +128,7 @@ impl Think {
         beta: evaluation::Eval,
         current_node: &game::SearchNode,
         p_line: &mut game::PvLine,
+        pv: & game::PvLine,
     ) -> evaluation::Eval {
         if ctx.nodes % 50_000 == 0 {
             ctx.check_time(Instant::now());
@@ -137,7 +144,7 @@ impl Think {
             return evaluation::MIN + depth_root;  // Encourage winning earlier
         }
 
-        let moves = move_generation::generate_moves(current_node);
+        let mut moves = move_generation::generate_moves(current_node);
 
         if moves.is_empty() {  // Game over
             ctx.nodes += 1;
@@ -164,17 +171,22 @@ impl Think {
             return evaluation::static_evaluation(current_node) * evaluation::perspective(&current_node.position.position);
         }
 
+        // For iterative deepening to be efficient, the first move must be from the last PV
+        Self::reorder_moves_pv(ctx, &mut moves, pv, depth_root);
+
         let mut line = game::PvLine::new();
 
         for move_ in moves {
             let mut new_node = game::SearchNode::from_node(current_node);
             new_node.play_move(&move_);
 
-            let eval = -Self::alpha_beta(ctx, depth - 1, depth_root + 1, -beta, -alpha, &new_node, &mut line);
+            let eval = -Self::alpha_beta(ctx, depth - 1, depth_root + 1, -beta, -alpha, &new_node, &mut line, pv);
 
             if ctx.stop() {
                 return 0;
             }
+
+            ctx.reached_left_most_path = true;
 
             if eval >= beta {
                 return beta;
@@ -231,6 +243,16 @@ impl Think {
         }
 
         p_line.size = line.size + 1;
+    }
+
+    fn reorder_moves_pv(ctx: &mut ThinkContext, moves: &mut Vec<game::Move>, pv: &game::PvLine, depth_root: i32) {
+        if depth_root >= pv.size as i32 || ctx.reached_left_most_path {
+            return;
+        }
+
+        let index = moves.iter().position(|move_| *move_ == pv.moves[depth_root as usize]).expect("This move must be here");
+
+        moves.swap(0, index);
     }
 
     fn score(eval: evaluation::Eval) -> messages::Score {
