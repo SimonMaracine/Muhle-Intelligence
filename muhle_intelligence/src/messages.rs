@@ -106,29 +106,9 @@ pub fn info(
     write_to_stdout(buffer)
 }
 
-pub fn option(name: &String, option: &options::Option) -> Result<(), String> {
-    let mut buffer = match &option {
-        options::Option::Check { default, .. } => {
-            format!("option name {} type check default {}", name, default)
-        }
-        options::Option::Spin { default, min, max, .. } => {
-            format!("option name {} type spin default {} min {} max {}", name, default, min, max)
-        }
-        options::Option::Combo { default, vars, .. } => {
-            let mut buffer = format!("option name {} type combo default {}", name, default);
-
-            for var in vars {
-                buffer += format!(" var {}", var).as_str();
-            }
-
-            buffer
-        }
-        options::Option::Button(_) => {
-            format!("option name {} type button", name)
-        }
-        options::Option::String { default, .. } => {
-            format!("option name {} type string default {}", name, default)
-        }
+pub fn option<O: options::Option>(name: String, option: &O) -> Result<(), String> {
+    let mut buffer = {
+        format!("option name {} ", name) + &option.display()
     };
 
     buffer.push('\n');

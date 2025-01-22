@@ -18,10 +18,11 @@ pub struct ThinkContext {
     time_begin: Instant,
     max_time: u32,  // Constraint indicated by go
     think_time: u32,  // Calculated based on remaining player time
+    twelve_mens_morris: bool,
 }
 
 impl ThinkContext {
-    pub fn new(should_stop: Arc<AtomicBool>) -> Self {
+    pub fn new(should_stop: Arc<AtomicBool>, twelve_mens_morris: bool) -> Self {
         Self {
             nodes: 0,
             should_stop,
@@ -30,6 +31,7 @@ impl ThinkContext {
             time_begin: Instant::now(),
             max_time: u32::MAX,
             think_time: u32::MAX,
+            twelve_mens_morris,
         }
     }
 

@@ -16,13 +16,13 @@ struct Sync {
 }
 
 struct Options {
-    hash: options::Option,
+    twelve_mens_morris: options::Check<false>,
 }
 
 impl Options {
     fn new() -> Self {
         Self {
-            hash: options::Option::Spin { value: 128, default: 128, min: 1, max: 1024 }
+            twelve_mens_morris: options::Check::new(),
         }
     }
 }
@@ -31,7 +31,7 @@ pub struct Engine {
     gbgp_mode: bool,
     debug_mode: bool,
     game: Arc<Mutex<game::Game>>,
-    options: Options,
+    options: Arc<Mutex<Options>>,
     handle: Option<JoinHandle<()>>,
     sync: Arc<Sync>,
     running: Arc<AtomicBool>,
@@ -52,7 +52,7 @@ impl Engine {
                 depth: None,
                 movetime: None,
             })),
-            options: Options::new(),
+            options: Arc::new(Mutex::new(Options::new())),
             handle: None,
             sync: Arc::new(Sync {
                 mutex_go: Mutex::new(false),
@@ -75,6 +75,11 @@ impl Engine {
         messages::id(messages::Identifier::Name(String::from(NAME)))?;
         messages::id(messages::Identifier::Author(String::from(AUTHOR)))?;
 
+        {
+            let options = self.options.lock().unwrap();
+            messages::option(String::from("TwelveMensMorris"), &options.twelve_mens_morris)?;
+        }
+
         messages::gbgpok()?;
 
         self.gbgp_mode = true;
@@ -91,11 +96,14 @@ impl Engine {
     }
 
     pub fn setoption(&mut self, name: &String, value: Option<&String>) -> Result<(), String> {
+        let mut options = self.options.lock().unwrap();
+
         match name.as_str() {
-            "hash" => {
-                match self.options.hash {
-                    options::Option::Button(func) => func(self),
-                    _ => Self::set_option_value(&mut self.options.hash, value)?,
+            "TwelveMensMorris" => {
+                if let Some(value) = value {
+                    options.twelve_mens_morris.set(&value)?;
+                } else {
+                    return Err(format!("Expected value for option"));
                 }
             }
             invalid => return Err(format!("Invalid option: `{}`", invalid))
@@ -178,7 +186,7 @@ impl Engine {
         }
         self.sync.cv.notify_one();
 
-        self.handle.take().expect("The thread should have been created or this code skipped").join().unwrap();
+        self.handle.take().expect("The thread should have been created").join().unwrap();
     }
 
     fn initialize_once(&mut self) {
@@ -192,6 +200,7 @@ impl Engine {
         let game = self.game.clone();
         let running = self.running.clone();
         let should_stop = self.should_stop.clone();
+        let options = self.options.clone();
 
         self.handle = Some(thread::spawn(move || {
             loop {
@@ -201,9 +210,13 @@ impl Engine {
                     break;
                 }
 
+                let twelve_mens_morris = {
+                    options.lock().unwrap().twelve_mens_morris.value
+                };
+
                 let game = game.lock().unwrap();
 
-                let best_move = Self::think(game.clone(), should_stop.clone());
+                let best_move = Self::think(game.clone(), should_stop.clone(), twelve_mens_morris);
 
                 messages::bestmove(best_move.as_ref(), None).expect("Should it fail, it's game over");
 
@@ -212,42 +225,10 @@ impl Engine {
         }));
     }
 
-    fn think(game: game::Game, should_stop: Arc<AtomicBool>) -> Option<game::Move> {
+    fn think(game: game::Game, should_stop: Arc<AtomicBool>, twelve_mens_morris: bool) -> Option<game::Move> {
         let mut think = think::Think::new();
-        let ctx = think::ThinkContext::new(should_stop);
+        let ctx = think::ThinkContext::new(should_stop, twelve_mens_morris);
 
         think.think(game, ctx)
-    }
-
-    fn set_option_value(option: &mut options::Option, value_: Option<&String>) -> Result<(), String> {
-        let value_ = value_.ok_or(String::from("Expected option value"))?;
-
-        match option {
-            options::Option::Check { value, .. } => {
-                *value = value_.parse::<bool>().map_err(|err| format!("Could not parse value: {}", err))?;
-            }
-            options::Option::Spin { value, min, max, .. } => {
-                let new_value = value_.parse::<i32>().map_err(|err| format!("Could not parse value: {}", err))?;
-
-                if new_value < *min || new_value > *max {
-                    return Err(format!("Invalid option value: `{}`", new_value));
-                }
-
-                *value = new_value;
-            }
-            options::Option::Combo { value, vars, .. } => {
-                if let None = vars.iter().find(|item| *item == value_) {
-                    return Err(format!("Invalid option value: `{}`", value_));
-                }
-
-                *value = value_.clone();
-            }
-            options::Option::String { value, .. } => {
-                *value = value_.clone();
-            }
-            _ => debug_assert!(false)
-        }
-
-        Ok(())
     }
 }

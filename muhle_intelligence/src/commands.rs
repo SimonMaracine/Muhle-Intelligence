@@ -33,6 +33,10 @@ pub fn setoption(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(),
         let mut i = 1;
 
         while let Some(name) = tokens.get(index + i) {
+            if name == "value" {
+                break;
+            }
+
             result.push(' ');
             result += name;
             i += 1;
