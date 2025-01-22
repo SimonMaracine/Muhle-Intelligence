@@ -27,28 +27,46 @@ pub fn isready(engine: &mut engine::Engine, _tokens: Vec<String>) -> Result<(), 
     engine.isready()
 }
 
-pub fn setoption(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {  // FIXME multi-token
+pub fn setoption(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(), String> {
     let name = if let Some(index) = tokens.iter().position(|token| token.as_str() == "name") {
-        if let Some(name) = tokens.get(index + 1) {
-            name
-        } else {
+        let mut result = String::new();
+        let mut i = 1;
+
+        while let Some(name) = tokens.get(index + i) {
+            result.push(' ');
+            result += name;
+            i += 1;
+        }
+
+        if result.is_empty() {
             return Err(String::from("Expected token after `name`"));
         }
+
+        String::from(result.strip_prefix(' ').expect("There should be a space"))
     } else {
         return Err(String::from("Expected token after `setoption`"));
     };
 
     let value = if let Some(index) = tokens.iter().position(|token| token.as_str() == "value") {
-        if let Some(value) = tokens.get(index + 1) {
-            Some(value)
-        } else {
+        let mut result = String::new();
+        let mut i = 1;
+
+        while let Some(value) = tokens.get(index + i) {
+            result.push(' ');
+            result += value;
+            i += 1;
+        }
+
+        if result.is_empty() {
             return Err(String::from("Expected token after `value`"));
         }
+
+        Some(String::from(result.strip_prefix(' ').expect("There should be a space")))
     } else {
         None
     };
 
-    engine.setoption(name, value)
+    engine.setoption(&name, value.as_ref())
 }
 
 pub fn newgame(engine: &mut engine::Engine, _tokens: Vec<String>) {

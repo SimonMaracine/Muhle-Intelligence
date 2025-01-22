@@ -60,7 +60,7 @@ fn main_loop(engine: &mut engine::Engine, log_file: &mut Option<fs::File>) -> Re
 fn write_to_log_file(log_file: &mut Option<fs::File>, buffer: String) -> Result<(), io::Error> {
     if let None = log_file {
         let mut file = fs::OpenOptions::new().append(true).create(true).open("muhle_intelligence.log")?;
-        file.write_all(format!("--- Log Begin ---\n").as_bytes())?;  // TODO time
+        file.write_all(format!("--- Log Begin ---\n").as_bytes())?;
         *log_file = Some(file);
     }
 
