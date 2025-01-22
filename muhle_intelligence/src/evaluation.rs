@@ -41,20 +41,8 @@ pub fn static_evaluation<const P: i32>(node: &game::SearchNode) -> Eval {
 
     for i in 0..24 {
         match node.position.position.board[i] {
-            game::Node::White => {
-                white_freedom += match P {
-                    game::NINE => piece_freedom(&node.position.position.board, i),
-                    game::TWELVE => piece_freedom12(&node.position.position.board, i),
-                    _ => unsafe { unreachable_unchecked() },
-                }
-            }
-            game::Node::Black => {
-                black_freedom += match P {
-                    game::NINE => piece_freedom(&node.position.position.board, i),
-                    game::TWELVE => piece_freedom12(&node.position.position.board, i),
-                    _ => unsafe { unreachable_unchecked() },
-                }
-            }
+            game::Node::White => white_freedom += piece_freedom::<P>(&node.position.position.board, i),
+            game::Node::Black => black_freedom += piece_freedom::<P>(&node.position.position.board, i),
             game::Node::Empty => ()
         }
     }
@@ -85,7 +73,15 @@ fn freedom(board: &game::Board, result: &mut i32, index: usize) {
     }
 }
 
-fn piece_freedom(board: &game::Board, index: usize) -> i32 {
+fn piece_freedom<const P: i32>(board: &game::Board, index: usize) -> i32 {
+    match P {
+        game::NINE => piece_freedom9(board, index),
+        game::TWELVE => piece_freedom12(board, index),
+        _ => unsafe { unreachable_unchecked() },
+    }
+}
+
+fn piece_freedom9(board: &game::Board, index: usize) -> i32 {
     let mut result = 0;
 
     match index {

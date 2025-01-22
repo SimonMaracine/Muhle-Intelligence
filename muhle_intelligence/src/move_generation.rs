@@ -26,7 +26,7 @@ fn generate_moves_phase1<const P: i32>(mut board: game::Board, player: game::Pla
 
         make_place_move(&mut board, player, i);
 
-        if is_mill(&board, player, i) {
+        if is_mill::<P>(&board, player, i) {
             let opponent_player = game::opponent(player);
             let all_in_mills = all_pieces_in_mills::<P>(&board, opponent_player);
 
@@ -35,7 +35,7 @@ fn generate_moves_phase1<const P: i32>(mut board: game::Board, player: game::Pla
                     continue;
                 }
 
-                if is_mill(&board, opponent_player, j) && !all_in_mills {
+                if is_mill::<P>(&board, opponent_player, j) && !all_in_mills {
                     continue;
                 }
 
@@ -59,16 +59,12 @@ fn generate_moves_phase2<const P: i32>(mut board: game::Board, player: game::Pla
             continue;
         }
 
-        let free_positions = match P {
-            game::NINE => neighbor_free_positions(&board, i),
-            game::TWELVE => neighbor_free_positions12(&board, i),
-            _ => unsafe { unreachable_unchecked() },
-        };
+        let free_positions = neighbor_free_positions::<P>(&board, i);
 
         for j in 0..free_positions.len() {
             make_move_move(&mut board, i, free_positions[j]);
 
-            if is_mill(&board, player, free_positions[j]) {
+            if is_mill::<P>(&board, player, free_positions[j]) {
                 let opponent_player = game::opponent(player);
                 let all_in_mills = all_pieces_in_mills::<P>(&board, opponent_player);
 
@@ -77,7 +73,7 @@ fn generate_moves_phase2<const P: i32>(mut board: game::Board, player: game::Pla
                         continue;
                     }
 
-                    if is_mill(&board, opponent_player, k) && !all_in_mills {
+                    if is_mill::<P>(&board, opponent_player, k) && !all_in_mills {
                         continue;
                     }
 
@@ -109,7 +105,7 @@ fn generate_moves_phase3<const P: i32>(mut board: game::Board, player: game::Pla
 
             make_move_move(&mut board, i, j);
 
-            if is_mill(&board, player, j) {
+            if is_mill::<P>(&board, player, j) {
                 let opponent_player = game::opponent(player);
                 let all_in_mills = all_pieces_in_mills::<P>(&board, opponent_player);
 
@@ -118,7 +114,7 @@ fn generate_moves_phase3<const P: i32>(mut board: game::Board, player: game::Pla
                         continue;
                     }
 
-                    if is_mill(&board, opponent_player, k) && !all_in_mills {
+                    if is_mill::<P>(&board, opponent_player, k) && !all_in_mills {
                         continue;
                     }
 
@@ -165,7 +161,15 @@ fn mill(board: &game::Board, node: game::Node, index1: usize, index2: usize) -> 
     board[index1] == node && board[index2] == node
 }
 
-fn is_mill(board: &game::Board, player: game::Player, index: usize) -> bool {
+fn is_mill<const P: i32>(board: &game::Board, player: game::Player, index: usize) -> bool {
+    match P {
+        game::NINE => is_mill9(board, player, index),
+        game::TWELVE => is_mill12(board, player, index),
+        _ => unsafe { unreachable_unchecked() },
+    }
+}
+
+fn is_mill9(board: &game::Board, player: game::Player, index: usize) -> bool {
     let node = game::as_node(player);
 
     debug_assert!(board[index] == node);
@@ -243,11 +247,7 @@ fn all_pieces_in_mills<const P: i32>(board: &game::Board, player: game::Player) 
             continue;
         }
 
-        if !match P {
-            game::NINE => is_mill(board, player, i),
-            game::TWELVE => is_mill12(board, player, i),
-            _ => unsafe { unreachable_unchecked() },
-        } {
+        if !is_mill::<P>(board, player, i) {
             return false;
         }
     }
@@ -261,7 +261,15 @@ fn neighbor(board: &game::Board, result: &mut Vec<usize>, index: usize) {
     }
 }
 
-fn neighbor_free_positions(board: &game::Board, index: usize) -> Vec<usize> {
+fn neighbor_free_positions<const P: i32>(board: &game::Board, index: usize) -> Vec<usize> {
+    match P {
+        game::NINE => neighbor_free_positions9(board, index),
+        game::TWELVE => neighbor_free_positions12(board, index),
+        _ => unsafe { unreachable_unchecked() },
+    }
+}
+
+fn neighbor_free_positions9(board: &game::Board, index: usize) -> Vec<usize> {
     let mut result = Vec::new();
     result.reserve(4);
 
