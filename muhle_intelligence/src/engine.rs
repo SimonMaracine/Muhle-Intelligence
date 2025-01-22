@@ -227,7 +227,7 @@ impl Engine {
 
     fn think(game: game::Game, should_stop: Arc<AtomicBool>, twelve_mens_morris: bool) -> Option<game::Move> {
         let mut think = think::Think::new();
-        let ctx = think::ThinkContext::new(should_stop, twelve_mens_morris);
+        let ctx = think::ThinkContext::new(should_stop);
 
         if twelve_mens_morris {
             think.think::<{game::TWELVE}>(game, ctx)

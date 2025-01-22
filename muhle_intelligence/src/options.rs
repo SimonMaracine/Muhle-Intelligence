@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::engine;
 
 pub trait Option {
