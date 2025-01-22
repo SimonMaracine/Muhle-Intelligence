@@ -206,6 +206,6 @@ mod test {
             plies_no_advancement: 0,
         });
 
-        assert_eq!(evaluation::static_evaluation(&node), 12);
+        assert_eq!(evaluation::static_evaluation::<{game::NINE}>(&node), 12);
     }
 }

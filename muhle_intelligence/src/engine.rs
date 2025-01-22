@@ -229,6 +229,10 @@ impl Engine {
         let mut think = think::Think::new();
         let ctx = think::ThinkContext::new(should_stop, twelve_mens_morris);
 
-        think.think(game, ctx)
+        if twelve_mens_morris {
+            think.think::<{game::TWELVE}>(game, ctx)
+        } else {
+            think.think::<{game::NINE}>(game, ctx)
+        }
     }
 }

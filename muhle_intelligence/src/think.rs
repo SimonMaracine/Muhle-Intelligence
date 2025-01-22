@@ -59,7 +59,7 @@ impl Think {
         }
     }
 
-    pub fn think(&mut self, game: game::Game, mut ctx: ThinkContext) -> Option<game::Move> {
+    pub fn think<const P: i32>(&mut self, game: game::Game, mut ctx: ThinkContext) -> Option<game::Move> {
         let current_node = self.setup(&game.position, &game.moves);
         let mut last_pv_line = game::PvLine::new();
 
@@ -71,7 +71,7 @@ impl Think {
         for depth in 1..=Self::max_depth(&game) {
             let mut line = game::PvLine::new();
 
-            let eval = Self::alpha_beta(
+            let eval = Self::alpha_beta::<P>(
                 &mut ctx,
                 depth,
                 0,
@@ -122,7 +122,7 @@ impl Think {
         Some(last_pv_line.moves[0])
     }
 
-    fn alpha_beta(
+    fn alpha_beta<const P: i32>(
         ctx: &mut ThinkContext,
         depth: i32,
         depth_root: i32,
@@ -140,13 +140,13 @@ impl Think {
             return 0;
         }
 
-        if current_node.position.position.is_game_over_material() {  // Game over
+        if current_node.position.position.is_game_over_material::<P>() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;
             return evaluation::MIN + depth_root;  // Encourage winning earlier
         }
 
-        let mut moves = move_generation::generate_moves(current_node);
+        let mut moves = move_generation::generate_moves::<P>(current_node);
 
         if moves.is_empty() {  // Game over
             ctx.nodes += 1;
@@ -154,7 +154,7 @@ impl Think {
             return evaluation::MIN + depth_root;  // Encourage winning earlier
         }
 
-        if current_node.is_threefold_repetition_rule() {  // Game over
+        if current_node.is_threefold_repetition_rule::<P>() {  // Game over
             ctx.nodes += 1;
             p_line.size = 0;
             return 0;
@@ -170,7 +170,7 @@ impl Think {
         if depth == 0 {
             ctx.nodes += 1;
             p_line.size = 0;
-            return evaluation::static_evaluation(current_node) * evaluation::perspective(&current_node.position.position);
+            return evaluation::static_evaluation::<P>(current_node) * evaluation::perspective(&current_node.position.position);
         }
 
         // For iterative deepening to be efficient, the first move must be from the last PV
@@ -182,7 +182,7 @@ impl Think {
             let mut new_node = game::SearchNode::from_node(current_node);
             new_node.play_move(&move_);
 
-            let eval = -Self::alpha_beta(ctx, depth - 1, depth_root + 1, -beta, -alpha, &new_node, &mut line, pv);
+            let eval = -Self::alpha_beta::<P>(ctx, depth - 1, depth_root + 1, -beta, -alpha, &new_node, &mut line, pv);
 
             if ctx.stop() {
                 return 0;

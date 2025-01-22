@@ -4,6 +4,9 @@ use std::ptr;
 
 use regex;
 
+pub const NINE: i32 = 18;
+pub const TWELVE: i32 = 24;
+
 #[derive(Clone)]
 pub struct Game {
     pub position: Position,
@@ -235,7 +238,7 @@ impl ToString for Move {
 
 pub type Board = [Node; 24];
 
-#[derive(Debug, Default, Clone, Eq)]
+#[derive(Debug, Default, Clone)]
 pub struct Position {
     pub board: Board,
     pub player: Player,
@@ -243,6 +246,11 @@ pub struct Position {
 }
 
 impl Position {
+    // Cannot use PartialEq
+    pub fn eq<const P: i32>(&self, other: &Position) -> bool {
+        self.board == other.board && self.player == other.player && self.plies >= P && other.plies >= P
+    }
+
     pub fn count_player_pieces(&self) -> i32 {
         let target = as_node(self.player);
         let mut result = 0;
@@ -254,8 +262,8 @@ impl Position {
         result
     }
 
-    pub fn is_game_over_material(&self) -> bool {
-        if self.plies < 18 {
+    pub fn is_game_over_material<const P: i32>(&self) -> bool {
+        if self.plies < P {
             return false;
         }
 
@@ -281,12 +289,6 @@ impl Position {
         }
 
         (pieces, player)
-    }
-}
-
-impl PartialEq for Position {
-    fn eq(&self, other: &Position) -> bool {
-        self.board == other.board && self.player == other.player && self.plies >= 18 && other.plies >= 18
     }
 }
 
@@ -456,7 +458,6 @@ impl SearchNode {
                 debug_assert_eq!(self.position.position.board[destination_index as usize], Node::Empty);
                 debug_assert_ne!(self.position.position.board[capture_index as usize], Node::Empty);
 
-
                 self.position.position.board.swap(source_index as usize, destination_index as usize);
                 self.position.position.board[capture_index as usize] = Node::Empty;
 
@@ -469,7 +470,7 @@ impl SearchNode {
         self.position.position.plies += 1;
     }
 
-    pub fn is_threefold_repetition_rule(&self) -> bool {
+    pub fn is_threefold_repetition_rule<const P: i32>(&self) -> bool {
         let mut previous_node = self.previous;
 
         let mut repetitions = 1;
@@ -479,7 +480,7 @@ impl SearchNode {
                 &(*previous_node).position.position
             };
 
-            if *position == self.position.position {
+            if position.eq::<P>(&self.position.position) {
                 repetitions += 1;
 
                 if repetitions == 3 {

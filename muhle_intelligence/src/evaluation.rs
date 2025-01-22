@@ -1,3 +1,5 @@
+use std::hint::unreachable_unchecked;
+
 use crate::game;
 
 pub type Eval = i32;
@@ -14,7 +16,7 @@ const PLAYER_EVAL: Eval = 10;
 const FREEDOM_EVAL: Eval = 1;
 const ENDGAME_PLAYER_FREEDOM: i32 = 3 * 4;
 
-pub fn static_evaluation(node: &game::SearchNode) -> Eval {
+pub fn static_evaluation<const P: i32>(node: &game::SearchNode) -> Eval {
     let mut evaluation: Eval = 0;
 
     let mut white_pieces = 0;
@@ -39,13 +41,25 @@ pub fn static_evaluation(node: &game::SearchNode) -> Eval {
 
     for i in 0..24 {
         match node.position.position.board[i] {
-            game::Node::White => white_freedom += piece_freedom(&node.position.position.board, i as game::Idx),
-            game::Node::Black => black_freedom += piece_freedom(&node.position.position.board, i as game::Idx),
-            game::Node::Empty => (),
+            game::Node::White => {
+                white_freedom += match P {
+                    game::NINE => piece_freedom(&node.position.position.board, i),
+                    game::TWELVE => piece_freedom12(&node.position.position.board, i),
+                    _ => unsafe { unreachable_unchecked() },
+                }
+            }
+            game::Node::Black => {
+                black_freedom += match P {
+                    game::NINE => piece_freedom(&node.position.position.board, i),
+                    game::TWELVE => piece_freedom12(&node.position.position.board, i),
+                    _ => unsafe { unreachable_unchecked() },
+                }
+            }
+            game::Node::Empty => ()
         }
     }
 
-    if node.position.position.plies >= 18 {
+    if node.position.position.plies >= P {
         if white_pieces == 3 {
             white_freedom = ENDGAME_PLAYER_FREEDOM;
         }
@@ -65,249 +79,265 @@ pub fn perspective(position: &game::Position) -> Eval {
     if position.player == game::Player::White { 1 } else { -1 }
 }
 
-fn piece_freedom(board: &game::Board, index: game::Idx) -> i32 {
+fn freedom(board: &game::Board, result: &mut i32, index: usize) {
+    if board[index] == game::Node::Empty {
+        *result += 1;
+    }
+}
+
+fn piece_freedom(board: &game::Board, index: usize) -> i32 {
     let mut result = 0;
 
     match index {
         0 => {
-            if board[1] == game::Node::Empty {
-                result += 1;
-            }
-            if board[9] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 1);
+            freedom(board, &mut result, 9);
         }
         1 => {
-            if board[0] == game::Node::Empty {
-                result += 1;
-            }
-            if board[2] == game::Node::Empty {
-                result += 1;
-            }
-            if board[4] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 0);
+            freedom(board, &mut result, 2);
+            freedom(board, &mut result, 4);
         }
         2 => {
-            if board[1] == game::Node::Empty {
-                result += 1;
-            }
-            if board[14] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 1);
+            freedom(board, &mut result, 14);
         }
         3 => {
-            if board[4] == game::Node::Empty {
-                result += 1;
-            }
-            if board[10] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 4);
+            freedom(board, &mut result, 10);
         }
         4 => {
-            if board[1] == game::Node::Empty {
-                result += 1;
-            }
-            if board[3] == game::Node::Empty {
-                result += 1;
-            }
-            if board[5] == game::Node::Empty {
-                result += 1;
-            }
-            if board[7] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 1);
+            freedom(board, &mut result, 3);
+            freedom(board, &mut result, 5);
+            freedom(board, &mut result, 7);
         }
         5 => {
-            if board[4] == game::Node::Empty {
-                result += 1;
-            }
-            if board[13] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 4);
+            freedom(board, &mut result, 13);
         }
         6 => {
-            if board[7] == game::Node::Empty {
-                result += 1;
-            }
-            if board[11] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 7);
+            freedom(board, &mut result, 11);
         }
         7 => {
-            if board[4] == game::Node::Empty {
-                result += 1;
-            }
-            if board[6] == game::Node::Empty {
-                result += 1;
-            }
-            if board[8] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 4);
+            freedom(board, &mut result, 6);
+            freedom(board, &mut result, 8);
         }
         8 => {
-            if board[7] == game::Node::Empty {
-                result += 1;
-            }
-            if board[12] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 7);
+            freedom(board, &mut result, 12);
         }
         9 => {
-            if board[0] == game::Node::Empty {
-                result += 1;
-            }
-            if board[10] == game::Node::Empty {
-                result += 1;
-            }
-            if board[21] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 0);
+            freedom(board, &mut result, 10);
+            freedom(board, &mut result, 21);
         }
         10 => {
-            if board[3] == game::Node::Empty {
-                result += 1;
-            }
-            if board[9] == game::Node::Empty {
-                result += 1;
-            }
-            if board[11] == game::Node::Empty {
-                result += 1;
-            }
-            if board[18] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 3);
+            freedom(board, &mut result, 9);
+            freedom(board, &mut result, 11);
+            freedom(board, &mut result, 18);
         }
         11 => {
-            if board[6] == game::Node::Empty {
-                result += 1;
-            }
-            if board[10] == game::Node::Empty {
-                result += 1;
-            }
-            if board[15] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 6);
+            freedom(board, &mut result, 10);
+            freedom(board, &mut result, 15);
         }
         12 => {
-            if board[8] == game::Node::Empty {
-                result += 1;
-            }
-            if board[13] == game::Node::Empty {
-                result += 1;
-            }
-            if board[17] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 8);
+            freedom(board, &mut result, 13);
+            freedom(board, &mut result, 17);
         }
         13 => {
-            if board[5] == game::Node::Empty {
-                result += 1;
-            }
-            if board[12] == game::Node::Empty {
-                result += 1;
-            }
-            if board[14] == game::Node::Empty {
-                result += 1;
-            }
-            if board[20] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 5);
+            freedom(board, &mut result, 12);
+            freedom(board, &mut result, 14);
+            freedom(board, &mut result, 20);
         }
         14 => {
-            if board[2] == game::Node::Empty {
-                result += 1;
-            }
-            if board[13] == game::Node::Empty {
-                result += 1;
-            }
-            if board[23] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 2);
+            freedom(board, &mut result, 13);
+            freedom(board, &mut result, 23);
         }
         15 => {
-            if board[11] == game::Node::Empty {
-                result += 1;
-            }
-            if board[16] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 11);
+            freedom(board, &mut result, 16);
         }
         16 => {
-            if board[15] == game::Node::Empty {
-                result += 1;
-            }
-            if board[17] == game::Node::Empty {
-                result += 1;
-            }
-            if board[19] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 15);
+            freedom(board, &mut result, 17);
+            freedom(board, &mut result, 19);
         }
         17 => {
-            if board[12] == game::Node::Empty {
-                result += 1;
-            }
-            if board[16] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 12);
+            freedom(board, &mut result, 16);
         }
         18 => {
-            if board[10] == game::Node::Empty {
-                result += 1;
-            }
-            if board[19] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 10);
+            freedom(board, &mut result, 19);
         }
         19 => {
-            if board[16] == game::Node::Empty {
-                result += 1;
-            }
-            if board[18] == game::Node::Empty {
-                result += 1;
-            }
-            if board[20] == game::Node::Empty {
-                result += 1;
-            }
-            if board[22] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 16);
+            freedom(board, &mut result, 18);
+            freedom(board, &mut result, 20);
+            freedom(board, &mut result, 22);
         }
         20 => {
-            if board[13] == game::Node::Empty {
-                result += 1;
-            }
-            if board[19] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 13);
+            freedom(board, &mut result, 19);
         }
         21 => {
-            if board[9] == game::Node::Empty {
-                result += 1;
-            }
-            if board[22] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 9);
+            freedom(board, &mut result, 22);
         }
         22 => {
-            if board[19] == game::Node::Empty {
-                result += 1;
-            }
-            if board[21] == game::Node::Empty {
-                result += 1;
-            }
-            if board[23] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 19);
+            freedom(board, &mut result, 21);
+            freedom(board, &mut result, 23);
         }
         23 => {
-            if board[14] == game::Node::Empty {
-                result += 1;
-            }
-            if board[22] == game::Node::Empty {
-                result += 1;
-            }
+            freedom(board, &mut result, 14);
+            freedom(board, &mut result, 22);
+        }
+        _ => ()
+    }
+
+    result
+}
+
+fn piece_freedom12(board: &game::Board, index: usize) -> i32 {
+    let mut result = 0;
+
+    match index {
+        0 => {
+            freedom(board, &mut result, 1);
+            freedom(board, &mut result, 9);
+            freedom(board, &mut result, 3);
+        }
+        1 => {
+            freedom(board, &mut result, 0);
+            freedom(board, &mut result, 2);
+            freedom(board, &mut result, 4);
+        }
+        2 => {
+            freedom(board, &mut result, 1);
+            freedom(board, &mut result, 14);
+            freedom(board, &mut result, 5);
+        }
+        3 => {
+            freedom(board, &mut result, 4);
+            freedom(board, &mut result, 10);
+            freedom(board, &mut result, 0);
+            freedom(board, &mut result, 6);
+        }
+        4 => {
+            freedom(board, &mut result, 1);
+            freedom(board, &mut result, 3);
+            freedom(board, &mut result, 5);
+            freedom(board, &mut result, 7);
+        }
+        5 => {
+            freedom(board, &mut result, 4);
+            freedom(board, &mut result, 13);
+            freedom(board, &mut result, 2);
+            freedom(board, &mut result, 8);
+        }
+        6 => {
+            freedom(board, &mut result, 7);
+            freedom(board, &mut result, 11);
+            freedom(board, &mut result, 3);
+        }
+        7 => {
+            freedom(board, &mut result, 4);
+            freedom(board, &mut result, 6);
+            freedom(board, &mut result, 8);
+        }
+        8 => {
+            freedom(board, &mut result, 7);
+            freedom(board, &mut result, 12);
+            freedom(board, &mut result, 5);
+        }
+        9 => {
+            freedom(board, &mut result, 0);
+            freedom(board, &mut result, 10);
+            freedom(board, &mut result, 21);
+        }
+        10 => {
+            freedom(board, &mut result, 3);
+            freedom(board, &mut result, 9);
+            freedom(board, &mut result, 11);
+            freedom(board, &mut result, 18);
+        }
+        11 => {
+            freedom(board, &mut result, 6);
+            freedom(board, &mut result, 10);
+            freedom(board, &mut result, 15);
+        }
+        12 => {
+            freedom(board, &mut result, 8);
+            freedom(board, &mut result, 13);
+            freedom(board, &mut result, 17);
+        }
+        13 => {
+            freedom(board, &mut result, 5);
+            freedom(board, &mut result, 12);
+            freedom(board, &mut result, 14);
+            freedom(board, &mut result, 20);
+        }
+        14 => {
+            freedom(board, &mut result, 2);
+            freedom(board, &mut result, 13);
+            freedom(board, &mut result, 23);
+        }
+        15 => {
+            freedom(board, &mut result, 11);
+            freedom(board, &mut result, 16);
+            freedom(board, &mut result, 18);
+        }
+        16 => {
+            freedom(board, &mut result, 15);
+            freedom(board, &mut result, 17);
+            freedom(board, &mut result, 19);
+        }
+        17 => {
+            freedom(board, &mut result, 12);
+            freedom(board, &mut result, 16);
+            freedom(board, &mut result, 20);
+        }
+        18 => {
+            freedom(board, &mut result, 10);
+            freedom(board, &mut result, 19);
+            freedom(board, &mut result, 15);
+            freedom(board, &mut result, 21);
+        }
+        19 => {
+            freedom(board, &mut result, 16);
+            freedom(board, &mut result, 18);
+            freedom(board, &mut result, 20);
+            freedom(board, &mut result, 22);
+        }
+        20 => {
+            freedom(board, &mut result, 13);
+            freedom(board, &mut result, 19);
+            freedom(board, &mut result, 17);
+            freedom(board, &mut result, 23);
+        }
+        21 => {
+            freedom(board, &mut result, 9);
+            freedom(board, &mut result, 22);
+            freedom(board, &mut result, 18);
+        }
+        22 => {
+            freedom(board, &mut result, 19);
+            freedom(board, &mut result, 21);
+            freedom(board, &mut result, 23);
+        }
+        23 => {
+            freedom(board, &mut result, 14);
+            freedom(board, &mut result, 22);
+            freedom(board, &mut result, 20);
         }
         _ => ()
     }
