@@ -8,7 +8,7 @@ use crate::options;
 use crate::messages;
 
 const NAME: &str = "Muhle Intelligence 1.0";
-const AUTHOR: &str = "Simon Maracine";
+const AUTHOR: &str = "Simon M.";
 
 struct Sync {
     mutex_go: Mutex<bool>,
