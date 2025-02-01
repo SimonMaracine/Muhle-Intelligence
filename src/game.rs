@@ -106,6 +106,7 @@ pub enum Player {
     Black = 2,
 }
 
+#[allow(unused)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum Node {

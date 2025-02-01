@@ -10,8 +10,6 @@ pub const WINDOW_MIN: Eval = -WINDOW_MAX;
 pub const MAX: Eval = WINDOW_MAX - 1;
 pub const MIN: Eval = WINDOW_MIN + 1;
 
-pub const UNKNOWN: Eval = Eval::MIN;
-
 const PLAYER_EVAL: Eval = 10;
 const FREEDOM_EVAL: Eval = 1;
 const ENDGAME_PLAYER_FREEDOM: i32 = 3 * 4;
