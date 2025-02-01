@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "muhle_intelligence_windows", windows_subsystem = "windows")]
+
 mod commands;
 mod engine;
 mod evaluation;
