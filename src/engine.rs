@@ -7,7 +7,7 @@ use crate::game;
 use crate::options;
 use crate::messages;
 
-const NAME: &str = "Muhle Intelligence 1.0";
+const NAME: &str = "Muhle Intelligence 1.0-alpha";
 const AUTHOR: &str = "Simon M.";
 
 struct Sync {

@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 regex = "1.10.5"
+
+[features]
+muhle_intelligence_windows = []
