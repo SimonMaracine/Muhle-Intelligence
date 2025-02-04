@@ -23,6 +23,7 @@ fn main() -> ExitCode {
         if engine.is_debug_mode() {
             let _ = write_to_log_file(&mut log_file, format!("[Critical error]  {}\n", err));
         }
+
         return ExitCode::from(1);
     }
 
@@ -30,13 +31,21 @@ fn main() -> ExitCode {
 }
 
 fn main_loop(engine: &mut engine::Engine, log_file: &mut Option<fs::File>) -> Result<(), String> {
+    // It looks like if the parent process dies, we silently fail to read input
+    let mut empty_inputs = 0;
+
     loop {
+        if empty_inputs == 20_000 {
+            return Err(String::from("The parent process probably died"));
+        }
+
         let tokens = match read_from_stdin() {
             Ok(input) => tokenize_input(input),
             Err(err) => return Err(format!("Could not read input: {}", err)),
         };
 
         if tokens.is_empty() {
+            empty_inputs += 1;
             continue;
         }
 
