@@ -33,21 +33,13 @@ fn main() -> ExitCode {
 }
 
 fn main_loop(engine: &mut engine::Engine, log_file: &mut Option<fs::File>) -> Result<(), String> {
-    // It looks like if the parent process dies, we silently fail to read input
-    let mut empty_inputs = 0;
-
     loop {
-        if empty_inputs == 20_000 {
-            return Err(String::from("The parent process probably died"));
-        }
-
         let tokens = match read_from_stdin() {
             Ok(input) => tokenize_input(input),
             Err(err) => return Err(format!("Could not read input: {}", err)),
         };
 
         if tokens.is_empty() {
-            empty_inputs += 1;
             continue;
         }
 
@@ -84,7 +76,12 @@ fn write_to_log_file(log_file: &mut Option<fs::File>, buffer: String) -> Result<
 
 fn read_from_stdin() -> Result<String, io::Error> {
     let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer)?;
+    let size = io::stdin().read_line(&mut buffer)?;
+
+    if size == 0 {
+        return Err(io::ErrorKind::UnexpectedEof.into());
+    }
+
     Ok(buffer)
 }
 
