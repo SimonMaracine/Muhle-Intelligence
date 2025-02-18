@@ -4,7 +4,7 @@ use crate::game;
 
 pub type Eval = i32;
 
-pub const WINDOW_MAX: Eval = 1000;
+pub const WINDOW_MAX: Eval = 500;
 pub const WINDOW_MIN: Eval = -WINDOW_MAX;
 
 pub const MAX: Eval = WINDOW_MAX - 1;

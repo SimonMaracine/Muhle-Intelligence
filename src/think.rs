@@ -92,6 +92,11 @@ impl Think {
 
             last_pv_line = line.clone();
 
+            if line.size == 0 {
+                return None;
+            }
+
+            // Don't send information, if it is game over
             let _ = messages::info(
                 Some(depth),
                 Some((now - ctx.time_begin).as_millis().try_into().expect("Should fit")),
@@ -103,10 +108,6 @@ impl Think {
                 None,
                 Some(&line),
             );
-
-            if line.size == 0 {
-                return None;
-            }
 
             // There is a best move available only after the first iteration
             ctx.can_stop = true;
@@ -258,12 +259,14 @@ impl Think {
     fn score(eval: evaluation::Eval) -> messages::Score {
         debug_assert!(eval <= evaluation::MAX && eval >= evaluation::MIN);
 
+        // Don't let moves be 0
+
         if eval >= evaluation::MAX - game::MAX_DEPTH {
             let moves = (evaluation::MAX - eval) / 2;
-            messages::Score::Win(moves)
+            messages::Score::Win(cmp::max(moves, 1))
         } else if eval <= evaluation::MIN + game::MAX_DEPTH {
             let moves = (evaluation::MIN - eval) / 2;
-            messages::Score::Win(moves)
+            messages::Score::Win(cmp::min(moves, -1))
         } else {
             messages::Score::Eval(eval)
         }
