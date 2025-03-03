@@ -120,9 +120,6 @@ fn execute_command(engine: &mut engine::Engine, tokens: Vec<String>) -> Result<(
             "stop" => {
                 commands::stop(engine, tokens);
             }
-            "ponderhit" => {
-                commands::ponderhit(engine, tokens);
-            }
             _ => return Err(format!("Invalid command: `{}`", command))
         }
     }

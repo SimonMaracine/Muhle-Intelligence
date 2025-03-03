@@ -167,10 +167,6 @@ pub fn stop(engine: &mut engine::Engine, _tokens: Vec<String>) {
     engine.stop();
 }
 
-pub fn ponderhit(engine: &mut engine::Engine, _tokens: Vec<String>) {
-    engine.ponderhit();
-}
-
 pub fn quit(engine: &mut engine::Engine, _tokens: Vec<String>) {
     engine.quit();
 }

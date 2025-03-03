@@ -168,10 +168,6 @@ impl Engine {
         self.should_stop.store(true, Ordering::SeqCst);
     }
 
-    pub fn ponderhit(&mut self) {
-
-    }
-
     pub fn quit(&mut self) {
         if !self.running.load(Ordering::SeqCst) {
             return;
